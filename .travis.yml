@@ -1,0 +1,17 @@
+language: python
+python:
+  - 3.8
+  - 3.7
+  - 3.6
+install: pip install -U tox-travis
+script: tox
+deploy:
+  provider: pypi
+  distributions: sdist bdist_wheel
+  user: gadgetmobile
+  password:
+    secure: ZEf/zjlu3ftVKTVBgg2I1RLsKpXBL2/bpCMh54eKcQebafyx2xP2DTADkJabyS7RoQSHjes/Ag/toWHz8W9SnINfPBKohzRIjo69QpWvKh7lDlvdNjSFVJFt3H0kPyYErzAuXl9NkHDYPDNXfgEWfQN5l6N80TuMn/9Wzx/HAdW1O2bb9+C5Ve797Vru+SAyFfTrwP7d+VXxncTilzJstrX6U955ueGTIq+wTwAwr8zJ2AGddXxHzWbPQt0iJKwnD+SCUF6hJqxOdx6TVUCnBa6NitjzONetcVwqH5OfvqtmyPGxQs+rDlzUZ8MKdBH+ypRsHYq7/+2OXpDrf5xHEBSQPJNu+qVAahsOiUWWUCCayCpGiZT+OmI7rBNFIT0hacqVLVIPFTCrCN6ncoUZRC4vq84Jfy/lyzboNVWUoOaTUd9LDQs0Qe0/wGjJsFQY0slXOGx6Cei9lWTCXKIDVFeCCEBPZKkoYsuj4/UhY2IQp3IrghcyhWMXIykKJ5He5NHZKdfrwz44YGlYsSrDyYAGRYtMQBE6MJGUVxIpyKFc60i6Oa2TCIPXt4y15v9ny0f7zMKj7W9TTfQxJsayiP00iSA48sg2gIx0tbdhXels7jqpsvEnoal0xu+t4eEs4W/XtIxpIZ8j/zfTaq1NjZCQL1lxyrfbjEvFfXBG3YE=
+  on:
+    tags: true
+    repo: gadgetmobile/blebox_uniapi
+    python: 3.8

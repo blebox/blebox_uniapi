@@ -1,17 +1,17 @@
 pip==19.2.3
-bump2version==0.5.11
+bump2version==1.0.0
 wheel==0.33.6
-watchdog==0.9.0
+watchdog==0.10.2
 flake8==3.7.8
-tox==3.14.0
-coverage==4.5.4
+tox==3.14.5
+coverage==5.0.3
 Sphinx==1.8.5
-twine==1.14.0
+twine==3.1.1
 
 semver==2.9.1
 
 deepmerge==0.1.0
-pytest==4.6.5
+pytest==5.4.1
 pytest-runner==5.2
 asynctest==0.13.0
 pytest-asyncio==0.10.0

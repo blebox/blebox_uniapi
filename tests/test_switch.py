@@ -41,20 +41,9 @@ class TestSwitchBox(DefaultBoxTest):
             "fv": "0.247",
             "hv": "0.2",
             "id": "1afe34e750b8",
-            "apiLevel": "20190808"
-        },
-        "network": {
             "ip": "192.168.1.239",
-            "ssid": "myWiFiNetwork",
-            "station_status": 5,
-            "apSSID": "switchBox-ap",
-            "apPasswd": ""
-        },
-        "relays": [{
-            "relay": 0,
-            "state": 0,
-            "stateAfterRestart": 0
-        }]
+            "apiLevel": "20190808"
+        }
     }
     """
     )
@@ -103,7 +92,7 @@ class TestSwitchBox(DefaultBoxTest):
 
         assert entity.device_class == DEVICE_CLASS_SWITCH
 
-        assert entity.is_on is False  # state already available here
+        assert entity.is_on is None
 
     async def test_update_when_off(self, aioclient_mock):
         """Test switch updating when off."""

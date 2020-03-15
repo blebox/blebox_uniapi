@@ -1,10 +1,10 @@
-pip==19.2.3
+pip==20.0.2
 bump2version==1.0.0
-wheel==0.33.6
+wheel==0.34.2
 watchdog==0.10.2
 flake8==3.7.8
 tox==3.14.5
-coverage==4.5.4
+coverage==5.0.3
 Sphinx==2.4.4
 twine==3.1.1
 
@@ -12,7 +12,7 @@ semver==2.9.1
 
 deepmerge==0.1.0
 pytest==5.4.1
-pytest-runner==5.1
+pytest-runner==5.2
 asynctest==0.13.0
 pytest-asyncio==0.10.0
 pytest-aiohttp==0.3.0

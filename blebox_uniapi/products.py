@@ -204,7 +204,7 @@ class Products:
         try:
             info = root["device"]
             data = {
-                "switchBox": [info, root],
+                "switchBox": [info],
                 "dimmerBox": [info, root],
                 "wLightBoxS": [info, root],
                 "wLightBox": [info, root],

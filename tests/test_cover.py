@@ -298,6 +298,7 @@ class TestGateBox(CoverTest):
 
     DEV_INFO_PATH = "api/gate/state"
 
+    # TODO: does gateBox have an api level currently?
     DEVICE_INFO = json.loads(
         """
         {

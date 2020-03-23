@@ -26,6 +26,7 @@ DEFAULT_PORT = 80
 
 
 class Box:
+    # TODO: pass IP? (For better error messages).
     def __init__(self, api_session, info, state_root=None):
         self._session = api_session
         self._name = "(unnamed)"

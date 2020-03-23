@@ -19,7 +19,7 @@ import pytest
 
 from blebox_uniapi.session import ApiHost
 from blebox_uniapi.products import Products
-from blebox_uniapi.box import UnsupportedBoxVersion
+from blebox_uniapi.error import UnsupportedBoxVersion, UnsupportedBoxResponse
 
 _LOGGER = logging.getLogger(__name__)
 

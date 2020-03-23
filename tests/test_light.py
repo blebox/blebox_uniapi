@@ -3,6 +3,8 @@ import json
 
 from .conftest import DefaultBoxTest, jmerge, CommonEntity
 
+from blebox_uniapi.error import UnsupportedBoxResponse, BadOnValueError
+
 # TODO: remove
 import colorsys
 
@@ -60,10 +62,6 @@ def color_RGB_to_hsv(iR: float, iG: float, iB: float):
 def color_rgb_to_hex(r: int, g: int, b: int) -> str:
     """Return a RGB color from a hex color string."""
     return "{0:02x}{1:02x}{2:02x}".format(round(r), round(g), round(b))
-
-
-class BadOnValueError(RuntimeError):
-    pass
 
 
 class BleBoxLightEntity(CommonEntity):

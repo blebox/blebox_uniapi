@@ -67,3 +67,11 @@ class ApiHost:
     @property
     def logger(self):
         return self._logger
+
+    @property
+    def host(self):
+        return self._host
+
+    @property
+    def port(self):
+        return self._port

@@ -3,68 +3,26 @@
 import semver
 import re
 
-# TODO: rename each to *State?
-from .feature import (
-    Temperature,
-    Cover,
-    AirQuality,
-    Light,
-    Climate,
-    Switch,
+from .sensor import Temperature
+from .cover import Cover
+from .air_quality import AirQuality
+from .light import Light
+from .climate import Climate
+from .switch import Switch
+
+from .error import (
+    UnsupportedBoxResponse,
+    UnsupportedBoxVersion,
+    JPathFailed,
+    BadFieldExceedsMax,
+    BadFieldLessThanMin,
+    BadFieldMissing,
+    BadFieldNotANumber,
+    BadFieldNotAString,
+    BadFieldNotRGBW,
 )
 
 DEFAULT_PORT = 80
-
-
-class BoxError(RuntimeError):
-    pass
-
-
-# TODO: test exceptions
-
-
-class UnsupportedBoxVersion(BoxError):
-    pass
-
-
-class UnsupportedAppVersion(BoxError):
-    pass
-
-
-class OutdatedBoxVersion(BoxError):
-    pass
-
-
-class JPathFailed(BoxError):
-    pass
-
-
-class BadFieldExceedsMax(BoxError):
-    pass
-
-
-class BadFieldLessThanMin(BoxError):
-    pass
-
-
-class BadFieldMissing(BoxError):
-    pass
-
-
-class BadFieldNotANumber(BoxError):
-    pass
-
-
-class BadFieldNotAString(BoxError):
-    pass
-
-
-class BadFieldNotRGBW(BoxError):
-    pass
-
-
-class UnsupportedBoxResponse(BoxError):
-    pass
 
 
 class Box:
@@ -73,41 +31,109 @@ class Box:
         self._name = "(unnamed)"
         self._data_path = None
 
+        address = f"{api_session.host}:{api_session.port}"
+
+        location = f"Device at {address}"
+
+        # NOTE: get ID first for better error messages
         try:
-            self._name = info["deviceName"]
-            self._unique_id = info["id"]
-            self._type = info["type"]
-            self._firmware_version = info["fv"]
-            self._hardware_version = info["hv"]
+            unique_id = info["id"]
+        except KeyError as ex:
+            raise UnsupportedBoxResponse(info, f"{location} has no id") from ex
+        location = f"Device:{unique_id} at {address}"
 
-            # Here due to circular dependency
-            from .products import Products
+        try:
+            type = info["type"]
+        except KeyError as ex:
+            raise UnsupportedBoxResponse(info, f"{location} has no type") from ex
+        location = f"{type}:{unique_id} at {address}"
 
-            config = Products.CONFIG["types"][self._type]
-            self._version, self._outdated = self.extract_version(
-                self._type, info, config
+        # Here due to circular dependency
+        from .products import Products
+
+        try:
+            config = Products.CONFIG["types"][type]
+        except KeyError as ex:
+            raise UnsupportedBoxResponse(
+                info, f"{location} is not a supported type"
+            ) from ex
+
+        # Ok to crash here, since it's a bug
+        self._data_path = config["api_path"]
+        min_supported, max_supported = config["api_level_range"]
+
+        try:
+            name = info["deviceName"]
+        except KeyError as ex:
+            raise UnsupportedBoxResponse(info, f"{location} has no name") from ex
+        location = f"'{name}' ({type}:{unique_id} at {address})"
+
+        try:
+            firmware_version = info["fv"]
+        except KeyError as ex:
+            raise UnsupportedBoxResponse(
+                info, f"{location} has no firmware version"
+            ) from ex
+        location = f"'{name}' ({type}:{unique_id}/{firmware_version} at {address})"
+
+        try:
+            hardware_version = info["hv"]
+        except KeyError as ex:
+            raise UnsupportedBoxResponse(
+                info, f"{location} has no hardware version"
+            ) from ex
+
+        try:
+            level = int(info["apiLevel"])
+        except KeyError:
+            if type != "gateBox":
+                raise UnsupportedBoxResponse(info, f"{location} has no apiLevel")
+
+            # TODO: assume all are supported
+            level = min_supported
+
+        if level < min_supported:
+            raise UnsupportedBoxVersion(
+                info,
+                f"{location} has outdated firmware (last supported: {min_supported} vs {level}) .",
             )
-            self._data_path = config["api_path"]
-            self._api = config.get("api", {})
 
-            self._features = {}
+        version, outdated = self.extract_version(
+            type, info, min_supported, max_supported, level
+        )
 
-            for item in {
-                "air_qualities": AirQuality,
-                "covers": Cover,
-                "sensors": Temperature,  # TODO: too narrow
-                "lights": Light,
-                "climates": Climate,
-                "switches": Switch,
-            }.items():
-                field, klass = item
+        self._type = type
+        self._unique_id = unique_id
+        self._name = name
+        self._firmware_version = firmware_version
+        self._hardware_version = hardware_version
+        self._api_version = level
+        self._version = version
+        self._outdated = outdated
+
+        self._api = config.get("api", {})
+
+        self._features = {}
+        for item in {
+            "air_qualities": AirQuality,
+            "covers": Cover,
+            "sensors": Temperature,  # TODO: too narrow
+            "lights": Light,
+            "climates": Climate,
+            "switches": Switch,
+        }.items():
+            field, klass = item
+            try:
                 self._features[field] = [
                     klass(self, *args) for args in config.get(field, [])
                 ]
+            # TODO: fix constructors instead
+            except KeyError as ex:
+                raise UnsupportedBoxResponse(
+                    info, f"{location} failed to initialize: {ex}"
+                )  # from ex
 
-            self._config = config
-        except KeyError as e:
-            raise UnsupportedBoxResponse(info, e)
+        self._config = config
 
         self._update_last_data(state_root)
 
@@ -140,8 +166,8 @@ class Box:
         return self._api_version
 
     @property
-    def ipv4_address(self):
-        return self._ipv4_address
+    def version(self):
+        return self._version
 
     @property
     def features(self):
@@ -159,36 +185,30 @@ class Box:
 
     def _update_last_data(self, new_data):
         self._last_data = new_data
-        for feature in self._features:
-            feature.after_update()
+        for feature_set in self._features.values():
+            for feature in feature_set:
+                feature.after_update()
 
-    def extract_version(self, type, device_info, config):
-        min_supported, max_supported = config["api_level_range"]
-
-        try:
-            level = int(device_info["apiLevel"])
-        except KeyError:
-            if type != "gateBox":
-                raise UnsupportedBoxResponse(device_info)
-
-            # TODO: assume all are supported
-            level = min_supported
-
+    def extract_version(self, type, device_info, min_supported, max_supported, level):
         minor = level - min_supported
-        if minor < 0:
-            raise UnsupportedBoxVersion(device_info)
 
         current = semver.VersionInfo(1, minor, 0)
-        if semver.VersionInfo.parse("1.0.0") > current:
-            raise OutdatedBoxVersion(device_info)
+
+        # TODO: uncomment when compatiblity is broken
+        # min_compatibility = config['min_semver'] # e.g. "1.0.0"
+        # if semver.VersionInfo.parse(min_compatibility) > current:
+        #     # TODO: coverage
+        #     raise OutdatedBoxVersion(device_info)
 
         # TODO: for now, BleBox assumes backward-compatibility
         max_minor = max_supported - min_supported
-        max_version = semver.VersionInfo(1, max_minor, 0)
-        # if current > max_version:
+        latest_version = semver.VersionInfo(1, max_minor, 0)
+
+        # TODO: uncomment when backward compatiblity is broken
+        # if current > latest_version:
         #     raise UnsupportedAppVersion(device_info)
 
-        outdated = current < max_version
+        outdated = current < latest_version
         return (current, outdated)
 
     async def async_api_call(self, path):
@@ -228,7 +248,7 @@ class Box:
                         break
 
                 if not found:
-                    raise JPathFailed(f"with: {name}={value}")
+                    raise JPathFailed(f"with: {name}={value}", path, data)
 
                 continue
 
@@ -247,7 +267,7 @@ class Box:
                         break
 
                 if not found:
-                    raise JPathFailed(f"with: {name}={value}")
+                    raise JPathFailed(f"with: {name}={value}", path, data)
                 continue
 
             with_index = re.compile("^\\[(\\d+)\\]$")
@@ -255,7 +275,7 @@ class Box:
             if match:
                 index = int(match.group(1))
                 if not isinstance(current_tree, list) or index >= len(current_tree):
-                    raise JPathFailed(f"with value at : {index}")
+                    raise JPathFailed(f"with value at index {index}", path, data)
 
                 current_tree = current_tree[index]
                 continue
@@ -263,12 +283,16 @@ class Box:
             if isinstance(current_tree, dict):
                 names = current_tree.keys()
                 if chunk not in names:
-                    raise JPathFailed(f"item: {chunk} not among: {names}")
+                    raise JPathFailed(
+                        f"item '{chunk}' not among {list(names)}", path, data
+                    )
 
                 current_tree = current_tree[chunk]
             else:
                 raise JPathFailed(
-                    f"unexpected type item: '{chunk}' not in: {current_tree}"
+                    f"unexpected item type: '{chunk}' not in: {current_tree}",
+                    path,
+                    data,
                 )
 
         return current_tree

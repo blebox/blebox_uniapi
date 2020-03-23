@@ -1,6 +1,8 @@
 """BleBox cover entities tests."""
 import json
 
+from blebox_uniapi import error
+
 from .conftest import DefaultBoxTest, jmerge, CommonEntity
 
 # TODO: remove

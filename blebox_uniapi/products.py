@@ -1,8 +1,6 @@
 from .box import Box
 
-
-class UnsupportedBox(RuntimeError):
-    pass
+from .error import UnsupportedBoxResponse
 
 
 class Products:
@@ -227,11 +225,12 @@ class Products:
         try:
             product_type = info["type"]
         except KeyError:
-            raise UnsupportedBox("(no type in info)")
+            # TODO: coverage
+            raise UnsupportedBoxResponse("(no type in info)")
 
         try:
             args = data[product_type]
         except KeyError:
-            raise UnsupportedBox(product_type)
+            raise UnsupportedBoxResponse(product_type)
 
         return Box(api_host, *args)

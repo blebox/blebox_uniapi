@@ -34,14 +34,19 @@ def aioclient_mock(loop, aiohttp_client):
 
 def array_merge(config, path, base, nxt):
     """Replace an array element with the merge result of elements."""
-    if len(nxt) and isinstance(nxt[0], dict):
-        index = 0
-        for item in nxt:
-            if not isinstance(item, dict):
-                raise NotImplementedError
-            my_merger.merge(base[index], item)
-            index += 1
-        return base
+    if len(nxt):
+        if isinstance(nxt[0], dict):
+            index = 0
+            for item in nxt:
+                if not isinstance(item, dict):
+                    raise NotImplementedError
+                my_merger.merge(base[index], item)
+                index += 1
+            return base
+        elif isinstance(nxt[0], int):
+            return [nxt[0]]
+        else:
+            raise NotImplementedError
 
 
 my_merger = Merger(

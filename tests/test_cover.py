@@ -294,12 +294,6 @@ class TestGateBox(CoverTest):
         """
     )
 
-    def patch_version(apiLevel):
-        """Generate a patch for a JSON state fixture."""
-        return f"""
-        {{ "device": {{ "apiLevel": {apiLevel} }} }}
-        """
-
     DEVICE_INFO_FUTURE = DEVICE_INFO
     DEVICE_INFO_LATEST = DEVICE_INFO
     DEVICE_INFO_OUTDATED = DEVICE_INFO

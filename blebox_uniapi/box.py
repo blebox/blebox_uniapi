@@ -71,7 +71,6 @@ class Box:
     def __init__(self, api_session, info, state_root=None):
         self._session = api_session
         self._name = "(unnamed)"
-        self._last_data = state_root
         self._data_path = None
 
         try:
@@ -109,6 +108,8 @@ class Box:
             self._config = config
         except KeyError as e:
             raise UnsupportedBoxResponse(info, e)
+
+        self._update_last_data(state_root)
 
     @property
     def name(self):
@@ -154,7 +155,12 @@ class Box:
     # TODO: report timestamp of last measurement (if possible)
 
     async def async_update_data(self):
-        self._last_data = await self.async_api_call(self._data_path)
+        self._update_last_data(await self.async_api_call(self._data_path))
+
+    def _update_last_data(self, new_data):
+        self._last_data = new_data
+        for feature in self._features:
+            feature.after_update()
 
     def extract_version(self, type, device_info, config):
         min_supported, max_supported = config["api_level_range"]
@@ -194,9 +200,9 @@ class Box:
             raise NotImplementedError(method)
 
         if method == "GET":
-            self._last_data = await self.async_api_call(path)
+            self._update_last_data(await self.async_api_call(path))
         else:
-            self._last_data = await self._session.async_api_post(path, post_data)
+            self._update_last_data(await self._session.async_api_post(path, post_data))
 
     def follow(self, data, path):
         if data is None:

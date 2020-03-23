@@ -315,12 +315,7 @@ class Light(Feature):
     def is_on(self):
         return self._desired_raw != self._off_value
 
-    async def async_update(self):
-        await super().async_update()
-
-        self._update_state()
-
-    def _update_state(self):
+    def after_update(self):
         alias = self._alias
         product = self._product
         raw = self.raw_value("desired")
@@ -428,18 +423,21 @@ class Switch(Feature):
         self._device_class = dev_class
         self._unit_id = unit_id
 
+    def after_update(self, data):
+        is_on = None
+
+        product = self._product
+        if product.last_data is not None:
+            raw = self.raw_value("state")
+            if raw is not None:  # no reading
+                alias = self._alias
+                is_on = 1 == product.expect_int(alias, raw, 1, 0)
+
+        self._is_on = is_on
+
     @property
     def is_on(self):
-        product = self._product
-        if not product.last_data:
-            return None
-
-        alias = self._alias
-        raw = self.raw_value("state")
-        if raw is None:  # no reading
-            return None
-
-        return 1 == product.expect_int(alias, raw, 1, 0)
+        return self._is_on
 
     @property
     def _unit_args(self):

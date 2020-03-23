@@ -8,6 +8,8 @@ from blebox_uniapi.error import UnsupportedBoxResponse, BadOnValueError
 # TODO: remove
 import colorsys
 
+import pytest
+
 # TODO: remove
 ATTR_BRIGHTNESS = "brightness"
 ATTR_HS_COLOR = "ATTR_HS_COLOR"
@@ -397,6 +399,18 @@ class TestWLightBoxS(DefaultBoxTest):
     """
     )
 
+    STATE_FULL_ON = json.loads(
+        """
+        {
+            "light": {
+                "desiredColor": "FF",
+                "currentColor": "CE",
+                "fadeSpeed": 255
+            }
+        }
+    """
+    )
+
     STATE_OFF = json.loads(
         """
         {
@@ -452,7 +466,32 @@ class TestWLightBoxS(DefaultBoxTest):
         async def turn_on():
             await entity.async_turn_on()
 
-        # TODO: implement last-value-after-on?
+        await self.allow_set_brightness(turn_on, aioclient_mock, 0xFF, self.STATE_FULL_ON)
+
+        assert entity.is_on is True
+        assert entity.brightness == 0xff
+
+    async def test_on_with_bad_value(self, aioclient_mock):
+        """Test light on with off value."""
+        entity = await self.updated(aioclient_mock, self.STATE_OFF)
+        assert entity.is_on is False
+
+        with pytest.raises(BadOnValueError, match=r"turn_on called with invalid value"):
+            await entity.async_turn_on(brightness="00")
+
+    async def test_on_with_bad_value_type(self, aioclient_mock):
+        """Test light on with off value."""
+        entity = await self.updated(aioclient_mock, self.STATE_OFF)
+        assert entity.is_on is False
+
+        with pytest.raises(BadOnValueError, match=r"turn_on called with bad parameter"):
+            await entity.async_turn_on(brightness=0)
+
+    async def test_off(self, aioclient_mock):
+        """Test light off."""
+        entity = await self.updated(aioclient_mock, self.STATE_ON)
+        assert entity.is_on is True
+
         async def turn_off():
             await entity.async_turn_off()
 

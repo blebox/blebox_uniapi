@@ -1,6 +1,8 @@
 """BleBox cover entities tests."""
 import json
 
+import pytest
+
 from blebox_uniapi import error
 
 from .conftest import DefaultBoxTest, jmerge, CommonEntity
@@ -341,6 +343,9 @@ class TestGateBox(CoverTest):
     STATE_OPENING = jmerge(STATE_DEFAULT, '{ "currentPos": 50, "desiredPos": 100 }')
     STATE_CLOSING = jmerge(STATE_DEFAULT, '{ "currentPos": 50, "desiredPos": 0 }')
     STATE_STOPPED = jmerge(STATE_DEFAULT, '{ "currentPos": 50, "desiredPos": 50 }')
+    STATE_FULLY_OPENED = jmerge(
+        STATE_DEFAULT, '{ "currentPos": 100, "desiredPos": 100 }'
+    )
 
     STATE_OPENING_NO_STOP = jmerge(STATE_OPENING, '{ "extraButtonType": 3}')
 
@@ -371,7 +376,6 @@ class TestGateBox(CoverTest):
         assert entity.current_cover_position == 50  # 100 - 34
         self.assert_state(entity, STATE_OPEN)
 
-
     async def test_open(self, aioclient_mock):
         """Test cover opening."""
 
@@ -382,6 +386,10 @@ class TestGateBox(CoverTest):
         await entity.async_open_cover()
         self.assert_state(entity, STATE_OPENING)
 
+    async def test_fully_opened(self, aioclient_mock):
+        entity = await self.updated(aioclient_mock, self.STATE_FULLY_OPENED)
+        assert entity.state == STATE_OPEN
+
     async def test_close(self, aioclient_mock):
         """Test cover closing."""
 
@@ -390,6 +398,12 @@ class TestGateBox(CoverTest):
         self.allow_get(aioclient_mock, "/s/p", self.STATE_CLOSING)
         await entity.async_close_cover()
         self.assert_state(entity, STATE_CLOSING)
+
+    async def test_closed(self, aioclient_mock):
+        """Test cover closed state."""
+
+        entity = await self.updated(aioclient_mock, self.STATE_CLOSED)
+        self.assert_state(entity, STATE_CLOSED)
 
     async def test_stop(self, aioclient_mock):
         """Test cover stopping."""
@@ -411,6 +425,16 @@ class TestGateBox(CoverTest):
 
         entity = await self.updated(aioclient_mock, self.STATE_OPENING_NO_STOP)
         assert not entity.supported_features & SUPPORT_STOP
+
+    async def test_stop_with_no_stop(self, aioclient_mock):
+        """Test stop capability is not available."""
+
+        entity = await self.updated(aioclient_mock, self.STATE_OPENING_NO_STOP)
+
+        with pytest.raises(
+            error.MisconfiguredDevice, match=r"second button not configured as 'stop'"
+        ):
+            await entity.async_stop_cover()
 
 
 class TestGateController(CoverTest):

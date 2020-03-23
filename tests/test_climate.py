@@ -86,12 +86,8 @@ class BleBoxClimateEntity(CommonEntity, ClimateDevice):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set the climate entity mode."""
-        if hvac_mode == HVAC_MODE_OFF:
-            return await self._feature.async_off()
-        elif hvac_mode == HVAC_MODE_HEAT:
-            return await self._feature.async_on()
-        else:
-            raise NotImplementedError
+        modemap = {HVAC_MODE_OFF: "async_off", HVAC_MODE_HEAT: "async_on"}
+        await getattr(self._feature, modemap[hvac_mode])()
 
     async def async_set_temperature(self, **kwargs):
         """Set the thermostat temperature."""

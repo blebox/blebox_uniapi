@@ -153,9 +153,7 @@ class TestShutter(CoverTest):
 
     def patch_version(apiLevel):
         """Generate a patch for a JSON state fixture."""
-        return f"""
-        {{ "device": {{ "apiLevel": {apiLevel} }} }}
-        """
+        return f"""{{ "device": {{ "apiLevel": {apiLevel} }} }}"""
 
     DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(20190912))
     DEVICE_INFO_LATEST = jmerge(DEVICE_INFO, patch_version(20190911))
@@ -353,6 +351,7 @@ class TestGateBox(CoverTest):
 
         assert entity.current_cover_position == 50  # 100 - 34
         self.assert_state(entity, STATE_OPEN)
+
 
     async def test_open(self, aioclient_mock):
         """Test cover opening."""

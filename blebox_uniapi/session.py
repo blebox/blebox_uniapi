@@ -26,14 +26,17 @@ class ApiHost:
         # TODO: remove?
         self._loop = loop
 
-    async def async_api_get(self, path):
+    async def async_request(self, path, async_method, data=None):
+
         url = self.api_path(path)
 
         try:
-
             # TODO: check timeout
             client_timeout = self._timeout
-            response = await self._session.get(url, timeout=client_timeout)
+            if data is not None:
+                response = await async_method(url, timeout=client_timeout, data=data)
+            else:
+                response = await async_method(url, timeout=client_timeout)
 
             if response.status != 200:
                 raise error.HttpError(f"Http error: {response.status}")
@@ -47,27 +50,12 @@ class ApiHost:
         except aiohttp.ClientError as ex:
             self._logger.debug("ERR: %s", ex)
             raise error.ClientError("Client Error: %s", ex)
+
+    async def async_api_get(self, path):
+        return await self.async_request(path, self._session.get)
 
     async def async_api_post(self, path, data):
-        url = self.api_path(path)
-
-        try:
-            client_timeout = self._timeout
-
-            response = await self._session.post(url, timeout=client_timeout, data=data)
-
-            if response.status != 200:
-                raise error.HttpError(f"Http error: {response.status}")
-
-            return await response.json()
-
-        # TODO: just log errors instead?
-        except aiohttp.ServerTimeoutError:
-            raise error.TimeoutError("Timeout trying to connect")
-
-        except aiohttp.ClientError as ex:
-            self._logger.debug("ERR: %s", ex)
-            raise error.ClientError("Client Error: %s", ex)
+        return await self.async_request(path, self._session.post, data)
 
     def api_path(self, path):
         host = self._host

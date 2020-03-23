@@ -96,6 +96,17 @@ async def test_session_api_get_timeout(logger, client):
         await api_session.async_api_get("/api/foo")
 
 
+async def test_session_api_post_timeout(logger, client):
+    def post_timeout_error(connection, **kwargs):
+        timeout_error(connection, timeout=kwargs.get("timeout"))
+
+    client.post = CoroutineMock(side_effect=post_timeout_error)
+    api_session = Session("127.0.0.4", "88", 2, client, None, logger)
+
+    with pytest.raises(error.TimeoutError):
+        await api_session.async_api_post("/api/foo", {})
+
+
 async def test_session_api_get_client_error(logger, client):
     client.get = CoroutineMock(side_effect=client_error)
     api_session = Session("127.0.0.4", "88", 2, client, None, logger)
@@ -103,11 +114,28 @@ async def test_session_api_get_client_error(logger, client):
         await api_session.async_api_get("/api/foo")
 
 
+async def test_session_api_post_client_error(logger, client):
+    def post_client_error(connection, **kwargs):
+        client_error(connection, timeout=kwargs.get("timeout"))
+
+    client.post = CoroutineMock(side_effect=post_client_error)
+    api_session = Session("127.0.0.4", "88", 2, client, None, logger)
+    with pytest.raises(error.ClientError):
+        await api_session.async_api_post("/api/foo", {})
+
+
 async def test_session_api_get_http_error(logger, client):
     client.get = CoroutineMock(return_value=bad_http_response())
     api_session = Session("127.0.0.4", "88", 2, client, None, logger)
     with pytest.raises(error.HttpError):
         await api_session.async_api_get("/api/foo")
+
+
+async def test_session_api_post_http_error(logger, client):
+    client.post = CoroutineMock(return_value=bad_http_response())
+    api_session = Session("127.0.0.4", "88", 2, client, None, logger)
+    with pytest.raises(error.HttpError):
+        await api_session.async_api_post("/api/foo", {})
 
 
 async def test_session_provides_a_logger(logger, client):

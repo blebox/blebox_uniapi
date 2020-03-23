@@ -223,6 +223,14 @@ class DefaultBoxTest:
             with pytest.raises(UnsupportedBoxVersion):
                 await self.async_entities(aioclient_mock)
 
+    async def test_unspecified_version(self, aioclient_mock):
+        """Test when api level is not specified."""
+
+        if self.DEVICE_INFO_UNSPECIFIED_API is not None:
+            await self.allow_get_info(aioclient_mock, self.DEVICE_INFO_UNSPECIFIED_API)
+            with pytest.raises(UnsupportedBoxResponse):
+                await self.async_entities(aioclient_mock)
+
 
 class AiohttpClientMockResponse:
     """Mock Aiohttp client response."""

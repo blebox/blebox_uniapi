@@ -178,6 +178,35 @@ class TestDimmer(DefaultBoxTest):
     DEVICE_INFO_MINIMUM = jmerge(DEVICE_INFO, patch_version(20170829))
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20170828))
 
+    DEVICE_INFO_UNSPECIFIED_API = json.loads(
+        """
+    {
+        "device": {
+            "deviceName": "My dimmer",
+            "type": "dimmerBox",
+            "fv": "0.247",
+            "hv": "0.2",
+            "id": "1afe34e750b8"
+        },
+        "network": {
+            "ip": "192.168.1.239",
+            "ssid": "myWiFiNetwork",
+            "station_status": 5,
+            "apSSID": "dimmerBox-ap",
+            "apPasswd": ""
+        },
+        "dimmer": {
+            "loadType": 7,
+            "currentBrightness": 65,
+            "desiredBrightness": 65,
+            "temperature": 39,
+            "overloaded": false,
+            "overheated": false
+        }
+    }
+    """
+    )
+
     STATE_DEFAULT = json.loads(
         """
     {
@@ -331,6 +360,33 @@ class TestWLightBoxS(DefaultBoxTest):
     DEVICE_INFO_MINIMUM = jmerge(DEVICE_INFO, patch_version(20180718))
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180717))
 
+    DEVICE_INFO_UNSPECIFIED_API = json.loads(
+        """
+    {
+        "device": {
+            "deviceName": "My wLightBoxS",
+            "type": "wLightBoxS",
+            "fv": "0.247",
+            "hv": "0.2",
+            "id": "1afe34e750b8"
+        },
+        "network": {
+            "ip": "192.168.1.239",
+            "ssid": "myWiFiNetwork",
+            "station_status": 5,
+            "apSSID": "wLightBoxS-ap",
+            "apPasswd": ""
+        },
+        "light": {
+            "desiredColor": "E3",
+            "currentColor": "DF",
+            "fadeSpeed": 255
+        }
+    }
+    """
+    )
+
+
     STATE_ON = json.loads(
         """
         {
@@ -459,6 +515,37 @@ class TestWLightBox(DefaultBoxTest):
 
     DEVICE_INFO_MINIMUM = jmerge(DEVICE_INFO, patch_version(20180718))
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180717))
+
+    DEVICE_INFO_UNSPECIFIED_API = json.loads(
+        """
+    {
+        "device": {
+            "deviceName": "My light 1",
+            "type": "wLightBox",
+            "fv": "0.247",
+            "hv": "0.2",
+            "id": "1afe34e750b8"
+        },
+        "network": {
+            "ip": "192.168.1.237",
+            "ssid": "myWiFiNetwork",
+            "station_status": 5,
+            "apSSID": "wLightBox-ap",
+            "apPasswd": ""
+        },
+        "rgbw": {
+            "desiredColor": "abcdefd9",
+            "currentColor": "abcdefd9",
+            "fadeSpeed": 248,
+            "effectSpeed": 2,
+            "effectID": 3,
+            "colorMode": 3
+        }
+    }
+            """
+    )
+
+
 
     STATE_DEFAULT = json.loads(
         """

@@ -162,6 +162,21 @@ class TestShutter(CoverTest):
     DEVICE_INFO_MINIMUM = jmerge(DEVICE_INFO, patch_version(20180604))
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180603))
 
+    DEVICE_INFO_UNSPECIFIED_API = json.loads(
+        """
+    {
+        "device": {
+            "deviceName": "My shutter 1",
+            "type": "shutterBox",
+            "fv": "0.147",
+            "hv": "0.7",
+            "id": "2bee34e750b8",
+            "ip": "172.0.0.1"
+        }
+    }
+    """
+    )
+
     STATE_DEFAULT = json.loads(
         """
     {
@@ -298,6 +313,8 @@ class TestGateBox(CoverTest):
     DEVICE_INFO_MINIMUM = DEVICE_INFO
     DEVICE_INFO_UNSUPPORTED = DEVICE_INFO
 
+    DEVICE_INFO_UNSPECIFIED_API = None  # already handled as default case
+
     STATE_DEFAULT = json.loads(
         """
         {
@@ -427,6 +444,22 @@ class TestGateController(CoverTest):
 
     DEVICE_INFO_MINIMUM = jmerge(DEVICE_INFO, patch_version(20180604))
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180603))
+
+    # NOTE: can't happen with a real device
+    DEVICE_INFO_UNSPECIFIED_API = json.loads(
+        """
+    {
+      "device": {
+        "deviceName": "My gate controller 1",
+        "type": "gateController",
+        "fv": "1.390",
+        "hv": "custom.2.6",
+        "id": "0ff2ffaafe30db9437",
+        "ip": "192.168.1.11"
+      }
+    }
+    """
+    )
 
     STATE_DEFAULT = json.loads(
         """

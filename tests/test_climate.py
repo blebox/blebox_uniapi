@@ -135,6 +135,21 @@ class TestSauna(DefaultBoxTest):
     DEVICE_INFO_MINIMUM = jmerge(DEVICE_INFO, patch_version(20180604))
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180603))
 
+    DEVICE_INFO_UNSPECIFIED_API = json.loads(
+        """
+    {
+        "device": {
+            "deviceName": "My SaunaBox",
+            "type": "saunaBox",
+            "fv": "0.176",
+            "hv": "0.6",
+            "id": "1afe34db9437",
+            "ip": "192.168.1.11"
+        }
+    }
+    """
+    )
+
     def patch_state(state, current, desired):
         """Generate a patch for a JSON state fixture."""
         return f"""

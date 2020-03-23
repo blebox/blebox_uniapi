@@ -63,6 +63,19 @@ class TestAirSensor(DefaultBoxTest):
     DEVICE_INFO_MINIMUM = jmerge(DEVICE_INFO, patch_version(20180403))
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180402))
 
+    DEVICE_INFO_UNSPECIFIED_API = json.loads(
+        """
+    {
+        "deviceName": "MyCustomDeviceName",
+        "type": "airSensor",
+        "fv": "0.973",
+        "hv": "0.6",
+        "id": "1afe34db9437",
+        "ip": "192.168.1.11"
+    }
+    """
+    )
+
     STATE_DEFAULT = json.loads(
         """
     {

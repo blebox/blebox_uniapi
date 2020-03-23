@@ -61,6 +61,21 @@ class TestSwitchBox(DefaultBoxTest):
     DEVICE_INFO_MINIMUM = jmerge(DEVICE_INFO, patch_version(20180604))
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180603))
 
+    DEVICE_INFO_UNSPECIFIED_API = json.loads(
+        """
+    {
+        "device":   {
+            "deviceName": "My switchBox",
+            "type": "switchBox",
+            "fv": "0.247",
+            "hv": "0.2",
+            "id": "1afe34e750b8",
+            "ip": "192.168.1.239"
+        }
+    }
+    """
+    )
+
     STATE_DEFAULT = json.loads(
         """
         {
@@ -178,6 +193,20 @@ class TestSwitchBoxD(DefaultBoxTest):
     DEVICE_INFO_OUTDATED = jmerge(DEVICE_INFO, patch_version(20190808))
     DEVICE_INFO_MINIMUM = jmerge(DEVICE_INFO, patch_version(20190808))
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20190807))
+
+    DEVICE_INFO_UNSPECIFIED_API = json.loads(
+        """
+    {
+        "device": {
+            "deviceName": "My switchBoxD",
+            "type": "switchBoxD",
+            "fv": "0.200",
+            "hv": "0.7",
+            "id": "1afe34e750b8"
+        }
+    }
+    """
+    )
 
     def patch_state(state1, state2):
         """Generate a patch for a JSON state fixture."""

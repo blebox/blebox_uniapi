@@ -189,33 +189,33 @@ class DefaultBoxTest:
         return entity
 
     async def test_future_version(self, aioclient_mock):
-        """Test sensor version support."""
+        """Test version support."""
         await self.allow_get_info(aioclient_mock, self.DEVICE_INFO_FUTURE)
         entity = (await self.async_entities(aioclient_mock))[0]
         assert entity.outdated is False
 
     async def test_latest_version(self, aioclient_mock):
-        """Test sensor version support."""
+        """Test version support."""
         await self.allow_get_info(aioclient_mock, self.DEVICE_INFO_LATEST)
         entity = (await self.async_entities(aioclient_mock))[0]
         assert entity.outdated is False
 
     async def test_outdated_version(self, aioclient_mock):
-        """Test sensor version support."""
+        """Test version support."""
         if self.DEVICE_INFO_MINIMUM != self.DEVICE_INFO_LATEST:
             await self.allow_get_info(aioclient_mock, self.DEVICE_INFO_OUTDATED)
             entity = (await self.async_entities(aioclient_mock))[0]
             assert entity.outdated is True
 
     async def test_minimum_version(self, aioclient_mock):
-        """Test sensor version support."""
+        """Test version support."""
         if self.DEVICE_INFO_MINIMUM != self.DEVICE_INFO_LATEST:
             await self.allow_get_info(aioclient_mock, self.DEVICE_INFO_MINIMUM)
             entity = (await self.async_entities(aioclient_mock))[0]
             assert entity.outdated is True
 
     async def test_unsupported_version(self, aioclient_mock):
-        """Test sensor version support."""
+        """Test version support."""
 
         # only gateBox is same, because no apiLevel
         if self.DEVICE_INFO_MINIMUM != self.DEVICE_INFO_FUTURE:

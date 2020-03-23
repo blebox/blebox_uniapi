@@ -739,3 +739,24 @@ class TestWLightBox(DefaultBoxTest):
         assert entity.is_on is False
         assert entity.hs_color == (0, 0)
         assert entity.white_value == 0x00
+
+    async def test_ancient_response(self, aioclient_mock):
+        """Test e.g. unsupported, ancient device status structure."""
+
+        DEVICE_INFO_ANCIENT_STRUCTURE = json.loads(
+            """
+            {
+                "deviceName": "My light 1",
+                "type": "wLightBox",
+                "fv": "0.623",
+                "hv": "0.3",
+                "universe": 0,
+                "id": "6201943ff9c9",
+                "ip": "192.168.9.45"
+            }
+            """
+        )
+
+        await self.allow_get_info(aioclient_mock, DEVICE_INFO_ANCIENT_STRUCTURE)
+        with pytest.raises(UnsupportedBoxResponse):
+            await self.async_entities(aioclient_mock)

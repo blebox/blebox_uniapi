@@ -217,6 +217,7 @@ class Box:
     async def async_api_command(self, command, value=None):
         method, path, post_data = self._api[command](value)
         if method not in ("GET", "POST"):
+            # TODO: coverage
             raise NotImplementedError(method)
 
         if method == "GET":
@@ -226,6 +227,7 @@ class Box:
 
     def follow(self, data, path):
         if data is None:
+            # TODO: coverage
             raise RuntimeError(f"bad argument: data {data}")
 
         results = path.split("/")

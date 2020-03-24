@@ -443,6 +443,13 @@ class TestGateBox(CoverTest):
         ):
             await entity.async_stop_cover()
 
+    async def test_set_position(self, aioclient_mock):
+        """Test cover position setting."""
+
+        entity = await self.updated(aioclient_mock, self.STATE_CLOSED)
+        with pytest.raises(NotImplementedError):
+            await entity.async_set_cover_position(**{ATTR_POSITION: 1})  # almost closed
+
 
 class TestGateController(CoverTest):
     """Tests for cover devices representing a BleBox gateController."""

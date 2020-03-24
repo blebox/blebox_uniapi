@@ -29,7 +29,7 @@ class Slider:
 class Shutter(Slider):
     @property
     def min_position(self):
-        return -1
+        return -1  # "unknown"
 
 
 class Gate(Slider):
@@ -46,10 +46,6 @@ class GateBox:
     @property
     def min_position(self):
         return 0
-
-    @property
-    def min_position(self):
-        return -1  # "unknown"
 
     @property
     def open_command(self):

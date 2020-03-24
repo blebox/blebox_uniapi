@@ -128,6 +128,9 @@ class MisconfiguredDevice(BoxError):
     pass
 
 
+# development bugs that shouldn't normally be possible
+
+
 class DeviceStateNotAvailable(BoxError):
     def __str__(self):
-        return "device state not available yet"
+        return "device state not available yet"  # pragma: no cover

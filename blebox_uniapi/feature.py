@@ -29,7 +29,7 @@ class Feature:
         # TODO: better exception?
         if product.last_data is None:
             # TODO: coverage
-            raise DeviceStateNotAvailable
+            raise DeviceStateNotAvailable  # pragma: no cover
 
         methods = self._methods
         return product.follow(product.last_data, methods[name])

@@ -225,8 +225,7 @@ class Products:
         try:
             product_type = info["type"]
         except KeyError:
-            # TODO: coverage
-            raise UnsupportedBoxResponse("(no type in info)")
+            raise UnsupportedBoxResponse("Missing 'type' field:", info)
 
         try:
             args = data[product_type]

@@ -218,8 +218,7 @@ class Box:
     async def async_api_command(self, command, value=None):
         method, path, post_data = self._api[command](value)
         if method not in ("GET", "POST"):
-            # TODO: coverage
-            raise NotImplementedError(method)
+            raise NotImplementedError(method)  # pragma: no cover
 
         if method == "GET":
             self._update_last_data(await self.async_api_call(path))
@@ -228,8 +227,7 @@ class Box:
 
     def follow(self, data, path):
         if data is None:
-            # TODO: coverage
-            raise RuntimeError(f"bad argument: data {data}")
+            raise RuntimeError(f"bad argument: data {data}")  # pragma: no cover
 
         results = path.split("/")
         current_tree = data
@@ -253,7 +251,7 @@ class Box:
                 if not found:
                     raise JPathFailed(f"with: {name}={value}", path, data)
 
-                continue
+                continue  # pragma: no cover
 
             with_int_value = re.compile("^\\[(.*)=(\\d+)\\]$")
             match = with_int_value.match(chunk)
@@ -271,7 +269,7 @@ class Box:
 
                 if not found:
                     raise JPathFailed(f"with: {name}={value}", path, data)
-                continue
+                continue  # pragma: no cover
 
             with_index = re.compile("^\\[(\\d+)\\]$")
             match = with_index.match(chunk)

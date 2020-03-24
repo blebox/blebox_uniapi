@@ -64,6 +64,12 @@ def test_json_paths(mock_session, data):
     ):
         box.follow(json.loads("""[4]"""), "foo")
 
+    with pytest.raises(
+        error.JPathFailed,
+        match=r"list expected but got {'foo': \[4\]} at .* within .*",
+    ):
+        box.follow(json.loads("""{"foo": [4]}"""), "[bar=0]/value")
+
 
 def test_without_id(mock_session, data):
     with pytest.raises(

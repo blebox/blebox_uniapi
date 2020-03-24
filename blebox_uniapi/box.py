@@ -261,6 +261,11 @@ class Box:
 
                 found = False
 
+                if not isinstance(current_tree, list):
+                    raise JPathFailed(
+                        f"list expected but got {current_tree}", path, data
+                    )
+
                 for item in current_tree:
                     if item[name] == value:
                         current_tree = item

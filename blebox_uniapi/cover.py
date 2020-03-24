@@ -1,6 +1,7 @@
 from .error import MisconfiguredDevice, DeviceStateNotAvailable
 from .feature import Feature
 
+
 class Slider:
     def read_state(self, alias, raw_value, product):
         raw = raw_value("state")
@@ -26,17 +27,29 @@ class Slider:
 
 
 class Shutter(Slider):
-    pass
+    @property
+    def min_position(self):
+        return -1
 
 
 class Gate(Slider):
-    pass
+    @property
+    def min_position(self):
+        return 0
 
 
 class GateBox:
     @property
     def is_slider(self):
         return False
+
+    @property
+    def min_position(self):
+        return 0
+
+    @property
+    def min_position(self):
+        return -1  # "unknown"
 
     @property
     def open_command(self):
@@ -129,7 +142,8 @@ class Cover(Feature):
 
         alias = self._alias
         raw = self.raw_value("desired")
-        return self._product.expect_int(alias, raw, 100, 0)
+        min_position = self._attributes.min_position
+        return self._product.expect_int(alias, raw, 100, min_position)
 
     # TODO: refactor
     def _read_state(self):

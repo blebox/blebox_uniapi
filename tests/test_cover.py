@@ -220,6 +220,7 @@ class TestShutter(CoverTest):
     STATE_OPENING = jmerge(STATE_DEFAULT, patch_state(1, 34, 0))
     STATE_MINIMALLY_OPENING = jmerge(STATE_DEFAULT, patch_state(1, 97, 100))
     STATE_STOPPED = jmerge(STATE_DEFAULT, patch_state(2, 34, 100))
+    STATE_UNKNOWN = jmerge(STATE_DEFAULT, patch_state(2, 34, -1))
 
     async def test_init(self, aioclient_mock):
         """Test cover default state."""
@@ -290,6 +291,11 @@ class TestShutter(CoverTest):
         self.assert_state(entity, STATE_OPENING)
         self.allow_get(aioclient_mock, "/s/s", self.STATE_STOPPED)
         await entity.async_stop_cover()
+        self.assert_state(entity, STATE_OPEN)
+
+    async def test_unkown_position(self, aioclient_mock):
+        """Test handling cover at unknown position."""
+        entity = await self.updated(aioclient_mock, self.STATE_UNKNOWN)
         self.assert_state(entity, STATE_OPEN)
 
 

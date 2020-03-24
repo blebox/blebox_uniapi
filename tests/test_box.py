@@ -91,7 +91,7 @@ def test_without_type(mock_session, data):
 def test_with_unknown_type(mock_session, data):
     with pytest.raises(
         error.UnsupportedBoxResponse,
-        match="unknownBox:abcd1234ef at 172.1.2.3:80 is not a supported type",
+        match=r"'foobar' \(unknownBox:abcd1234ef/1.23 at 172.1.2.3:80\) is not a supported type",
     ):
         data["type"] = "unknownBox"
         Box(mock_session, data)

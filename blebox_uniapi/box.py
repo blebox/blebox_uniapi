@@ -49,20 +49,6 @@ class Box:
             raise UnsupportedBoxResponse(info, f"{location} has no type") from ex
         location = f"{type}:{unique_id} at {address}"
 
-        # Here due to circular dependency
-        from .products import Products
-
-        try:
-            config = Products.CONFIG["types"][type]
-        except KeyError as ex:
-            raise UnsupportedBoxResponse(
-                info, f"{location} is not a supported type"
-            ) from ex
-
-        # Ok to crash here, since it's a bug
-        self._data_path = config["api_path"]
-        min_supported, max_supported = config["api_level_range"]
-
         try:
             name = info["deviceName"]
         except KeyError as ex:
@@ -90,7 +76,28 @@ class Box:
             if type != "gateBox":
                 raise UnsupportedBoxResponse(info, f"{location} has no apiLevel")
 
-            # TODO: assume all are supported
+            level = None
+
+        if type == "switchBox":
+            if level < 20190808:
+                type = "switchBox0"
+
+        # Here due to circular dependency
+        from .products import Products
+
+        try:
+            config = Products.CONFIG["types"][type]
+        except KeyError as ex:
+            raise UnsupportedBoxResponse(
+                info, f"{location} is not a supported type"
+            ) from ex
+
+        # Ok to crash here, since it's a bug
+        self._data_path = config["api_path"]
+        min_supported, max_supported = config["api_level_range"]
+
+        # TODO: assume all are supported
+        if level is None:
             level = min_supported
 
         if level < min_supported:

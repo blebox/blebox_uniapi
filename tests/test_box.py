@@ -126,9 +126,12 @@ def test_without_api_level(mock_session, data):
         del data["apiLevel"]
         Box(mock_session, data)
 
+
 def test_with_init_failure(mock_session, data):
-    with patch("blebox_uniapi.box.AirQuality", spec_set=True, autospec=True) as mock_sensor:
-        mock_sensor.side_effect=KeyError
+    with patch(
+        "blebox_uniapi.box.AirQuality", spec_set=True, autospec=True
+    ) as mock_sensor:
+        mock_sensor.side_effect = KeyError
         with pytest.raises(
             error.UnsupportedBoxResponse,
             match=r"'foobar' \(airSensor:abcd1234ef/1.23 at 172.1.2.3:80\) failed to initialize: ",
@@ -148,36 +151,47 @@ def test_properties(mock_session, data):
     assert (1, 0, 0) == box.version
     assert True is box.outdated
 
+
 def test_validations(mock_session, data):
     box = Box(mock_session, data)
 
-    with pytest.raises(error.BadFieldExceedsMax, match=r"foobar.field1 is 123 which exceeds max \(100\)"):
+    with pytest.raises(
+        error.BadFieldExceedsMax,
+        match=r"foobar.field1 is 123 which exceeds max \(100\)",
+    ):
         box.check_int_range(123, "field1", 100, 0)
 
-    with pytest.raises(error.BadFieldLessThanMin, match=r"foobar.field1 is 123 which is less than minimum \(200\)"):
+    with pytest.raises(
+        error.BadFieldLessThanMin,
+        match=r"foobar.field1 is 123 which is less than minimum \(200\)",
+    ):
         box.check_int_range(123, "field1", 300, 200)
 
     with pytest.raises(error.BadFieldMissing, match=r"foobar.field1 is missing"):
         box.check_int(None, "field1", 300, 200)
 
-    with pytest.raises(error.BadFieldNotANumber, match=r"foobar.field1 is '123' which is not a number"):
+    with pytest.raises(
+        error.BadFieldNotANumber, match=r"foobar.field1 is '123' which is not a number"
+    ):
         box.check_int("123", "field1", 300, 200)
-
-
 
     with pytest.raises(error.BadFieldMissing, match=r"foobar.field1 is missing"):
         box.check_hex_str(None, "field1", 300, 200)
 
-    with pytest.raises(error.BadFieldNotAString, match=r"foobar.field1 is 123 which is not a string"):
+    with pytest.raises(
+        error.BadFieldNotAString, match=r"foobar.field1 is 123 which is not a string"
+    ):
         box.check_hex_str(123, "field1", 300, 200)
-
-
 
     with pytest.raises(error.BadFieldMissing, match=r"foobar.field1 is missing"):
         box.check_rgbw(None, "field1")
 
-    with pytest.raises(error.BadFieldNotAString, match=r"foobar.field1 is 123 which is not a string"):
+    with pytest.raises(
+        error.BadFieldNotAString, match=r"foobar.field1 is 123 which is not a string"
+    ):
         box.check_rgbw(123, "field1")
 
-    with pytest.raises(error.BadFieldNotRGBW, match=r"foobar.field1 is 123 which is not a rgbw string"):
+    with pytest.raises(
+        error.BadFieldNotRGBW, match=r"foobar.field1 is 123 which is not a rgbw string"
+    ):
         box.check_rgbw("123", "field1")

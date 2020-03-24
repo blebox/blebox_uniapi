@@ -1,4 +1,4 @@
-from .error import MisconfiguredDevice, DeviceStateNotAvailable
+from .error import MisconfiguredDevice
 from .feature import Feature
 
 

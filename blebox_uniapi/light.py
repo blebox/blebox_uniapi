@@ -13,6 +13,7 @@ class Light(Feature):
             "brightness?": False,
             "white?": True,
             "color?": True,
+            "to_value": lambda int_value: int_value,
             "validator": lambda product, alias, raw: product.expect_rgbw(alias, raw),
         },
         "wLightBoxS": {
@@ -21,6 +22,7 @@ class Light(Feature):
             "brightness?": True,
             "white?": False,
             "color?": False,
+            "to_value": lambda int_value: "{:02x}".format(int_value),
             "validator": lambda product, alias, raw: product.expect_hex_str(
                 alias, raw, 255, 0
             ),
@@ -31,6 +33,7 @@ class Light(Feature):
             "brightness?": True,
             "white?": False,
             "color?": False,
+            "to_value": lambda int_value: int_value,
             "validator": lambda product, alias, raw: product.expect_int(
                 alias, raw, 255, 0
             ),
@@ -56,10 +59,22 @@ class Light(Feature):
         if brightness is None:
             return value
 
+        if not isinstance(brightness, int):
+            raise BadOnValueError(
+                f"adjust_brightness called with bad parameter ({brightness} is {type(value)} instead of int)"
+            )
+
+        if brightness > 255:
+            raise BadOnValueError(
+                f"adjust_brightness called with bad parameter ({brightness} is greater than 255)"
+            )
+
         if not self.supports_brightness:
             return value
 
-        return brightness  # ok since not implemented for rgbw
+        method = self.CONFIG[self._product.type]["to_value"]
+
+        return method(brightness)  # ok since not implemented for rgbw
 
     @property
     def supports_white(self):
@@ -101,6 +116,14 @@ class Light(Feature):
     def after_update(self):
         alias = self._alias
         product = self._product
+        if product.last_data is None:
+            self._desired_raw = None
+            self._desired = None
+            self._is_on = None
+            if product.type == "wLightBox":
+                self._white_value = None
+            return
+
         raw = self.raw_value("desired")
 
         self._desired_raw = raw
@@ -135,7 +158,9 @@ class Light(Feature):
 
     async def async_on(self, value):
         if not isinstance(value, type(self._off_value)):
-            raise BadOnValueError(f"turn_on called with bad parameter ({value})")
+            raise BadOnValueError(
+                f"turn_on called with bad parameter ({value} is {type(value)}, compared to {self._off_value} which is {type(self._off_value)})"
+            )
 
         if value == self._off_value:
             raise BadOnValueError(f"turn_on called with invalid value ({value})")

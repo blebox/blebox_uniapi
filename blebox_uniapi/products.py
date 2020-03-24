@@ -204,8 +204,8 @@ class Products:
             data = {
                 "switchBox": [info],
                 "dimmerBox": [info, root],
-                "wLightBoxS": [info, root],
-                "wLightBox": [info, root],
+                "wLightBoxS": [info],
+                "wLightBox": [info],
                 "gateController": [info],
                 "saunaBox": [info],
                 "switchBoxD": [info],

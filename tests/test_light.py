@@ -96,6 +96,9 @@ class BleBoxLightEntity(CommonEntity):
     def hs_color(self):
         """Return the hue and saturation."""
         rgbw_hex = self._feature.rgbw_hex
+        if rgbw_hex is None:
+            return None
+
         r, g, b, x = rgb_hex_to_rgb_list(rgbw_hex)
         return color_RGB_to_hs(r, g, b)
 
@@ -326,22 +329,13 @@ class TestWLightBoxS(DefaultBoxTest):
         "device": {
             "deviceName": "My wLightBoxS",
             "type": "wLightBoxS",
-            "fv": "0.247",
-            "hv": "0.2",
+            "fv": "0.924",
+            "hv": "0.1",
+            "universe": 0,
             "id": "1afe34e750b8",
-            "apiLevel": 20180718
-        },
-        "network": {
-            "ip": "192.168.1.239",
-            "ssid": "myWiFiNetwork",
-            "station_status": 5,
-            "apSSID": "wLightBoxS-ap",
-            "apPasswd": ""
-        },
-        "light": {
-            "desiredColor": "E3",
-            "currentColor": "DF",
-            "fadeSpeed": 255
+            "apiLevel": 20180718,
+            "ip": "192.168.9.13",
+            "availableFv": null
         }
     }
     """
@@ -378,21 +372,20 @@ class TestWLightBoxS(DefaultBoxTest):
             "apPasswd": ""
         },
         "light": {
-            "desiredColor": "E3",
-            "currentColor": "DF",
+            "desiredColor": "e3",
+            "currentColor": "df",
             "fadeSpeed": 255
         }
     }
     """
     )
 
-
     STATE_ON = json.loads(
         """
         {
             "light": {
-                "desiredColor": "AB",
-                "currentColor": "CD",
+                "desiredColor": "ab",
+                "currentColor": "cd",
                 "fadeSpeed": 255
             }
         }
@@ -403,8 +396,8 @@ class TestWLightBoxS(DefaultBoxTest):
         """
         {
             "light": {
-                "desiredColor": "FF",
-                "currentColor": "CE",
+                "desiredColor": "ff",
+                "currentColor": "ce",
                 "fadeSpeed": 255
             }
         }
@@ -434,9 +427,9 @@ class TestWLightBoxS(DefaultBoxTest):
         assert entity.unique_id == "BleBox-wLightBoxS-1afe34e750b8-color"
 
         assert entity.supported_features & SUPPORT_BRIGHTNESS
-        assert entity.brightness == 0xE3
+        assert entity.brightness is None
 
-        assert entity.is_on is True  # state already available
+        assert entity.is_on is None
 
     async def test_update(self, aioclient_mock):
         """Test light updating."""
@@ -466,26 +459,34 @@ class TestWLightBoxS(DefaultBoxTest):
         async def turn_on():
             await entity.async_turn_on()
 
-        await self.allow_set_brightness(turn_on, aioclient_mock, 0xFF, self.STATE_FULL_ON)
+        await self.allow_set_brightness(
+            turn_on, aioclient_mock, 0xFF, self.STATE_FULL_ON
+        )
 
         assert entity.is_on is True
-        assert entity.brightness == 0xff
-
-    async def test_on_with_bad_value(self, aioclient_mock):
-        """Test light on with off value."""
-        entity = await self.updated(aioclient_mock, self.STATE_OFF)
-        assert entity.is_on is False
-
-        with pytest.raises(BadOnValueError, match=r"turn_on called with invalid value"):
-            await entity.async_turn_on(brightness="00")
+        assert entity.brightness == 0xFF
 
     async def test_on_with_bad_value_type(self, aioclient_mock):
         """Test light on with off value."""
         entity = await self.updated(aioclient_mock, self.STATE_OFF)
         assert entity.is_on is False
 
-        with pytest.raises(BadOnValueError, match=r"turn_on called with bad parameter"):
-            await entity.async_turn_on(brightness=0)
+        with pytest.raises(
+            BadOnValueError,
+            match=r"adjust_brightness called with bad parameter \(00 is <class 'str'> instead of int\)",
+        ):
+            await entity.async_turn_on(brightness="00")
+
+    async def test_on_with_bad_value_exceeding_max(self, aioclient_mock):
+        """Test light on with off value."""
+        entity = await self.updated(aioclient_mock, self.STATE_OFF)
+        assert entity.is_on is False
+
+        with pytest.raises(
+            BadOnValueError,
+            match=r"adjust_brightness called with bad parameter \(1234 is greater than 255\)",
+        ):
+            await entity.async_turn_on(brightness=1234)
 
     async def test_off(self, aioclient_mock):
         """Test light off."""
@@ -516,28 +517,13 @@ class TestWLightBox(DefaultBoxTest):
         "device": {
             "deviceName": "My light 1",
             "type": "wLightBox",
-            "fv": "0.247",
-            "hv": "0.2",
+            "fv": "0.993",
+            "hv": "4.3",
             "id": "1afe34e750b8",
             "apiLevel": 20190808
-        },
-        "network": {
-            "ip": "192.168.1.237",
-            "ssid": "myWiFiNetwork",
-            "station_status": 5,
-            "apSSID": "wLightBox-ap",
-            "apPasswd": ""
-        },
-        "rgbw": {
-            "desiredColor": "abcdefd9",
-            "currentColor": "abcdefd9",
-            "fadeSpeed": 248,
-            "effectSpeed": 2,
-            "effectID": 3,
-            "colorMode": 3
         }
     }
-            """
+    """
     )
 
     def patch_version(apiLevel):
@@ -581,8 +567,6 @@ class TestWLightBox(DefaultBoxTest):
     }
             """
     )
-
-
 
     STATE_DEFAULT = json.loads(
         """
@@ -644,15 +628,15 @@ class TestWLightBox(DefaultBoxTest):
         assert entity.unique_id == "BleBox-wLightBox-1afe34e750b8-color"
 
         assert entity.supported_features & SUPPORT_WHITE_VALUE
-        assert entity.white_value == 0xD9
+        assert entity.white_value is None
 
         assert entity.supported_features & SUPPORT_COLOR
-        assert entity.hs_color == (210.0, 28.452)
-        assert entity.white_value == 0xD9
+        assert entity.hs_color is None
+        assert entity.white_value is None
 
         # assert entity.supported_features & SUPPORT_BRIGHTNESS
         # assert entity.brightness == 123
-        assert entity.is_on is True  # state already available
+        assert entity.is_on is None
 
     async def test_update(self, aioclient_mock):
         """Test light updating."""

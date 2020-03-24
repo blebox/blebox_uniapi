@@ -2,6 +2,14 @@
 History
 =======
 
+1.1.0 (2020-03-24)
+------------------
+
+* fix switchBox support
+* fix minimum position handling
+* drop Python 3.6 support (still may work)
+* misc fixes, cleanup and increased test coverage
+
 1.0.0 (2020-03-24)
 ------------------
 

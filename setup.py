@@ -14,7 +14,7 @@ requirements = ['aiohttp>=3', 'semver>=2.9.1']
 
 setup_requirements = ['pytest-runner', ]
 
-test_requirements = ['pytest>=3', 'asynctest>=0.13', 'semver', 'deepmerge']
+test_requirements = ['pytest>=3', 'pytest-asyncio>=0.10.0', 'asynctest>=0.13', 'semver', 'deepmerge']
 
 setup(
     author="Gadget Mobile",

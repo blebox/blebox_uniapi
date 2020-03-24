@@ -27,7 +27,7 @@ retype = type(re.compile(""))
 
 
 @pytest.fixture
-def aioclient_mock(loop, aiohttp_client):
+def aioclient_mock():
     with patch("aiohttp.ClientSession", spec_set=True, autospec=True) as mocked_session:
         yield mocked_session.return_value
 

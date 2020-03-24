@@ -12,8 +12,6 @@ from asynctest import patch, Mock, CoroutineMock
 from blebox_uniapi.session import ApiHost as Session
 from blebox_uniapi import error
 
-pytestmark = pytest.mark.asyncio
-
 
 @pytest.fixture
 def mocked_client():

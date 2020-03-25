@@ -3,3 +3,4 @@
 --ignore-dir=.tox
 --ignore-dir=htmlcov
 --ignore-dir=build
+--ignore-dir=.eggs

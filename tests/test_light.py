@@ -446,7 +446,7 @@ class TestWLightBoxS(DefaultBoxTest):
         await self.allow_post(
             code,
             aioclient_mock,
-            "/api/rgbw/set",
+            "/api/light/set",
             json.dumps({"light": {"desiredColor": raw}}),
             response,
         )

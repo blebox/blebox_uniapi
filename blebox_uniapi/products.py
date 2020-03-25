@@ -190,7 +190,7 @@ class Products:
                 "api": {
                     "set": lambda x: (
                         "POST",
-                        "/api/rgbw/set",
+                        "/api/light/set",
                         f'{{"light": {{"desiredColor": "{x}"}}}}',
                     )
                 },

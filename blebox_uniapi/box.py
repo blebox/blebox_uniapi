@@ -2,6 +2,7 @@
 
 import semver
 import re
+import asyncio
 
 from .sensor import Temperature
 from .cover import Cover
@@ -28,6 +29,7 @@ DEFAULT_PORT = 80
 class Box:
     # TODO: pass IP? (For better error messages).
     def __init__(self, api_session, info, state_root=None):
+        self._sem = asyncio.BoundedSemaphore()
         self._session = api_session
         self._name = "(unnamed)"
         self._data_path = None
@@ -189,7 +191,7 @@ class Box:
     # TODO: report timestamp of last measurement (if possible)
 
     async def async_update_data(self):
-        self._update_last_data(await self.async_api_call(self._data_path))
+        await self._async_api("GET", self._data_path)
 
     def _update_last_data(self, new_data):
         self._last_data = new_data
@@ -219,18 +221,9 @@ class Box:
         outdated = current < latest_version
         return (current, outdated)
 
-    async def async_api_call(self, path):
-        return await self._session.async_api_get(path)
-
     async def async_api_command(self, command, value=None):
-        method, path, post_data = self._api[command](value)
-        if method not in ("GET", "POST"):
-            raise NotImplementedError(method)  # pragma: no cover
-
-        if method == "GET":
-            self._update_last_data(await self.async_api_call(path))
-        else:
-            self._update_last_data(await self._session.async_api_post(path, post_data))
+        method, *args = self._api[command](value)
+        return await self._async_api(method, *args)
 
     def follow(self, data, path):
         if data is None:
@@ -356,3 +349,14 @@ class Box:
         if len(value) != 8:
             raise BadFieldNotRGBW(self.name, field, value)
         return value
+
+    async def _async_api(self, method, path, post_data=None):
+        if method not in ("GET", "POST"):
+            raise NotImplementedError(method)  # pragma: no cover
+
+        async with self._sem:
+            if method == "GET":
+                response = await self._session.async_api_get(path)
+            else:
+                response = await self._session.async_api_post(path, post_data)
+            self._update_last_data(response)

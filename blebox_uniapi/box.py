@@ -28,7 +28,7 @@ DEFAULT_PORT = 80
 
 class Box:
     # TODO: pass IP? (For better error messages).
-    def __init__(self, api_session, info, state_root=None):
+    def __init__(self, api_session, info):
         self._sem = asyncio.BoundedSemaphore()
         self._session = api_session
         self._name = "(unnamed)"
@@ -145,7 +145,7 @@ class Box:
 
         self._config = config
 
-        self._update_last_data(state_root)
+        self._update_last_data(None)
 
     @property
     def name(self):

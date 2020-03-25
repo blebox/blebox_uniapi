@@ -211,24 +211,24 @@ class Products:
         try:
             info = root["device"]
             data = {
-                "switchBox": [info],
-                "dimmerBox": [info, root],
-                "wLightBoxS": [info],
-                "wLightBox": [info],
-                "gateController": [info],
-                "saunaBox": [info],
-                "switchBoxD": [info],
-                "shutterBox": [info],
-                "tempSensor": [info],
+                "switchBox": info,
+                "dimmerBox": info,
+                "wLightBoxS": info,
+                "wLightBox": info,
+                "gateController": info,
+                "saunaBox": info,
+                "switchBoxD": info,
+                "shutterBox": info,
+                "tempSensor": info,
                 # in case it's ever fixed
-                "airSensor": [info],
-                "gateBox": [info],
+                "airSensor": info,
+                "gateBox": info,
             }
         except KeyError:
             info = root
             data = {
-                "airSensor": [root],
-                "gateBox": [root],
+                "airSensor": root,
+                "gateBox": root,
             }
 
         try:
@@ -237,8 +237,8 @@ class Products:
             raise UnsupportedBoxResponse("Missing 'type' field:", info)
 
         try:
-            args = data[product_type]
+            info = data[product_type]
         except KeyError:
             raise UnsupportedBoxResponse(product_type)
 
-        return Box(api_host, *args)
+        return Box(api_host, info)

@@ -249,9 +249,9 @@ class TestDimmer(DefaultBoxTest):
         assert entity.unique_id == "BleBox-dimmerBox-1afe34e750b8-brightness"
 
         assert entity.supported_features & SUPPORT_BRIGHTNESS
-        assert entity.brightness == 65
+        assert entity.brightness is None
 
-        assert entity.is_on is True
+        assert entity.is_on is None
 
     async def test_update(self, aioclient_mock):
         """Test light updating."""

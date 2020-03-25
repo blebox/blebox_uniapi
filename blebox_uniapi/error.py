@@ -1,23 +1,36 @@
 class Error(RuntimeError):
+    """Generic blebox_uniapi error."""
+
     pass
 
 
-# Basic http client errors:
+# Likely fixable/retriable network/busy errors
 
 
-class TimeoutError(Error):
+class TemporaryError(Error):
     pass
+
+
+class ConnectionError(TemporaryError):
+    pass
+
+
+class TimeoutError(ConnectionError):
+    pass
+
+
+# Likely unfixable device errors (do not setup)
 
 
 class ClientError(Error):
     pass
 
 
-class HttpError(Error):
+class HttpError(ClientError):
     pass
 
 
-# api errors
+# API errors
 
 
 class BoxError(Error):

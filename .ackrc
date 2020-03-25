@@ -2,3 +2,4 @@
 --ignore-dir=venv
 --ignore-dir=.tox
 --ignore-dir=htmlcov
+--ignore-dir=build

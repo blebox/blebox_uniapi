@@ -44,12 +44,11 @@ class ApiHost:
             return await response.json()
 
         # TODO: just log errors instead?
-        except aiohttp.ServerTimeoutError:
-            raise error.TimeoutError("Timeout trying to connect")
+        except aiohttp.ServerTimeoutError as ex:
+            raise error.TimeoutError(f"Timeout trying to connect ({ex})") from ex
 
         except aiohttp.ClientError as ex:
-            self._logger.debug("ERR: %s", ex)
-            raise error.ClientError("Client Error: %s", ex)
+            raise error.ClientError(f"Client Error {ex}") from ex
 
     async def async_api_get(self, path):
         return await self.async_request(path, self._session.get)

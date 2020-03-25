@@ -40,7 +40,7 @@ class TestAirSensor(DefaultBoxTest):
     DEVICE_INFO = json.loads(
         """
     {
-        "deviceName": "MyCustomDeviceName",
+        "deviceName": "My air 1",
         "type": "airSensor",
         "fv": "0.973",
         "hv": "0.6",
@@ -66,7 +66,7 @@ class TestAirSensor(DefaultBoxTest):
     DEVICE_INFO_UNSPECIFIED_API = json.loads(
         """
     {
-        "deviceName": "MyCustomDeviceName",
+        "deviceName": "My air 1",
         "type": "airSensor",
         "fv": "0.973",
         "hv": "0.6",
@@ -117,7 +117,7 @@ class TestAirSensor(DefaultBoxTest):
         await self.allow_get_info(aioclient_mock)
         entity = (await self.async_entities(aioclient_mock))[0]
 
-        assert entity.name == "airSensor-0.air"
+        assert entity.name == "My air 1 (airSensor#0.air)"
         assert entity.icon == "mdi:blur"
         assert entity.unique_id == "BleBox-airSensor-1afe34db9437-0.air"
         assert entity.particulate_matter_0_1 is None

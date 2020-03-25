@@ -228,7 +228,7 @@ class TestShutter(CoverTest):
         await self.allow_get_info(aioclient_mock)
         entity = (await self.async_entities(aioclient_mock))[0]
 
-        assert entity.name == "shutterBox-position"
+        assert entity.name == "My shutter 1 (shutterBox#position)"
         assert entity.unique_id == "BleBox-shutterBox-2bee34e750b8-position"
 
         assert entity.device_class == DEVICE_CLASS_SHUTTER
@@ -362,7 +362,7 @@ class TestGateBox(CoverTest):
         await self.allow_get_info(aioclient_mock)
         entity = (await self.async_entities(aioclient_mock))[0]
 
-        assert entity.name == "gateBox-position"
+        assert entity.name == "My gate 1 (gateBox#position)"
         assert entity.unique_id == "BleBox-gateBox-1afe34db9437-position"
         assert entity.device_class == DEVICE_CLASS_DOOR
         assert entity.supported_features & SUPPORT_OPEN
@@ -541,7 +541,7 @@ class TestGateController(CoverTest):
         await self.allow_get_info(aioclient_mock)
         entity = (await self.async_entities(aioclient_mock))[0]
 
-        assert entity.name == "gateController-position"
+        assert entity.name == "My gate controller 1 (gateController#position)"
         assert entity.unique_id == "BleBox-gateController-0ff2ffaafe30db9437-position"
 
         assert entity.device_class == DEVICE_CLASS_DOOR

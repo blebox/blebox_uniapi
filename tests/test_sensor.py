@@ -120,5 +120,5 @@ class TestTempSensor(DefaultBoxTest):
         await entity.async_update()
 
         # TODO: include product name?
-        assert entity.name == "tempSensor-0.temperature"
+        assert entity.name == "My tempSensor (tempSensor#0.temperature)"
         assert entity.state == 25.2

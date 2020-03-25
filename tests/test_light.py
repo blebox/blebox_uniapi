@@ -245,7 +245,7 @@ class TestDimmer(DefaultBoxTest):
         await self.allow_get_info(aioclient_mock)
         entity = (await self.async_entities(aioclient_mock))[0]
 
-        assert entity.name == "dimmerBox-brightness"
+        assert entity.name == "My dimmer (dimmerBox#brightness)"
         assert entity.unique_id == "BleBox-dimmerBox-1afe34e750b8-brightness"
 
         assert entity.supported_features & SUPPORT_BRIGHTNESS
@@ -423,7 +423,7 @@ class TestWLightBoxS(DefaultBoxTest):
         await self.allow_get_info(aioclient_mock)
         entity = (await self.async_entities(aioclient_mock))[0]
 
-        assert entity.name == "wLightBoxS-brightness"
+        assert entity.name == "My wLightBoxS (wLightBoxS#brightness)"
         assert entity.unique_id == "BleBox-wLightBoxS-1afe34e750b8-brightness"
 
         assert entity.supported_features & SUPPORT_BRIGHTNESS
@@ -624,7 +624,7 @@ class TestWLightBox(DefaultBoxTest):
         await self.allow_get_info(aioclient_mock)
         entity = (await self.async_entities(aioclient_mock))[0]
 
-        assert entity.name == "wLightBox-color"
+        assert entity.name == "My light 1 (wLightBox#color)"
         assert entity.unique_id == "BleBox-wLightBox-1afe34e750b8-color"
 
         assert entity.supported_features & SUPPORT_WHITE_VALUE

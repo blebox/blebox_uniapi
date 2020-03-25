@@ -100,7 +100,7 @@ class TestSwitchBox0(DefaultBoxTest):
 
         entity = (await self.async_entities(aioclient_mock))[0]
 
-        assert entity.name == "switchBox0-0.relay"
+        assert entity.name == "My switchBox (switchBox0#0.relay)"
         assert entity.unique_id == "BleBox-switchBox0-1afe34e750b8-0.relay"
 
         assert entity.device_class == DEVICE_CLASS_SWITCH
@@ -216,7 +216,7 @@ class TestSwitchBox(DefaultBoxTest):
 
         entity = (await self.async_entities(aioclient_mock))[0]
 
-        assert entity.name == "switchBox-0.relay"
+        assert entity.name == "My switchBox (switchBox#0.relay)"
         assert entity.unique_id == "BleBox-switchBox-1afe34e750b8-0.relay"
 
         assert entity.device_class == DEVICE_CLASS_SWITCH
@@ -346,13 +346,13 @@ class TestSwitchBoxD(DefaultBoxTest):
 
         entity = entities[0]
         # TODO: include output names?
-        assert entity.name == "switchBoxD-0.relay"
+        assert entity.name == "My switchBoxD (switchBoxD#0.relay)"
         assert entity.unique_id == "BleBox-switchBoxD-1afe34e750b8-0.relay"
         assert entity.device_class == DEVICE_CLASS_SWITCH
         assert entity.is_on is None
 
         entity = entities[1]
-        assert entity.name == "switchBoxD-1.relay"
+        assert entity.name == "My switchBoxD (switchBoxD#1.relay)"
         assert entity.unique_id == "BleBox-switchBoxD-1afe34e750b8-1.relay"
         assert entity.device_class == DEVICE_CLASS_SWITCH
         assert entity.is_on is None

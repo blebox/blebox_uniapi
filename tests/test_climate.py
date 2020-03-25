@@ -194,7 +194,7 @@ class TestSauna(DefaultBoxTest):
         await self.allow_get_info(aioclient_mock)
         entity = (await self.async_entities(aioclient_mock))[0]
 
-        assert entity.name == "saunaBox-thermostat"
+        assert entity.name == "My SaunaBox (saunaBox#thermostat)"
         assert entity.unique_id == "BleBox-saunaBox-1afe34db9437-thermostat"
 
         assert entity.device_class is None

@@ -16,7 +16,8 @@ class Feature:
 
     @property
     def full_name(self):
-        return f"{self._product.type}-{self._alias}"
+        product = self._product
+        return f"{product.name} ({product.type}#{self._alias})"
 
     @property
     def device_class(self):

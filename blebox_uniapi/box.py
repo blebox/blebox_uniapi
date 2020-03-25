@@ -3,6 +3,7 @@
 import semver
 import re
 import asyncio
+import time
 
 from .sensor import Temperature
 from .cover import Cover
@@ -29,6 +30,7 @@ DEFAULT_PORT = 80
 class Box:
     # TODO: pass IP? (For better error messages).
     def __init__(self, api_session, info):
+        self._last_real_update = None
         self._sem = asyncio.BoundedSemaphore()
         self._session = api_session
         self._name = "(unnamed)"
@@ -223,6 +225,7 @@ class Box:
 
     async def async_api_command(self, command, value=None):
         method, *args = self._api[command](value)
+        self._last_real_update = None  # force update
         return await self._async_api(method, *args)
 
     def follow(self, data, path):
@@ -350,13 +353,24 @@ class Box:
             raise BadFieldNotRGBW(self.name, field, value)
         return value
 
+    def _has_recent_data(self):
+        last = self._last_real_update
+        return time.time() -2 <= last if last is not None else False
+
     async def _async_api(self, method, path, post_data=None):
         if method not in ("GET", "POST"):
             raise NotImplementedError(method)  # pragma: no cover
 
+        if self._has_recent_data():
+            return
+
         async with self._sem:
+            if self._has_recent_data():
+                return
+
             if method == "GET":
                 response = await self._session.async_api_get(path)
             else:
                 response = await self._session.async_api_post(path, post_data)
             self._update_last_data(response)
+            self._last_real_update = time.time()

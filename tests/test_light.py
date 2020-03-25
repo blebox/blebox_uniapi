@@ -423,8 +423,8 @@ class TestWLightBoxS(DefaultBoxTest):
         await self.allow_get_info(aioclient_mock)
         entity = (await self.async_entities(aioclient_mock))[0]
 
-        assert entity.name == "wLightBoxS-color"
-        assert entity.unique_id == "BleBox-wLightBoxS-1afe34e750b8-color"
+        assert entity.name == "wLightBoxS-brightness"
+        assert entity.unique_id == "BleBox-wLightBoxS-1afe34e750b8-brightness"
 
         assert entity.supported_features & SUPPORT_BRIGHTNESS
         assert entity.brightness is None

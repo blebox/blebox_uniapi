@@ -194,7 +194,7 @@ class Products:
                         f'{{"light": {{"desiredColor": "{x}"}}}}',
                     )
                 },
-                "lights": [["color", {"desired": "light/desiredColor"}]],
+                "lights": [["brightness", {"desired": "light/desiredColor"}]],
             },
         }
     }

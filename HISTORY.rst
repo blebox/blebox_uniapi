@@ -5,6 +5,18 @@ History
 1.1.0 (2020-03-24)
 ------------------
 
+* fix bad wLightBox API path
+* wrap api calls in semaphore (to serialize reqests to each box)
+* throttle updates to 2/second (to avoid unnecessary requests)
+* rework error handling and hierarchy (for cleaner usage)
+* use actual device name (to help recognize the device)
+* handle asyncio.TimeoutError (to handle timeout-related errors nicely)
+* properly re-raise exceptions (to avoid lengthy call stacktraces)
+* rename wLightBoxS feature to "brightness"
+
+1.1.0 (2020-03-24)
+------------------
+
 * fix switchBox support
 * fix minimum position handling
 * drop Python 3.6 support (still may work)

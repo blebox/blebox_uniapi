@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import aiohttp
+import asyncio
 
 from . import error
 
@@ -27,12 +28,12 @@ class ApiHost:
         self._loop = loop
 
     async def async_request(self, path, async_method, data=None):
+        # TODO: check timeout
+        client_timeout = self._timeout
 
         url = self.api_path(path)
 
         try:
-            # TODO: check timeout
-            client_timeout = self._timeout
             if data is not None:
                 response = await async_method(url, timeout=client_timeout, data=data)
             else:
@@ -44,8 +45,8 @@ class ApiHost:
             return await response.json()
 
         # TODO: just log errors instead?
-        except aiohttp.ServerTimeoutError as ex:
-            raise error.TimeoutError(f"Timeout trying to connect ({ex})") from ex
+        except (aiohttp.ServerTimeoutError,asyncio.TimeoutError) as ex:
+            raise error.TimeoutError(f"Timeout: failed to connect within {client_timeout}s: ({ex})") from ex
 
         except aiohttp.ClientError as ex:
             raise error.ClientError(f"Client Error {ex}") from ex

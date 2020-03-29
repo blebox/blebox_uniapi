@@ -1,4 +1,5 @@
 from .sensor import Temperature
+from .error import JPathFailed
 
 
 class Climate(Temperature):
@@ -13,6 +14,14 @@ class Climate(Temperature):
     @property
     def current(self):
         return self._current
+
+    @property
+    def max_temp(self):
+        return self._max_temp
+
+    @property
+    def min_temp(self):
+        return self._min_temp
 
     @property
     def is_heating(self):
@@ -47,3 +56,17 @@ class Climate(Temperature):
         self._desired = self._read_temperature("desired")
         self._current = self._read_temperature("temperature")
         self._is_heating = self._read_is_heating()
+
+        if self._product.last_data is None:
+            self._min_temp = None
+            self._max_temp = None
+            return
+
+        try:
+            self.raw_value("minimum")
+        except JPathFailed:
+            # TODO: coverage
+            return
+
+        self._min_temp = self._read_temperature("minimum")
+        self._max_temp = self._read_temperature("maximum")

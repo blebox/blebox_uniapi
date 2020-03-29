@@ -80,6 +80,16 @@ class BleBoxClimateEntity(CommonEntity, ClimateDevice):
         return self._feature.current
 
     @property
+    def max_temp(self):
+        """Return the maximum thermostat setting."""
+        return self._feature.max_temp
+
+    @property
+    def min_temp(self):
+        """Return the minimum thermostat setting."""
+        return self._feature.min_temp
+
+    @property
     def target_temperature(self):
         """Return the desired thermostat temperature."""
         return self._feature.desired
@@ -101,7 +111,7 @@ class TestSauna(DefaultBoxTest):
     DEVCLASS = "climates"
     ENTITY_CLASS = BleBoxClimateEntity
 
-    DEV_INFO_PATH = "api/heat/state"
+    DEV_INFO_PATH = "api/heat/extended/state"
 
     DEVICE_INFO = json.loads(
         """
@@ -164,6 +174,8 @@ class TestSauna(DefaultBoxTest):
         "heat": {
             "state": 0,
             "desiredTemp": 6428,
+            "maximumTemp": 12166,
+            "minimumTemp": -5166,
             "sensors": [
                 {
                     "type": "temperature",
@@ -206,6 +218,8 @@ class TestSauna(DefaultBoxTest):
         assert entity.target_temperature is None
         assert entity.temperature_unit == TEMP_CELSIUS
         assert entity.state is None
+        assert entity.max_temp is None
+        assert entity.min_temp is None
 
     async def test_update(self, aioclient_mock):
         """Test updating."""
@@ -217,6 +231,8 @@ class TestSauna(DefaultBoxTest):
         assert entity.target_temperature == 64.3
         assert entity.current_temperature == 40.0
         assert entity.temperature_unit == TEMP_CELSIUS
+        assert entity.max_temp == 121.7
+        assert entity.min_temp == -51.7
 
     async def test_on_when_below_target(self, aioclient_mock):
         """Test when temperature is below desired."""

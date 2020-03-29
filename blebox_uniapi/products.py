@@ -79,7 +79,8 @@ class Products:
                 ],
             },
             "saunaBox": {
-                "api_path": "/api/heat/state",
+                # TODO: read extended state only once on startup
+                "api_path": "/api/heat/extended/state",
                 # TODO: use an api map (map to semver)? Or constraints?
                 "api_level_range": [20180604, 20180604],
                 "api": {
@@ -92,6 +93,8 @@ class Products:
                         "thermostat",
                         {
                             "desired": "heat/desiredTemp",
+                            "minimum": "heat/minimumTemp",
+                            "maximum": "heat/maximumTemp",
                             "temperature": "heat/sensors/[id=0]/value",
                             "state": "heat/state",
                         },

@@ -246,6 +246,15 @@ class TestShutter(CoverTest):
 
         self.assert_state(entity, None)
 
+    async def test_device_info(self, aioclient_mock):
+        await self.allow_get_info(aioclient_mock, self.DEVICE_INFO)
+        entity = (await self.async_entities(aioclient_mock))[0]
+        assert entity.device_info["name"] == "My shutter 1"
+        assert entity.device_info["mac"] == "2bee34e750b8"
+        assert entity.device_info["manufacturer"] == "BleBox"
+        assert entity.device_info["model"] == "shutterBox"
+        assert entity.device_info["sw_version"] == "0.147"
+
     async def test_update(self, aioclient_mock):
         """Test cover updating."""
 
@@ -374,6 +383,15 @@ class TestGateBox(CoverTest):
         assert not entity.supported_features & SUPPORT_SET_POSITION
         assert entity.current_cover_position is None
         self.assert_state(entity, None)
+
+    async def test_device_info(self, aioclient_mock):
+        await self.allow_get_info(aioclient_mock, self.DEVICE_INFO)
+        entity = (await self.async_entities(aioclient_mock))[0]
+        assert entity.device_info["name"] == "My gate 1"
+        assert entity.device_info["mac"] == "1afe34db9437"
+        assert entity.device_info["manufacturer"] == "BleBox"
+        assert entity.device_info["model"] == "gateBox"
+        assert entity.device_info["sw_version"] == "0.176"
 
     async def test_update(self, aioclient_mock):
         """Test cover updating."""
@@ -553,6 +571,15 @@ class TestGateController(CoverTest):
         assert entity.supported_features & SUPPORT_SET_POSITION
         assert entity.current_cover_position is None
         self.assert_state(entity, None)
+
+    async def test_device_info(self, aioclient_mock):
+        await self.allow_get_info(aioclient_mock, self.DEVICE_INFO)
+        entity = (await self.async_entities(aioclient_mock))[0]
+        assert entity.device_info["name"] == "My gate controller 1"
+        assert entity.device_info["mac"] == "0ff2ffaafe30db9437"
+        assert entity.device_info["manufacturer"] == "BleBox"
+        assert entity.device_info["model"] == "gateController"
+        assert entity.device_info["sw_version"] == "1.390"
 
     async def test_update(self, aioclient_mock):
         """Test cover updating."""

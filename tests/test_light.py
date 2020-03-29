@@ -253,6 +253,15 @@ class TestDimmer(DefaultBoxTest):
 
         assert entity.is_on is None
 
+    async def test_device_info(self, aioclient_mock):
+        await self.allow_get_info(aioclient_mock, self.DEVICE_INFO)
+        entity = (await self.async_entities(aioclient_mock))[0]
+        assert entity.device_info["name"] == "My dimmer"
+        assert entity.device_info["mac"] == "1afe34e750b8"
+        assert entity.device_info["manufacturer"] == "BleBox"
+        assert entity.device_info["model"] == "dimmerBox"
+        assert entity.device_info["sw_version"] == "0.247"
+
     async def test_update(self, aioclient_mock):
         """Test light updating."""
 
@@ -430,6 +439,15 @@ class TestWLightBoxS(DefaultBoxTest):
         assert entity.brightness is None
 
         assert entity.is_on is None
+
+    async def test_device_info(self, aioclient_mock):
+        await self.allow_get_info(aioclient_mock, self.DEVICE_INFO)
+        entity = (await self.async_entities(aioclient_mock))[0]
+        assert entity.device_info["name"] == "My wLightBoxS"
+        assert entity.device_info["mac"] == "1afe34e750b8"
+        assert entity.device_info["manufacturer"] == "BleBox"
+        assert entity.device_info["model"] == "wLightBoxS"
+        assert entity.device_info["sw_version"] == "0.924"
 
     async def test_update(self, aioclient_mock):
         """Test light updating."""
@@ -637,6 +655,15 @@ class TestWLightBox(DefaultBoxTest):
         # assert entity.supported_features & SUPPORT_BRIGHTNESS
         # assert entity.brightness == 123
         assert entity.is_on is None
+
+    async def test_device_info(self, aioclient_mock):
+        await self.allow_get_info(aioclient_mock, self.DEVICE_INFO)
+        entity = (await self.async_entities(aioclient_mock))[0]
+        assert entity.device_info["name"] == "My light 1"
+        assert entity.device_info["mac"] == "1afe34e750b8"
+        assert entity.device_info["manufacturer"] == "BleBox"
+        assert entity.device_info["model"] == "wLightBox"
+        assert entity.device_info["sw_version"] == "0.993"
 
     async def test_update(self, aioclient_mock):
         """Test light updating."""

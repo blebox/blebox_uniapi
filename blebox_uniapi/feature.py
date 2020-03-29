@@ -23,6 +23,10 @@ class Feature:
     def device_class(self):
         return self._device_class
 
+    @property
+    def product(self):
+       return self._product
+
     # TODO: (cleanup) move to product/box ?
     def raw_value(self, name):
         product = self._product

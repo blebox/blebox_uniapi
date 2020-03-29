@@ -152,9 +152,11 @@ async def test_properties(mock_session, data):
     assert "foobar" == box.name
     assert None is box.last_data
     assert "airSensor" == box.type
+    assert "airSensor" == box.model
     assert "abcd1234ef" == box.unique_id
     assert "1.23" == box.firmware_version
     assert "4.56" == box.hardware_version
+    assert "BleBox" == box.brand
     assert 20180403 == box.api_version
     assert (1, 0, 0) == box.version
     assert True is box.outdated

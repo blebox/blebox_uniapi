@@ -221,6 +221,15 @@ class TestSauna(DefaultBoxTest):
         assert entity.max_temp is None
         assert entity.min_temp is None
 
+    async def test_device_info(self, aioclient_mock):
+        await self.allow_get_info(aioclient_mock, self.DEVICE_INFO)
+        entity = (await self.async_entities(aioclient_mock))[0]
+        assert entity.device_info["name"] == "My SaunaBox"
+        assert entity.device_info["mac"] == "1afe34db9437"
+        assert entity.device_info["manufacturer"] == "BleBox"
+        assert entity.device_info["model"] == "saunaBox"
+        assert entity.device_info["sw_version"] == "0.176"
+
     async def test_update(self, aioclient_mock):
         """Test updating."""
 

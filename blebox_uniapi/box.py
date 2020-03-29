@@ -122,6 +122,7 @@ class Box:
         self._api_version = level
         self._version = version
         self._outdated = outdated
+        self._model = config.get("model", type)
 
         self._api = config.get("api", {})
 
@@ -189,6 +190,14 @@ class Box:
     def outdated(self):
         # TODO: fixme
         return self._outdated
+
+    @property
+    def brand(self):
+        return "BleBox"
+
+    @property
+    def model(self):
+        return self._model
 
     # TODO: report timestamp of last measurement (if possible)
 

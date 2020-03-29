@@ -322,3 +322,14 @@ class CommonEntity:
     def outdated(self):
         """Return the temperature."""
         return self._feature._product.outdated
+
+    @property
+    def device_info(self):
+        product = self._feature.product
+        return {
+            "name": product.name,
+            "mac": product.unique_id,
+            "manufacturer": product.brand,
+            "model": product.model,
+            "sw_version": product.firmware_version,
+        }

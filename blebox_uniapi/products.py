@@ -123,6 +123,7 @@ class Products:
                 ],
             },
             "switchBox0": {
+                "model": "switchBox",
                 "api_path": "/api/relay/state",
                 "api_level_range": [20180604, 20190808],
                 "api": {

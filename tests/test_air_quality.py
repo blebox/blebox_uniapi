@@ -124,6 +124,15 @@ class TestAirSensor(DefaultBoxTest):
         assert entity.particulate_matter_2_5 is None
         assert entity.particulate_matter_10 is None
 
+    async def test_device_info(self, aioclient_mock):
+        await self.allow_get_info(aioclient_mock, self.DEVICE_INFO)
+        entity = (await self.async_entities(aioclient_mock))[0]
+        assert entity.device_info["name"] == "My air 1"
+        assert entity.device_info["mac"] == "1afe34db9437"
+        assert entity.device_info["manufacturer"] == "BleBox"
+        assert entity.device_info["model"] == "airSensor"
+        assert entity.device_info["sw_version"] == "0.973"
+
     async def test_update(self, aioclient_mock):
         """Test air quality sensor state after update."""
 

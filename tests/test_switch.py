@@ -107,6 +107,15 @@ class TestSwitchBox0(DefaultBoxTest):
 
         assert entity.is_on is None
 
+    async def test_device_info(self, aioclient_mock):
+        await self.allow_get_info(aioclient_mock, self.DEVICE_INFO)
+        entity = (await self.async_entities(aioclient_mock))[0]
+        assert entity.device_info["name"] == "My switchBox"
+        assert entity.device_info["mac"] == "1afe34e750b8"
+        assert entity.device_info["manufacturer"] == "BleBox"
+        assert entity.device_info["model"] == "switchBox"
+        assert entity.device_info["sw_version"] == "0.247"
+
     async def test_update_when_off(self, aioclient_mock):
         """Test switch updating when off."""
 
@@ -222,6 +231,15 @@ class TestSwitchBox(DefaultBoxTest):
         assert entity.device_class == DEVICE_CLASS_SWITCH
 
         assert entity.is_on is None
+
+    async def test_device_info(self, aioclient_mock):
+        await self.allow_get_info(aioclient_mock, self.DEVICE_INFO)
+        entity = (await self.async_entities(aioclient_mock))[0]
+        assert entity.device_info["name"] == "My switchBox"
+        assert entity.device_info["mac"] == "1afe34e750b8"
+        assert entity.device_info["manufacturer"] == "BleBox"
+        assert entity.device_info["model"] == "switchBox"
+        assert entity.device_info["sw_version"] == "0.247"
 
     async def test_update_when_off(self, aioclient_mock):
         """Test switch updating when off."""
@@ -356,6 +374,15 @@ class TestSwitchBoxD(DefaultBoxTest):
         assert entity.unique_id == "BleBox-switchBoxD-1afe34e750b8-1.relay"
         assert entity.device_class == DEVICE_CLASS_SWITCH
         assert entity.is_on is None
+
+    async def test_device_info(self, aioclient_mock):
+        await self.allow_get_info(aioclient_mock, self.DEVICE_INFO)
+        entity = (await self.async_entities(aioclient_mock))[0]
+        assert entity.device_info["name"] == "My switchBoxD"
+        assert entity.device_info["mac"] == "1afe34e750b8"
+        assert entity.device_info["manufacturer"] == "BleBox"
+        assert entity.device_info["model"] == "switchBoxD"
+        assert entity.device_info["sw_version"] == "0.200"
 
     async def test_update_when_off(self, aioclient_mock):
         """Test switch updating when off."""

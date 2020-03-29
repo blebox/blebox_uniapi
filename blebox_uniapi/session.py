@@ -40,18 +40,26 @@ class ApiHost:
                 response = await async_method(url, timeout=client_timeout)
 
             if response.status != 200:
-                raise error.HttpError(f"Request to {self.host}:{self.port} failed with HTTP {response.status}")
+                raise error.HttpError(
+                    f"Request to {self.host}:{self.port} failed with HTTP {response.status}"
+                )
 
             return await response.json()
 
         except asyncio.TimeoutError as ex:
-            raise error.TimeoutError(f"Failed to connect to {self.host}:{self.port} within {client_timeout}s: ({ex})") from None
+            raise error.TimeoutError(
+                f"Failed to connect to {self.host}:{self.port} within {client_timeout}s: ({ex})"
+            ) from None
 
         except aiohttp.ClientConnectionError as ex:
-            raise error.ConnectionError(f"Details: {ex}") from None
+            raise error.ConnectionError(
+                f"Failed to connect to {self.host}:{self.port}: {ex}"
+            ) from None
 
         except aiohttp.ClientError as ex:
-            raise error.ClientError(f"API request failed to {self.host}:{self.port} {ex}") from ex
+            raise error.ClientError(
+                f"API request failed to {self.host}:{self.port}: {ex}"
+            ) from ex
 
     async def async_api_get(self, path):
         return await self.async_request(path, self._session.get)

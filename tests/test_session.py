@@ -39,7 +39,11 @@ def timeout_error(connection, timeout):
 
 
 def client_error(connection, timeout):
-    raise aiohttp.ClientError
+    raise aiohttp.ClientError("client err")
+
+
+def os_error(connection, timeout):
+    raise aiohttp.ClientOSError("os error")
 
 
 def bad_http_response(spec_set=aiohttp.ClientResponse):
@@ -105,7 +109,18 @@ async def test_session_api_post_timeout(logger, client):
 async def test_session_api_get_client_error(logger, client):
     client.get = CoroutineMock(side_effect=client_error)
     api_session = Session("127.0.0.4", "88", 2, client, None, logger)
-    with pytest.raises(error.ClientError):
+    with pytest.raises(
+        error.ClientError, match=r"API request failed to 127\.0\.0\.4:88: client err"
+    ):
+        await api_session.async_api_get("/api/foo")
+
+
+async def test_session_always_show_address_details(logger, client):
+    client.get = CoroutineMock(side_effect=os_error)
+    api_session = Session("127.0.0.4", "88", 2, client, None, logger)
+    with pytest.raises(
+        error.ConnectionError, match=r"Failed to connect to 127\.0\.0\.4:88: os error"
+    ):
         await api_session.async_api_get("/api/foo")
 
 

@@ -492,7 +492,7 @@ class TestGateController(CoverTest):
       "device": {
         "deviceName": "My gate controller 1",
         "type": "gateController",
-        "fv": "1.390",
+        "fv": "0.981",
         "hv": "custom.2.6",
         "id": "0ff2ffaafe30db9437",
         "ip": "192.168.1.11"
@@ -510,8 +510,8 @@ class TestGateController(CoverTest):
                 "eventReason": 0,
                 "triggered": [ 0 ]
             },
-            "currentPos": [ 31 ],
-            "desiredPos": [ 29 ]
+            "currentPos": { "positions": [ 31 ] },
+            "desiredPos": { "positions": [ 29 ] }
         }
     }
     """
@@ -523,8 +523,8 @@ class TestGateController(CoverTest):
         {{
             "gateController": {{
                 "state": {state},
-                "currentPos": [ {current} ],
-                "desiredPos": [ {desired} ]
+                "currentPos": {{ "positions": [ {current} ] }},
+                "desiredPos": {{ "positions": [ {desired} ] }}
             }}
         }}
         """

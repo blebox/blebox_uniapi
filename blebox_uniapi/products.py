@@ -70,8 +70,8 @@ class Products:
                     [
                         "position",
                         {
-                            "desired": "gateController/desiredPos/[0]",
-                            # "current": "gateController/currentPos/[0]",
+                            "desired": "gateController/desiredPos/positions/[0]",
+                            # "current": "gateController/currentPos/positions/[0]",
                             "state": "gateController/state",
                         },
                         "gate",

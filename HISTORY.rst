@@ -2,6 +2,15 @@
 History
 =======
 
+
+1.2.0 (2020-03-30)
+------------------
+
+* expose device info
+* always add ip/port in connection errors
+* fixed gateController support
+* support for sauna min/max temp
+
 1.1.0 (2020-03-24)
 ------------------
 

@@ -110,7 +110,7 @@ async def test_session_api_get_client_error(logger, client):
     client.get = CoroutineMock(side_effect=client_error)
     api_session = Session("127.0.0.4", "88", 2, client, None, logger)
     with pytest.raises(
-        error.ClientError, match=r"API request failed to 127\.0\.0\.4:88: client err"
+        error.ClientError, match=r"API request http://127\.0\.0\.4:88/api/foo failed: client err"
     ):
         await api_session.async_api_get("/api/foo")
 

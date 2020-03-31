@@ -41,7 +41,7 @@ class ApiHost:
 
             if response.status != 200:
                 raise error.HttpError(
-                    f"Request to {self.host}:{self.port} failed with HTTP {response.status}"
+                    f"Request to {url} failed with HTTP {response.status}"
                 )
 
             return await response.json()
@@ -58,7 +58,7 @@ class ApiHost:
 
         except aiohttp.ClientError as ex:
             raise error.ClientError(
-                f"API request failed to {self.host}:{self.port}: {ex}"
+                f"API request {url} failed: {ex}"
             ) from ex
 
     async def async_api_get(self, path):

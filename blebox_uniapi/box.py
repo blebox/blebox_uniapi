@@ -202,7 +202,7 @@ class Box:
     # TODO: report timestamp of last measurement (if possible)
 
     async def async_update_data(self):
-        await self._async_api("GET", self._data_path)
+        await self._async_api(True, "GET", self._data_path)
 
     def _update_last_data(self, new_data):
         self._last_data = new_data
@@ -235,7 +235,7 @@ class Box:
     async def async_api_command(self, command, value=None):
         method, *args = self._api[command](value)
         self._last_real_update = None  # force update
-        return await self._async_api(method, *args)
+        return await self._async_api(False, method, *args)
 
     def follow(self, data, path):
         if data is None:
@@ -366,16 +366,18 @@ class Box:
         last = self._last_real_update
         return time.time() -2 <= last if last is not None else False
 
-    async def _async_api(self, method, path, post_data=None):
+    async def _async_api(self, is_update, method, path, post_data=None):
         if method not in ("GET", "POST"):
             raise NotImplementedError(method)  # pragma: no cover
 
-        if self._has_recent_data():
-            return
-
-        async with self._sem:
+        if is_update:
             if self._has_recent_data():
                 return
+
+        async with self._sem:
+            if is_update:
+                if self._has_recent_data():
+                    return
 
             if method == "GET":
                 response = await self._session.async_api_get(path)

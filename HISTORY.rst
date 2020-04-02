@@ -2,6 +2,11 @@
 History
 =======
 
+1.3.1 (2020-04-2)
+------------------
+
+* 2dac0f6 never skip command requests
+* 32f8e7b improve error messages
 
 1.2.0 (2020-03-30)
 ------------------

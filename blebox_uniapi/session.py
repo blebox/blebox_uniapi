@@ -57,9 +57,7 @@ class ApiHost:
             ) from None
 
         except aiohttp.ClientError as ex:
-            raise error.ClientError(
-                f"API request {url} failed: {ex}"
-            ) from ex
+            raise error.ClientError(f"API request {url} failed: {ex}") from ex
 
     async def async_api_get(self, path):
         return await self.async_request(path, self._session.get)

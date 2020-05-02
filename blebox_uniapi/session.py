@@ -2,15 +2,18 @@
 
 import aiohttp
 import asyncio
+import logging
 
 from . import error
 
 DEFAULT_TIMEOUT = aiohttp.ClientTimeout(total=None, sock_connect=5, sock_read=5)
 DEFAULT_PORT = 80
 
+LOGGER = logging.getLogger(__name__)
+
 
 class ApiHost:
-    def __init__(self, host, port, timeout, session, loop, logger):
+    def __init__(self, host, port, timeout, session, loop, logger=LOGGER):
         self._host = host
         self._port = port
 

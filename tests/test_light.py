@@ -680,7 +680,7 @@ class TestWLightBox(DefaultBoxTest):
             code,
             aioclient_mock,
             "/api/rgbw/set",
-            '{"rgbw":{"desiredColor": "' + str(value) + '", "fadeSpeed": ' + json.dumps(None) + '}}',
+            '{"rgbw":{"desiredColor": "' + str(value) + '"}}',
             response,
         )
 

@@ -210,13 +210,23 @@ class Light(Feature):
         if value == self._off_value:
             raise BadOnValueError(f"turn_on called with invalid value ({value})")
 
-        if fade_speed is not None:
-            if not isinstance(fade_speed, int):
-                raise BadFadeSpeedValueError(f"turn_on called with invalid fade_speed value type ({type(fade_speed)})")
-            if 0 > fade_speed > 255:
-                raise BadFadeSpeedValueError(f"turn_on called with fade_speed value out of range ({fade_speed})")
-
-        await self.async_api_command("set", value, fade_speed)
+        if not self.supports_fade_speed:
+            await self.async_api_command("set", value)
+        else:
+            self.validate_fade_speed(fade_speed)
+            await self.async_api_command("set", value, fade_speed)
 
     async def async_off(self, fade_speed=None):
-        await self.async_api_command("set", self._off_value, fade_speed)
+        if not self.supports_fade_speed:
+            await self.async_api_command("set", self._off_value)
+        else:
+            self.validate_fade_speed(fade_speed)
+            await self.async_api_command("set", self._off_value, fade_speed)
+
+    def validate_fade_speed(self, fade_speed):
+        if fade_speed is None:
+            return
+        if not isinstance(fade_speed, int):
+            raise BadFadeSpeedValueError(f"turn_on called with invalid fade_speed value type ({type(fade_speed)})")
+        if 0 > fade_speed > 255:
+            raise BadFadeSpeedValueError(f"turn_on called with fade_speed value out of range ({fade_speed})")

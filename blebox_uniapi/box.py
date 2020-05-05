@@ -232,8 +232,8 @@ class Box:
         outdated = current < latest_version
         return (current, outdated)
 
-    async def async_api_command(self, command, value=None):
-        method, *args = self._api[command](value)
+    async def async_api_command(self, command, *args):
+        method, *args = self._api[command](*args)
         self._last_real_update = None  # force update
         return await self._async_api(False, method, *args)
 

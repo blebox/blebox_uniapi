@@ -134,6 +134,9 @@ class BadOnValueError(BoxError):
     pass
 
 
+class BadFadeSpeedValueError(BoxError):
+    pass
+
 # misc errors
 
 

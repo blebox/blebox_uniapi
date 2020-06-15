@@ -7,7 +7,7 @@ coverage==5.1
 Sphinx==3.0.3
 twine==3.1.1
 
-semver==2.10.0
+semver==2.10.2
 
 deepmerge==0.1.0
 pytest==5.4.2

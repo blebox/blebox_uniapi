@@ -9,7 +9,7 @@ twine==3.1.1
 
 semver==2.10.0
 
-deepmerge==0.1.0
+deepmerge==0.1.1
 pytest==5.4.2
 pytest-runner==5.2
 asynctest==0.13.0

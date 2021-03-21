@@ -47,10 +47,12 @@ class Box:
             raise UnsupportedBoxResponse(info, f"{location} has no id") from ex
         location = f"Device:{unique_id} at {address}"
 
-        try:
+        if "product" in info: # product field was added in 2020 firmware 
+            type = info["product"]
+        elif "type" in info:
             type = info["type"]
-        except KeyError as ex:
-            raise UnsupportedBoxResponse(info, f"{location} has no type") from ex
+        else:
+            raise UnsupportedBoxResponse(info, f"{location} has no type")
         location = f"{type}:{unique_id} at {address}"
 
         try:
@@ -358,7 +360,7 @@ class Box:
         if not isinstance(value, str):
             raise BadFieldNotAString(self.name, field, value)
 
-        if len(value) != 8:
+        if len(value) != 2 and len(value) != 8: # in MONO mode only white is given
             raise BadFieldNotRGBW(self.name, field, value)
         return value
 

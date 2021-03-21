@@ -189,17 +189,17 @@ class Products:
                 ],
             },
             "wLightBoxS": {
-                "api_path": "/api/light/state",
-                "api_level_range": [20180718, 20180718],
+                "api_path": "/api/rgbw/state",
+                "api_level_range": [20200229, 20200229],
                 "api": {
                     "set": lambda x: (
                         "POST",
-                        "/api/light/set",
-                        f'{{"light": {{"desiredColor": "{x}"}}}}',
+                        "/api/rgbw/set",
+                        f'{{"rgbw": {{"desiredColor": "{x}"}}}}',
                     )
                 },
-                "lights": [["brightness", {"desired": "light/desiredColor"}]],
-            },
+                "lights": [["brightness", {"desired": "rgbw/desiredColor"}]],
+            }
         }
     }
 
@@ -235,9 +235,11 @@ class Products:
                 "gateBox": root,
             }
 
-        try:
+        if "product" in info: # product field was added in 2020 firmware
+            product_type = info["product"]
+        elif "type" in info:
             product_type = info["type"]
-        except KeyError:
+        else:
             raise UnsupportedBoxResponse("Missing 'type' field:", info)
 
         try:

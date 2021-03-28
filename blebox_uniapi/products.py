@@ -141,6 +141,15 @@ class Products:
                 },
                 "switches": [["0.relay", {"state": "relays/[relay=0]/state"}, "relay"]],
             },
+            "switchBoxDC": {
+                "api_path": "/api/relay/state",
+                "api_level_range": [20200831, 20200831],
+                "api": {
+                    "on": lambda x=None: ("GET", "/s/1", None),
+                    "off": lambda x=None: ("GET", "/s/0", None),
+                },
+                "switches": [["0.relay", {"state": "relays/[relay=0]/state"}, "relay"]],
+            },
             "switchBoxD": {
                 "api_path": "/api/relay/state",
                 "api_level_range": [20190808, 20190808],

@@ -47,12 +47,17 @@ class Box:
             raise UnsupportedBoxResponse(info, f"{location} has no id") from ex
         location = f"Device:{unique_id} at {address}"
 
-        if "product" in info: # product field was added in 2020 firmware 
-            type = info["product"]
-        elif "type" in info:
+        if "type" in info:
             type = info["type"]
         else:
             raise UnsupportedBoxResponse(info, f"{location} has no type")
+
+        # in firmware before 2020 'wLightBoxS' was stored as 'type'
+        # now it's stored as 'product' and 'type' is 'wLightBox'
+        # before a general refactor this is the easiest way to revert back to old logic
+        if "product" in info and info["product"] == "wLightBoxS":
+            type = "wLightBoxS"
+
         location = f"{type}:{unique_id} at {address}"
 
         try:
@@ -360,13 +365,15 @@ class Box:
         if not isinstance(value, str):
             raise BadFieldNotAString(self.name, field, value)
 
-        if len(value) != 2 and len(value) != 8: # in MONO mode only white is given
+        # value can have different length depending on LED color mode
+        # mono mode will be 1 byte, and RGBWW will be 5 bytes
+        if len(value) > 10 or len(value) % 2 != 0:
             raise BadFieldNotRGBW(self.name, field, value)
         return value
 
     def _has_recent_data(self):
         last = self._last_real_update
-        return time.time() -2 <= last if last is not None else False
+        return time.time() - 2 <= last if last is not None else False
 
     async def _async_api(self, is_update, method, path, post_data=None):
         if method not in ("GET", "POST"):

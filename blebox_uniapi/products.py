@@ -141,15 +141,6 @@ class Products:
                 },
                 "switches": [["0.relay", {"state": "relays/[relay=0]/state"}, "relay"]],
             },
-            "switchBoxDC": {
-                "api_path": "/api/relay/state",
-                "api_level_range": [20200831, 20200831],
-                "api": {
-                    "on": lambda x=None: ("GET", "/s/1", None),
-                    "off": lambda x=None: ("GET", "/s/0", None),
-                },
-                "switches": [["0.relay", {"state": "relays/[relay=0]/state"}, "relay"]],
-            },
             "switchBoxD": {
                 "api_path": "/api/relay/state",
                 "api_level_range": [20190808, 20190808],
@@ -208,7 +199,7 @@ class Products:
                     )
                 },
                 "lights": [["brightness", {"desired": "rgbw/desiredColor"}]],
-            }
+            },
         }
     }
 
@@ -244,12 +235,16 @@ class Products:
                 "gateBox": root,
             }
 
-        if "product" in info: # product field was added in 2020 firmware
-            product_type = info["product"]
-        elif "type" in info:
+        if "type" in info:
             product_type = info["type"]
         else:
             raise UnsupportedBoxResponse("Missing 'type' field:", info)
+
+        # in firmware before 2020 'wLightBoxS' was stored as 'type'
+        # now it's stored as 'product' and 'type' is 'wLightBox'
+        # before a general refactor this is the easiest way to revert back to old logic
+        if "product" in info and info["product"] == "wLightBoxS":
+            product_type = "wLightBoxS"
 
         try:
             info = data[product_type]

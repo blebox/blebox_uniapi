@@ -52,11 +52,10 @@ class Box:
         else:
             raise UnsupportedBoxResponse(info, f"{location} has no type")
 
-        # in firmware before 2020 'wLightBoxS' was stored as 'type'
-        # now it's stored as 'product' and 'type' is 'wLightBox'
-        # before a general refactor this is the easiest way to revert back to old logic
-        if "product" in info and info["product"] == "wLightBoxS":
-            type = "wLightBoxS"
+        if "product" in info:
+            product = info["product"]
+        else:
+            product = type
 
         location = f"{type}:{unique_id} at {address}"
 
@@ -92,6 +91,13 @@ class Box:
         if type == "switchBox":
             if level < 20190808:
                 type = "switchBox0"
+
+        # TODO: make wLightBox API support multiple products
+        # in 2020 wLightBoxS API has been deprecated and it started using wLightBox API
+        # current codebase needs a refactor to support multiple product sharing one API
+        # as a temporary workaround we are using 'alias' type wLightBoxS2
+        if type == "wLightBox" and product == "wLightBoxS":
+            type = "wLightBoxS2"
 
         # Here due to circular dependency
         from .products import Products

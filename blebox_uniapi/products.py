@@ -189,6 +189,18 @@ class Products:
                 ],
             },
             "wLightBoxS": {
+                "api_path": "/api/light/state",
+                "api_level_range": [20180718, 20180718],
+                "api": {
+                    "set": lambda x: (
+                        "POST",
+                        "/api/light/set",
+                        f'{{"light": {{"desiredColor": "{x}"}}}}',
+                    )
+                },
+                "lights": [["brightness", {"desired": "light/desiredColor"}]],
+            },
+            "wLightBoxS2": {
                 "api_path": "/api/rgbw/state",
                 "api_level_range": [20200229, 20200229],
                 "api": {
@@ -239,12 +251,6 @@ class Products:
             product_type = info["type"]
         else:
             raise UnsupportedBoxResponse("Missing 'type' field:", info)
-
-        # in firmware before 2020 'wLightBoxS' was stored as 'type'
-        # now it's stored as 'product' and 'type' is 'wLightBox'
-        # before a general refactor this is the easiest way to revert back to old logic
-        if "product" in info and info["product"] == "wLightBoxS":
-            product_type = "wLightBoxS"
 
         try:
             info = data[product_type]

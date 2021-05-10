@@ -57,13 +57,13 @@ class Box:
         else:
             product = type
 
-        location = f"{type}:{unique_id} at {address}"
+        location = f"{product}:{unique_id} at {address}"
 
         try:
             name = info["deviceName"]
         except KeyError as ex:
             raise UnsupportedBoxResponse(info, f"{location} has no name") from ex
-        location = f"'{name}' ({type}:{unique_id} at {address})"
+        location = f"'{name}' ({product}:{unique_id} at {address})"
 
         try:
             firmware_version = info["fv"]
@@ -71,7 +71,7 @@ class Box:
             raise UnsupportedBoxResponse(
                 info, f"{location} has no firmware version"
             ) from ex
-        location = f"'{name}' ({type}:{unique_id}/{firmware_version} at {address})"
+        location = f"'{name}' ({product}:{unique_id}/{firmware_version} at {address})"
 
         try:
             hardware_version = info["hv"]
@@ -92,13 +92,6 @@ class Box:
             if level < 20190808:
                 type = "switchBox0"
 
-        # TODO: make wLightBox API support multiple products
-        # in 2020 wLightBoxS API has been deprecated and it started using wLightBox API
-        # current codebase needs a refactor to support multiple product sharing one API
-        # as a temporary workaround we are using 'alias' type wLightBoxS2
-        if type == "wLightBox" and product == "wLightBoxS":
-            type = "wLightBoxS2"
-
         # Here due to circular dependency
         from .products import Products
 
@@ -108,6 +101,14 @@ class Box:
             raise UnsupportedBoxResponse(
                 info, f"{location} is not a supported type"
             ) from ex
+
+        # TODO: make wLightBox API support multiple products
+        # in 2020 wLightBoxS API has been deprecated and it started using wLightBox API
+        # current codebase needs a refactor to support multiple product sharing one API
+        # as a temporary workaround we are using 'alias' type wLightBoxS2
+        if type == "wLightBox" and product == "wLightBoxS":
+            config = Products.CONFIG["types"]["wLightBoxS2"]
+            type = "wLightBoxS"
 
         # Ok to crash here, since it's a bug
         self._data_path = config["api_path"]
@@ -128,6 +129,7 @@ class Box:
         )
 
         self._type = type
+        self._product = product
         self._unique_id = unique_id
         self._name = name
         self._firmware_version = firmware_version
@@ -174,6 +176,10 @@ class Box:
     @property
     def type(self):
         return self._type
+
+    @property
+    def product(self):
+        return self._product
 
     @property
     def unique_id(self):

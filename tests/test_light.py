@@ -350,6 +350,21 @@ class TestWLightBoxS(DefaultBoxTest):
     """
     )
 
+    DEVICE_INFO2 = {
+        "device": {
+            "deviceName": "My wLightBoxS",
+            "type": "wLightBox",
+            "product": "wLightBoxS",
+            "hv": "s_0.1",
+            "fv": "0.1022",
+            "universe": 0,
+            "apiLevel": "20200229",
+            "id": "ce50e32d2707",
+            "ip": "192.168.1.25",
+            "availableFv": None
+        }
+    }
+
     def patch_version(apiLevel):
         """Generate a patch for a JSON state fixture."""
         return f"""
@@ -448,6 +463,15 @@ class TestWLightBoxS(DefaultBoxTest):
         assert entity.device_info["manufacturer"] == "BleBox"
         assert entity.device_info["model"] == "wLightBoxS"
         assert entity.device_info["sw_version"] == "0.924"
+
+    async def test_device_info2(self, aioclient_mock):
+        await self.allow_get_info(aioclient_mock, self.DEVICE_INFO2)
+        entity = (await self.async_entities(aioclient_mock))[0]
+        assert entity.device_info["name"] == "My wLightBoxS"
+        assert entity.device_info["mac"] == "ce50e32d2707"
+        assert entity.device_info["manufacturer"] == "BleBox"
+        assert entity.device_info["model"] == "wLightBoxS"
+        assert entity.device_info["sw_version"] == "0.1022"
 
     async def test_update(self, aioclient_mock):
         """Test light updating."""

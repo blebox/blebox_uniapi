@@ -247,9 +247,9 @@ class Products:
                 "gateBox": root,
             }
 
-        if "type" in info:
+        try:
             product_type = info["type"]
-        else:
+        except KeyError:
             raise UnsupportedBoxResponse("Missing 'type' field:", info)
 
         try:

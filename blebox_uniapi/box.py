@@ -47,14 +47,14 @@ class Box:
             raise UnsupportedBoxResponse(info, f"{location} has no id") from ex
         location = f"Device:{unique_id} at {address}"
 
-        if "type" in info:
+        try:
             type = info["type"]
-        else:
-            raise UnsupportedBoxResponse(info, f"{location} has no type")
+        except KeyError as ex:
+            raise UnsupportedBoxResponse(info, f"{location} has no type") from ex
 
-        if "product" in info:
+        try:
             product = info["product"]
-        else:
+        except KeyError:
             product = type
 
         location = f"{product}:{unique_id} at {address}"

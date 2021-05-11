@@ -200,6 +200,18 @@ class Products:
                 },
                 "lights": [["brightness", {"desired": "light/desiredColor"}]],
             },
+            "wLightBoxS2": {
+                "api_path": "/api/rgbw/state",
+                "api_level_range": [20200229, 20200229],
+                "api": {
+                    "set": lambda x: (
+                        "POST",
+                        "/api/rgbw/set",
+                        f'{{"rgbw": {{"desiredColor": "{x}"}}}}',
+                    )
+                },
+                "lights": [["brightness", {"desired": "rgbw/desiredColor"}]],
+            },
         }
     }
 

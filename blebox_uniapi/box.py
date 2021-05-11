@@ -51,13 +51,19 @@ class Box:
             type = info["type"]
         except KeyError as ex:
             raise UnsupportedBoxResponse(info, f"{location} has no type") from ex
-        location = f"{type}:{unique_id} at {address}"
+
+        try:
+            product = info["product"]
+        except KeyError:
+            product = type
+
+        location = f"{product}:{unique_id} at {address}"
 
         try:
             name = info["deviceName"]
         except KeyError as ex:
             raise UnsupportedBoxResponse(info, f"{location} has no name") from ex
-        location = f"'{name}' ({type}:{unique_id} at {address})"
+        location = f"'{name}' ({product}:{unique_id} at {address})"
 
         try:
             firmware_version = info["fv"]
@@ -65,7 +71,7 @@ class Box:
             raise UnsupportedBoxResponse(
                 info, f"{location} has no firmware version"
             ) from ex
-        location = f"'{name}' ({type}:{unique_id}/{firmware_version} at {address})"
+        location = f"'{name}' ({product}:{unique_id}/{firmware_version} at {address})"
 
         try:
             hardware_version = info["hv"]
@@ -96,6 +102,14 @@ class Box:
                 info, f"{location} is not a supported type"
             ) from ex
 
+        # TODO: make wLightBox API support multiple products
+        # in 2020 wLightBoxS API has been deprecated and it started using wLightBox API
+        # current codebase needs a refactor to support multiple product sharing one API
+        # as a temporary workaround we are using 'alias' type wLightBoxS2
+        if type == "wLightBox" and product == "wLightBoxS":
+            config = Products.CONFIG["types"]["wLightBoxS2"]
+            type = "wLightBoxS"
+
         # Ok to crash here, since it's a bug
         self._data_path = config["api_path"]
         min_supported, max_supported = config["api_level_range"]
@@ -115,6 +129,7 @@ class Box:
         )
 
         self._type = type
+        self._product = product
         self._unique_id = unique_id
         self._name = name
         self._firmware_version = firmware_version
@@ -161,6 +176,10 @@ class Box:
     @property
     def type(self):
         return self._type
+
+    @property
+    def product(self):
+        return self._product
 
     @property
     def unique_id(self):
@@ -358,13 +377,15 @@ class Box:
         if not isinstance(value, str):
             raise BadFieldNotAString(self.name, field, value)
 
-        if len(value) != 8:
+        # value can have different length depending on LED color mode
+        # mono mode will be 1 byte, and RGBWW will be 5 bytes
+        if len(value) > 10 or len(value) % 2 != 0:
             raise BadFieldNotRGBW(self.name, field, value)
         return value
 
     def _has_recent_data(self):
         last = self._last_real_update
-        return time.time() -2 <= last if last is not None else False
+        return time.time() - 2 <= last if last is not None else False
 
     async def _async_api(self, is_update, method, path, post_data=None):
         if method not in ("GET", "POST"):

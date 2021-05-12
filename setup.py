@@ -17,8 +17,8 @@ setup_requirements = ['pytest-runner', ]
 test_requirements = ['pytest>=3', 'pytest-asyncio>=0.10.0', 'asynctest>=0.13', 'semver', 'deepmerge']
 
 setup(
-    author="Gadget Mobile",
-    author_email='the_gadget_mobile@yahoo.com',
+    author="BleBox",
+    author_email='opensource@blebox.eu',
     python_requires='>=3.6',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
@@ -41,7 +41,7 @@ setup(
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
-    url='https://github.com/gadgetmobile/blebox_uniapi',
+    url='https://github.com/blebox/blebox_uniapi',
     version='1.3.2',
     zip_safe=False,
 )

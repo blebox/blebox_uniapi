@@ -7,7 +7,7 @@ BleBox Python UniAPI
         :target: https://pypi.python.org/pypi/blebox_uniapi
 
 .. image:: https://img.shields.io/travis/gadgetmobile/blebox_uniapi.svg
-        :target: https://travis-ci.com/gadgetmobile/blebox_uniapi
+        :target: https://travis-ci.com/blebox/blebox_uniapi
 
 .. image:: https://readthedocs.org/projects/blebox-uniapi/badge/?version=latest
         :target: https://blebox-uniapi.readthedocs.io/en/latest/?badge=latest

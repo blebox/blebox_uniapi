@@ -1,5 +1,5 @@
 """Top-level package for BleBox Python UniAPI."""
 
-__author__ = """Gadget Mobile"""
-__email__ = "the_gadget_mobile@yahoo.com"
+__author__ = """BleBox"""
+__email__ = "opensource@blebox.eu"
 __version__ = '1.3.2'

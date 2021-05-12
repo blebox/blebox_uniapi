@@ -6,7 +6,7 @@ BleBox Python UniAPI
 .. image:: https://img.shields.io/pypi/v/blebox_uniapi.svg
         :target: https://pypi.python.org/pypi/blebox_uniapi
 
-.. image:: https://img.shields.io/travis/gadgetmobile/blebox_uniapi.svg
+.. image:: https://travis-ci.com/blebox/blebox_uniapi.svg?branch=master
         :target: https://travis-ci.com/blebox/blebox_uniapi
 
 .. image:: https://readthedocs.org/projects/blebox-uniapi/badge/?version=latest
@@ -39,4 +39,4 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
 
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
-.. _`11 BleBox smart home devices`: https://blebox.eu/products/?lang=en
+.. _`11 BleBox smart home devices`: https://blebox.eu/produkty/?lang=en

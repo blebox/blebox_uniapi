@@ -110,6 +110,16 @@ class Box:
             config = Products.CONFIG["types"]["wLightBoxS2"]
             type = "wLightBoxS"
 
+        # Currently code doesn't support different apis for the same types or products
+        # and should be heavily refactored to support that functionality.
+        # Also I don't know if every "gateBox" product have apiLevel (line 86) that is
+        # why I used additional condition
+        if type == "gateBox" and level:
+            _min, _max = Products.CONFIG["types"]["gateBoxB"]["api_level_range"]
+            if _min <= level <= _max:
+                config = Products.CONFIG["types"]["gateBoxB"]
+                type = "gateBoxB"
+
         # Ok to crash here, since it's a bug
         self._data_path = config["api_path"]
         min_supported, max_supported = config["api_level_range"]

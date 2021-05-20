@@ -2,10 +2,20 @@ from .error import MisconfiguredDevice
 from .feature import Feature
 
 
-class Slider:
+class Gate:
+    """Previous class name: Slider, is it problem if I renamed it ?"""
     def read_state(self, alias, raw_value, product):
         raw = raw_value("state")
         return product.expect_int(alias, raw, 4, 0)
+
+    def read_desired(self, alias, raw_value, product):
+        raw = raw_value("desired")
+        min_position = self.min_position
+        return product.expect_int(alias, raw, 100, min_position)
+
+    @property
+    def min_position(self):
+        return 0
 
     @property
     def is_slider(self):
@@ -26,26 +36,16 @@ class Slider:
         return True
 
 
-class Shutter(Slider):
+class Shutter(Gate):
     @property
     def min_position(self):
         return -1  # "unknown"
 
 
-class Gate(Slider):
-    @property
-    def min_position(self):
-        return 0
-
-
-class GateBox:
+class GateBox(Gate):
     @property
     def is_slider(self):
         return False
-
-    @property
-    def min_position(self):
-        return 0
 
     @property
     def open_command(self):
@@ -91,9 +91,40 @@ class GateBox:
         return 1 == product.expect_int(alias, raw, 3, 0)
 
 
+class GateBoxB(GateBox):
+
+    def read_state(self, alias, raw_value, product):
+        current = raw_value("position")
+
+        # gate with gateBox visualized:
+        #  (0) [   <#####] (100)
+
+        if current == 0:  # closed
+            return 3  # closed (lower/left limit)
+
+        if current == 100:  # opened
+            return 4  # open (upper/right limit)
+
+        # I don't know if I can leave it in that way,
+        # basically it will be returned while 'current == 50'
+        return 2  # manually stopped
+
+    def read_desired(self, alias, raw_value, product):
+        return None
+
+    def read_has_stop(self, alias, raw_value, product):
+        """
+        "extraButtonType" field isn't available in responses
+        from "GET" posts to "/s/p" or "/s/s" so I just returned True
+        """
+        return True
+
+
 # TODO: handle tilt
 class Cover(Feature):
-    ATTR_CLASS_MAP = {"shutter": Shutter, "gate": Gate, "gatebox": GateBox}
+    ATTR_CLASS_MAP = {
+        "shutter": Shutter, "gate": Gate, "gatebox": GateBox, "gateboxb": GateBoxB
+    }
 
     def __init__(self, product, alias, methods, dev_class):
         self._device_class = dev_class
@@ -137,9 +168,7 @@ class Cover(Feature):
             return None
 
         alias = self._alias
-        raw = self.raw_value("desired")
-        min_position = self._attributes.min_position
-        return self._product.expect_int(alias, raw, 100, min_position)
+        return self._attributes.read_desired(alias, self.raw_value, self._product)
 
     # TODO: refactor
     def _read_state(self):

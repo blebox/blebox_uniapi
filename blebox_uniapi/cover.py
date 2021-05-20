@@ -122,12 +122,14 @@ class GateBoxB(GateBox):
 
 # TODO: handle tilt
 class Cover(Feature):
-    ATTR_CLASS_MAP = {
-        "shutter": Shutter, "gate": Gate, "gatebox": GateBox, "gateboxb": GateBoxB
-    }
+    ATTR_CLASS_MAP = {"shutter": Shutter, "gate": Gate, "gatebox": GateBox}
 
     def __init__(self, product, alias, methods, dev_class):
         self._device_class = dev_class
+        # This is realy awful hack for different GateBox apis.
+        # In return, it prevents additional changes in homeassistant core lib.
+        if product.type == "gateBoxB":
+            self.ATTR_CLASS_MAP[self._device_class] = GateBoxB
         self._attributes = self.ATTR_CLASS_MAP[self._device_class]()
         super().__init__(product, alias, methods)
 

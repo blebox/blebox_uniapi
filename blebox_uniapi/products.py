@@ -55,7 +55,7 @@ class Products:
                     ]
                 ],
             },
-            # I don't know well naming convention for your products and it's subgroups
+            # I don't know well naming convention for your products and their subgroups
             # so I named it temporary "gateBoxB".
             "gateBoxB": {
                 "api_path": "/state",
@@ -70,7 +70,7 @@ class Products:
                         {
                             "position": "gate/currentPos",
                         },
-                        "gateboxb",
+                        "gatebox",
                     ]
                 ],
             },

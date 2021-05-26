@@ -3,7 +3,7 @@ from .feature import Feature
 
 
 class Gate:
-    """Previous class name: Slider, is it problem if I renamed it ?"""
+
     def read_state(self, alias, raw_value, product):
         raw = raw_value("state")
         return product.expect_int(alias, raw, 4, 0)

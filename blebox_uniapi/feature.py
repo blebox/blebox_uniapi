@@ -25,7 +25,7 @@ class Feature:
 
     @property
     def product(self):
-       return self._product
+        return self._product
 
     # TODO: (cleanup) move to product/box ?
     def raw_value(self, name):

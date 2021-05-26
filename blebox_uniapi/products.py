@@ -55,8 +55,6 @@ class Products:
                     ]
                 ],
             },
-            # I don't know well naming convention for your products and it's subgroups
-            # so I named it temporary "gateBoxB".
             "gateBoxB": {
                 "api_path": "/state",
                 "api_level_range": [20200831, 20210118],

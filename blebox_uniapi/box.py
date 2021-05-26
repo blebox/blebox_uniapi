@@ -112,8 +112,6 @@ class Box:
 
         # Currently code doesn't support different apis for the same types or products
         # and should be heavily refactored to support that functionality.
-        # Also I don't know if every "gateBox" product have apiLevel (line 86) that is
-        # why I used additional condition
         if type == "gateBox" and level:
             _min, _max = Products.CONFIG["types"]["gateBoxB"]["api_level_range"]
             if _min <= level <= _max:

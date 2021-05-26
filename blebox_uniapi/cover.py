@@ -3,7 +3,7 @@ from .feature import Feature
 
 
 class Gate:
-    """Previous class name: Slider, is it problem if I renamed it ?"""
+
     def read_state(self, alias, raw_value, product):
         raw = raw_value("state")
         return product.expect_int(alias, raw, 4, 0)
@@ -127,7 +127,6 @@ class Cover(Feature):
     def __init__(self, product, alias, methods, dev_class):
         self._device_class = dev_class
         # This is realy awful hack for different GateBox apis.
-        # In return, it prevents additional changes in homeassistant core lib.
         if product.type == "gateBoxB":
             self.ATTR_CLASS_MAP[self._device_class] = GateBoxB
         self._attributes = self.ATTR_CLASS_MAP[self._device_class]()

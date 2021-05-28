@@ -102,12 +102,7 @@ class GateBoxB(GateBox):
         if current == 0:  # closed
             return 3  # closed (lower/left limit)
 
-        if current == 100:  # opened
-            return 4  # open (upper/right limit)
-
-        # I don't know if I can leave it in that way,
-        # basically it will be returned while 'current == 50'
-        return 2  # manually stopped
+        return 4  # open (upper/right limit)
 
     def read_desired(self, alias, raw_value, product):
         return None

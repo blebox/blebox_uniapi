@@ -28,10 +28,10 @@ class Products:
                 "api_path": "/api/dimmer/state",
                 "api_level_range": [20170829, 20170829],
                 "api": {
-                    "set": lambda x: (
+                    "set": lambda x, y: (
                         "POST",
                         "/api/dimmer/set",
-                        '{"dimmer":{"desiredBrightness": ' + str(x) + "}}",
+                        f'{{"dimmer":{{"desiredBrightness": {str(x)}, "fadeSpeed": {"null" if y is None else str(y)}}}}}',
                     ),
                 },
                 "lights": [["brightness", {"desired": "dimmer/desiredBrightness"}]],
@@ -209,10 +209,10 @@ class Products:
                 "api_path": "/api/light/state",
                 "api_level_range": [20180718, 20180718],
                 "api": {
-                    "set": lambda x: (
+                    "set": lambda x, y: (
                         "POST",
                         "/api/light/set",
-                        f'{{"light": {{"desiredColor": "{x}"}}}}',
+                        f'{{"light": {{"desiredColor": "{x}", "fadeSpeed": {"null" if y is None else str(y)}}}}}',
                     )
                 },
                 "lights": [["brightness", {"desired": "light/desiredColor"}]],

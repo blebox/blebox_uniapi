@@ -276,7 +276,7 @@ class TestDimmer(DefaultBoxTest):
             code,
             aioclient_mock,
             "/api/dimmer/set",
-            '{"dimmer":{"desiredBrightness": ' + str(value) + "}}",
+            '{"dimmer":{"desiredBrightness": ' + str(value) + ', "fadeSpeed": ' + json.dumps(None) + '}}',
             response,
         )
 
@@ -489,7 +489,7 @@ class TestWLightBoxS(DefaultBoxTest):
             code,
             aioclient_mock,
             "/api/light/set",
-            json.dumps({"light": {"desiredColor": raw}}),
+            json.dumps({"light": {"desiredColor": raw, "fadeSpeed": None}}),
             response,
         )
 

@@ -55,6 +55,23 @@ class Products:
                     ]
                 ],
             },
+            "gateBoxB": {
+                "api_path": "/state",
+                "api_level_range": [20200831, 20210118],
+                "api": {
+                    "primary": lambda x=None: ("GET", "/s/p", None),
+                    "secondary": lambda x=None: ("GET", "/s/s", None),
+                },
+                "covers": [
+                    [
+                        "position",
+                        {
+                            "position": "gate/currentPos",
+                        },
+                        "gatebox",
+                    ]
+                ],
+            },
             "gateController": {
                 "api_path": "/api/gatecontroller/state",
                 "api_level_range": [20180604, 20190911],

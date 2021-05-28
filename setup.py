@@ -42,6 +42,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/blebox/blebox_uniapi',
-    version='1.3.2',
+    version='1.3.3',
     zip_safe=False,
 )

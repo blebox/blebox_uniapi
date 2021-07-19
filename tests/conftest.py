@@ -4,6 +4,7 @@ import copy
 import json as _json
 import asyncio
 import re
+from datetime import date, timedelta
 
 import logging
 
@@ -17,9 +18,10 @@ from aiohttp import ClientResponseError
 
 import pytest
 
+from blebox_uniapi.config import get_latest_conf
 from blebox_uniapi.session import ApiHost
 from blebox_uniapi.products import Products
-from blebox_uniapi.error import UnsupportedBoxVersion, UnsupportedBoxResponse
+from blebox_uniapi.error import UnsupportedBoxVersion
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,6 +71,12 @@ def jmerge(base, ext):
     result = copy.deepcopy(base)
     my_merger.merge(result, _json.loads(ext))
     return result
+
+
+def future_date(delta_days=300):
+    """Generate future date string in 'YYYYMMDD' format."""
+    future_date = date.today() + timedelta(days=delta_days)
+    return future_date.strftime('%Y%m%d')
 
 
 HTTP_MOCKS = {}
@@ -189,46 +197,46 @@ class DefaultBoxTest:
         return entity
 
     async def test_future_version(self, aioclient_mock):
-        """Test version support."""
+        """
+        Test support for future versions, that is last supported entry in config type file.
+        """
         await self.allow_get_info(aioclient_mock, self.DEVICE_INFO_FUTURE)
         entity = (await self.async_entities(aioclient_mock))[0]
-        assert entity.outdated is False
+
+        assert (
+            entity._feature.product._config is
+            get_latest_conf(entity._feature.product.type)
+        )
 
     async def test_latest_version(self, aioclient_mock):
-        """Test version support."""
+        """
+        Test support for latest versions, that is last supported entry in config type file.
+        """
         await self.allow_get_info(aioclient_mock, self.DEVICE_INFO_LATEST)
         entity = (await self.async_entities(aioclient_mock))[0]
-        assert entity.outdated is False
 
-    async def test_outdated_version(self, aioclient_mock):
-        """Test version support."""
-        if self.DEVICE_INFO_MINIMUM != self.DEVICE_INFO_LATEST:
-            await self.allow_get_info(aioclient_mock, self.DEVICE_INFO_OUTDATED)
-            entity = (await self.async_entities(aioclient_mock))[0]
-            assert entity.outdated is True
-
-    async def test_minimum_version(self, aioclient_mock):
-        """Test version support."""
-        if self.DEVICE_INFO_MINIMUM != self.DEVICE_INFO_LATEST:
-            await self.allow_get_info(aioclient_mock, self.DEVICE_INFO_MINIMUM)
-            entity = (await self.async_entities(aioclient_mock))[0]
-            assert entity.outdated is True
+        assert (
+            entity._feature.product._config is
+            get_latest_conf(entity._feature.product.type)
+        )
 
     async def test_unsupported_version(self, aioclient_mock):
         """Test version support."""
 
-        # only gateBox is same, because no apiLevel
-        if self.DEVICE_INFO_MINIMUM != self.DEVICE_INFO_FUTURE:
+        # only gateBox is same
+        if self.DEVICE_INFO != self.DEVICE_INFO_UNSUPPORTED:
             await self.allow_get_info(aioclient_mock, self.DEVICE_INFO_UNSUPPORTED)
             with pytest.raises(UnsupportedBoxVersion):
                 await self.async_entities(aioclient_mock)
 
     async def test_unspecified_version(self, aioclient_mock):
-        """Test when api level is not specified."""
+        """
+        Test default_api_level when api level is not specified in device info.
 
+        """
         if self.DEVICE_INFO_UNSPECIFIED_API is not None:
             await self.allow_get_info(aioclient_mock, self.DEVICE_INFO_UNSPECIFIED_API)
-            with pytest.raises(UnsupportedBoxResponse):
+            with pytest.raises(UnsupportedBoxVersion):
                 await self.async_entities(aioclient_mock)
 
 
@@ -316,12 +324,6 @@ class CommonEntity:
 
     async def async_update(self):
         await self._feature.async_update()
-
-    # NOTE: Not a Home Assistant field
-    @property
-    def outdated(self):
-        """Return the temperature."""
-        return self._feature._product.outdated
 
     @property
     def device_info(self):

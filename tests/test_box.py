@@ -128,8 +128,8 @@ async def test_without_hardware_version(mock_session, data):
 
 async def test_without_api_level(mock_session, data):
     with pytest.raises(
-        error.UnsupportedBoxResponse,
-        match=r"'foobar' \(airSensor:abcd1234ef/1.23 at 172.1.2.3:80\) has no apiLevel",
+        error.UnsupportedBoxVersion,
+        match=r"'foobar' \(airSensor:abcd1234ef/1.23 at 172.1.2.3:80\) has unsupported version",
     ):
         del data["apiLevel"]
         Box(mock_session, data)
@@ -158,8 +158,6 @@ async def test_properties(mock_session, data):
     assert "4.56" == box.hardware_version
     assert "BleBox" == box.brand
     assert 20180403 == box.api_version
-    assert (1, 0, 0) == box.version
-    assert True is box.outdated
 
 
 async def test_validations(mock_session, data):

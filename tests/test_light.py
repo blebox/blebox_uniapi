@@ -1,9 +1,10 @@
 """BleBox light entities tests."""
 import json
 
-from .conftest import DefaultBoxTest, jmerge, CommonEntity
+from .conftest import CommonEntity, DefaultBoxTest, future_date, jmerge
 
-from blebox_uniapi.error import UnsupportedBoxResponse, BadOnValueError
+from blebox_uniapi.config import get_latest_api_level
+from blebox_uniapi.error import BadOnValueError, UnsupportedBoxVersion
 
 # TODO: remove
 import colorsys
@@ -174,11 +175,10 @@ class TestDimmer(DefaultBoxTest):
         {{ "device": {{ "apiLevel": {apiLevel} }} }}
         """
 
-    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(20170930))
-    DEVICE_INFO_LATEST = jmerge(DEVICE_INFO, patch_version(20170829))
-    DEVICE_INFO_OUTDATED = jmerge(DEVICE_INFO, patch_version(20170829))
-
-    DEVICE_INFO_MINIMUM = jmerge(DEVICE_INFO, patch_version(20170829))
+    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(future_date()))
+    DEVICE_INFO_LATEST = jmerge(
+        DEVICE_INFO, patch_version(get_latest_api_level("dimmerBox"))
+    )
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20170828))
 
     DEVICE_INFO_UNSPECIFIED_API = json.loads(
@@ -371,11 +371,10 @@ class TestWLightBoxS(DefaultBoxTest):
         {{ "device": {{ "apiLevel": {apiLevel} }} }}
         """
 
-    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(20180719))
-    DEVICE_INFO_LATEST = jmerge(DEVICE_INFO, patch_version(20180718))
-    DEVICE_INFO_OUTDATED = jmerge(DEVICE_INFO, patch_version(20180718))
-
-    DEVICE_INFO_MINIMUM = jmerge(DEVICE_INFO, patch_version(20180718))
+    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(future_date()))
+    DEVICE_INFO_LATEST = jmerge(
+        DEVICE_INFO, patch_version(get_latest_api_level("wLightBoxS"))
+    )
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180717))
 
     DEVICE_INFO_UNSPECIFIED_API = json.loads(
@@ -574,11 +573,10 @@ class TestWLightBox(DefaultBoxTest):
         {{ "device": {{ "apiLevel": {apiLevel} }} }}
         """
 
-    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(20190809))
-    DEVICE_INFO_LATEST = jmerge(DEVICE_INFO, patch_version(20190808))
-    DEVICE_INFO_OUTDATED = jmerge(DEVICE_INFO, patch_version(20190807))
-
-    DEVICE_INFO_MINIMUM = jmerge(DEVICE_INFO, patch_version(20180718))
+    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(future_date()))
+    DEVICE_INFO_LATEST = jmerge(
+        DEVICE_INFO, patch_version(get_latest_api_level("wLightBox"))
+    )
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180717))
 
     DEVICE_INFO_UNSPECIFIED_API = json.loads(
@@ -830,5 +828,5 @@ class TestWLightBox(DefaultBoxTest):
         )
 
         await self.allow_get_info(aioclient_mock, DEVICE_INFO_ANCIENT_STRUCTURE)
-        with pytest.raises(UnsupportedBoxResponse):
+        with pytest.raises(UnsupportedBoxVersion):
             await self.async_entities(aioclient_mock)

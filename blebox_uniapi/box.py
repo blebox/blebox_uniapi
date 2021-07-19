@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
-
-import semver
 import re
 import asyncio
 import time
 
-from .sensor import Temperature
-from .cover import Cover
 from .air_quality import AirQuality
-from .light import Light
 from .climate import Climate
+from .config import default_api_level, get_conf, get_conf_set
+from .cover import Cover
+from .light import Light
+from .sensor import Temperature
 from .switch import Switch
 
 from .error import (
@@ -57,6 +56,13 @@ class Box:
         except KeyError:
             product = type
 
+        # TODO: make wLightBox API support multiple products
+        # in 2020 wLightBoxS API has been deprecated and it started using wLightBox API
+        # current codebase needs a refactor to support multiple product sharing one API
+        # as a temporary workaround we are using 'alias' type wLightBoxS2
+        if type == "wLightBox" and product == "wLightBoxS":
+            type = "wLightBoxS"
+
         location = f"{product}:{unique_id} at {address}"
 
         try:
@@ -80,62 +86,17 @@ class Box:
                 info, f"{location} has no hardware version"
             ) from ex
 
-        try:
-            level = int(info["apiLevel"])
-        except KeyError:
-            if type != "gateBox":
-                raise UnsupportedBoxResponse(info, f"{location} has no apiLevel")
+        level = int(info.get("apiLevel", default_api_level))
 
-            level = None
+        config_set = get_conf_set(type)
+        if not config_set:
+            raise UnsupportedBoxResponse(f"{location} is not a supported type")
 
-        if type == "switchBox":
-            if level < 20190808:
-                type = "switchBox0"
+        config = get_conf(level, config_set)
+        if not config:
+            raise UnsupportedBoxVersion(f"{location} has unsupported version ({level}).")
 
-        # Here due to circular dependency
-        from .products import Products
-
-        try:
-            config = Products.CONFIG["types"][type]
-        except KeyError as ex:
-            raise UnsupportedBoxResponse(
-                info, f"{location} is not a supported type"
-            ) from ex
-
-        # TODO: make wLightBox API support multiple products
-        # in 2020 wLightBoxS API has been deprecated and it started using wLightBox API
-        # current codebase needs a refactor to support multiple product sharing one API
-        # as a temporary workaround we are using 'alias' type wLightBoxS2
-        if type == "wLightBox" and product == "wLightBoxS":
-            config = Products.CONFIG["types"]["wLightBoxS2"]
-            type = "wLightBoxS"
-
-        # Currently code doesn't support different apis for the same types or products
-        # and should be heavily refactored to support that functionality.
-        if type == "gateBox" and level:
-            _min, _max = Products.CONFIG["types"]["gateBoxB"]["api_level_range"]
-            if _min <= level <= _max:
-                config = Products.CONFIG["types"]["gateBoxB"]
-                type = "gateBoxB"
-
-        # Ok to crash here, since it's a bug
         self._data_path = config["api_path"]
-        min_supported, max_supported = config["api_level_range"]
-
-        # TODO: assume all are supported
-        if level is None:
-            level = min_supported
-
-        if level < min_supported:
-            raise UnsupportedBoxVersion(
-                info,
-                f"{location} has outdated firmware (last supported: {min_supported} vs {level}) .",
-            )
-
-        version, outdated = self.extract_version(
-            type, info, min_supported, max_supported, level
-        )
-
         self._type = type
         self._product = product
         self._unique_id = unique_id
@@ -143,14 +104,14 @@ class Box:
         self._firmware_version = firmware_version
         self._hardware_version = hardware_version
         self._api_version = level
-        self._version = version
-        self._outdated = outdated
+
         self._model = config.get("model", type)
+        self._subclass = config.get('subclass', None)
 
         self._api = config.get("api", {})
 
         self._features = {}
-        for item in {
+        for field, klass in {
             "air_qualities": AirQuality,
             "covers": Cover,
             "sensors": Temperature,  # TODO: too narrow
@@ -158,7 +119,6 @@ class Box:
             "climates": Climate,
             "switches": Switch,
         }.items():
-            field, klass = item
             try:
                 self._features[field] = [
                     klass(self, *args) for args in config.get(field, [])
@@ -206,17 +166,8 @@ class Box:
         return self._api_version
 
     @property
-    def version(self):
-        return self._version
-
-    @property
     def features(self):
         return self._features
-
-    @property
-    def outdated(self):
-        # TODO: fixme
-        return self._outdated
 
     @property
     def brand(self):
@@ -236,28 +187,6 @@ class Box:
         for feature_set in self._features.values():
             for feature in feature_set:
                 feature.after_update()
-
-    def extract_version(self, type, device_info, min_supported, max_supported, level):
-        minor = level - min_supported
-
-        current = semver.VersionInfo(1, minor, 0)
-
-        # TODO: uncomment when compatiblity is broken
-        # min_compatibility = config['min_semver'] # e.g. "1.0.0"
-        # if semver.VersionInfo.parse(min_compatibility) > current:
-        #     # TODO: coverage
-        #     raise OutdatedBoxVersion(device_info)
-
-        # TODO: for now, BleBox assumes backward-compatibility
-        max_minor = max_supported - min_supported
-        latest_version = semver.VersionInfo(1, max_minor, 0)
-
-        # TODO: uncomment when backward compatiblity is broken
-        # if current > latest_version:
-        #     raise UnsupportedAppVersion(device_info)
-
-        outdated = current < latest_version
-        return (current, outdated)
 
     async def async_api_command(self, command, value=None):
         method, *args = self._api[command](value)

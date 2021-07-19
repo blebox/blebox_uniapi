@@ -1,7 +1,9 @@
 """BleBox climate entities tests."""
 import json
 
-from .conftest import DefaultBoxTest, jmerge, CommonEntity
+from blebox_uniapi.config import get_latest_api_level
+
+from .conftest import CommonEntity, DefaultBoxTest, future_date, jmerge
 
 # TODO: remove
 SUPPORT_TARGET_TEMPERATURE = 1
@@ -135,10 +137,10 @@ class TestSauna(DefaultBoxTest):
         {{ "device": {{ "apiLevel": {apiLevel} }} }}
         """
 
-    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(20180605))
-    DEVICE_INFO_LATEST = jmerge(DEVICE_INFO, patch_version(20180604))
-    DEVICE_INFO_OUTDATED = jmerge(DEVICE_INFO, patch_version(20180604))
-    DEVICE_INFO_MINIMUM = jmerge(DEVICE_INFO, patch_version(20180604))
+    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(future_date()))
+    DEVICE_INFO_LATEST = jmerge(
+        DEVICE_INFO, patch_version(get_latest_api_level("saunaBox"))
+    )
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180603))
 
     DEVICE_INFO_UNSPECIFIED_API = json.loads(

@@ -117,14 +117,11 @@ class GateBoxB(GateBox):
 
 # TODO: handle tilt
 class Cover(Feature):
-    ATTR_CLASS_MAP = {"shutter": Shutter, "gate": Gate, "gatebox": GateBox}
 
     def __init__(self, product, alias, methods, dev_class):
         self._device_class = dev_class
-        # This is realy awful hack for different GateBox apis.
-        if product.type == "gateBoxB":
-            self.ATTR_CLASS_MAP[self._device_class] = GateBoxB
-        self._attributes = self.ATTR_CLASS_MAP[self._device_class]()
+        self._attributes = product._subclass()
+
         super().__init__(product, alias, methods)
 
     @property

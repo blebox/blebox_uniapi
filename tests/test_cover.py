@@ -3,9 +3,10 @@ import json
 
 import pytest
 
+from blebox_uniapi.config import get_latest_api_level
 from blebox_uniapi import error
 
-from .conftest import DefaultBoxTest, jmerge, CommonEntity
+from .conftest import CommonEntity, DefaultBoxTest, future_date, jmerge
 
 # TODO: remove
 ATTR_POSITION = "ATTR_POSITION"
@@ -55,7 +56,7 @@ class BleBoxCoverEntity(CommonEntity):
         types = {
             "shutter": DEVICE_CLASS_SHUTTER,
             "gatebox": DEVICE_CLASS_DOOR,
-            "gateboxb": DEVICE_CLASS_DOOR,
+            # "gateboxB": DEVICE_CLASS_DOOR,
             "gate": DEVICE_CLASS_DOOR,
         }
         return types[self._feature.device_class]
@@ -161,11 +162,10 @@ class TestShutter(CoverTest):
     """
     )
 
-    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(20190912))
-    DEVICE_INFO_LATEST = jmerge(DEVICE_INFO, patch_version(20190911))
-    DEVICE_INFO_OUTDATED = jmerge(DEVICE_INFO, patch_version(20190910))
-
-    DEVICE_INFO_MINIMUM = jmerge(DEVICE_INFO, patch_version(20180604))
+    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(future_date()))
+    DEVICE_INFO_LATEST = jmerge(
+        DEVICE_INFO, patch_version(get_latest_api_level("shutterBox"))
+    )
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180603))
 
     DEVICE_INFO_UNSPECIFIED_API = json.loads(
@@ -315,7 +315,6 @@ class TestGateBox(CoverTest):
 
     DEV_INFO_PATH = "api/gate/state"
 
-    # TODO: does gateBox have an api level currently?
     DEVICE_INFO = json.loads(
         """
         {
@@ -329,10 +328,10 @@ class TestGateBox(CoverTest):
         """
     )
 
-    DEVICE_INFO_FUTURE = DEVICE_INFO
-    DEVICE_INFO_LATEST = DEVICE_INFO
-    DEVICE_INFO_OUTDATED = DEVICE_INFO
-    DEVICE_INFO_MINIMUM = DEVICE_INFO
+    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, f'{{ "apiLevel":"{future_date()}" }}')
+    DEVICE_INFO_LATEST = jmerge(
+        DEVICE_INFO, f'{{ "apiLevel":"{get_latest_api_level("gateBox")}" }}'
+    )
     DEVICE_INFO_UNSUPPORTED = DEVICE_INFO
 
     DEVICE_INFO_UNSPECIFIED_API = None  # already handled as default case
@@ -495,11 +494,10 @@ class TestGateBoxB(CoverTest):
         """
     )
 
-    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(20210200))
-    DEVICE_INFO_LATEST = jmerge(DEVICE_INFO, patch_version(20210118))
-
-    DEVICE_INFO_OUTDATED = DEVICE_INFO
-    DEVICE_INFO_MINIMUM = DEVICE_INFO
+    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(future_date()))
+    DEVICE_INFO_LATEST = jmerge(
+        DEVICE_INFO, patch_version(get_latest_api_level("gateBox"))
+    )
     DEVICE_INFO_UNSUPPORTED = DEVICE_INFO
 
     DEVICE_INFO_UNSPECIFIED_API = None  # already handled as default case
@@ -516,22 +514,14 @@ class TestGateBoxB(CoverTest):
     STATE_STOPPED = jmerge(STATE_DEFAULT, '{"gate": {"currentPos": 50 }}')
     STATE_FULLY_OPENED = jmerge(STATE_DEFAULT, '{"gate": {"currentPos": 100 }}')
 
-    async def test_unsupported_version(self, aioclient_mock):
-        """
-        Test version support. We don't need this - why is it written like that ?
-        What is the connection between api_level of the product and it's api_level_range ?
-        If api_level won't be in range of api_level_range then it will be using gateBox
-        class, not gateBoxB class.
-        """
-
     async def test_init(self, aioclient_mock):
         """Test cover default state."""
 
         await self.allow_get_info(aioclient_mock)
         entity = (await self.async_entities(aioclient_mock))[0]
 
-        assert entity.name == "My gateBox 1 (gateBoxB#position)"
-        assert entity.unique_id == "BleBox-gateBoxB-1afe34d27e4f-position"
+        assert entity.name == "My gateBox 1 (gateBox#position)"
+        assert entity.unique_id == "BleBox-gateBox-1afe34d27e4f-position"
         assert entity.device_class == DEVICE_CLASS_DOOR
         assert entity.supported_features & SUPPORT_OPEN
         assert entity.supported_features & SUPPORT_CLOSE
@@ -543,11 +533,11 @@ class TestGateBoxB(CoverTest):
 
         await self.allow_get_info(aioclient_mock, self.DEVICE_INFO)
         entity = (await self.async_entities(aioclient_mock))[0]
-
+        # import pdb;pdb.set_trace()
         assert entity.device_info["name"] == "My gateBox 1"
         assert entity.device_info["mac"] == "1afe34d27e4f"
         assert entity.device_info["manufacturer"] == "BleBox"
-        assert entity.device_info["model"] == "gateBoxB"
+        assert entity.device_info["model"] == "gateBox"
         assert entity.device_info["sw_version"] == "0.1010"
 
     async def test_fully_opened(self, aioclient_mock):
@@ -590,11 +580,10 @@ class TestGateController(CoverTest):
     """
     )
 
-    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(20190912))
-    DEVICE_INFO_LATEST = jmerge(DEVICE_INFO, patch_version(20190911))
-    DEVICE_INFO_OUTDATED = jmerge(DEVICE_INFO, patch_version(20190910))
-
-    DEVICE_INFO_MINIMUM = jmerge(DEVICE_INFO, patch_version(20180604))
+    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(future_date()))
+    DEVICE_INFO_LATEST = jmerge(
+        DEVICE_INFO, patch_version(get_latest_api_level("gateController"))
+    )
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180603))
 
     # NOTE: can't happen with a real device

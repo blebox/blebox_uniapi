@@ -2,7 +2,9 @@
 
 import json
 
-from .conftest import DefaultBoxTest, CommonEntity, jmerge
+from blebox_uniapi.box_types import get_latest_api_level
+
+from .conftest import CommonEntity, DefaultBoxTest, future_date, jmerge
 
 
 class BleBoxAirQualityEntity(CommonEntity):
@@ -57,10 +59,10 @@ class TestAirSensor(DefaultBoxTest):
         {{ "apiLevel": {apiLevel} }}
         """
 
-    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(20191113))
-    DEVICE_INFO_LATEST = jmerge(DEVICE_INFO, patch_version(20191112))
-    DEVICE_INFO_OUTDATED = jmerge(DEVICE_INFO, patch_version(20191111))
-    DEVICE_INFO_MINIMUM = jmerge(DEVICE_INFO, patch_version(20180403))
+    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(future_date()))
+    DEVICE_INFO_LATEST = jmerge(
+        DEVICE_INFO, patch_version(get_latest_api_level("airSensor"))
+    )
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180402))
 
     DEVICE_INFO_UNSPECIFIED_API = json.loads(

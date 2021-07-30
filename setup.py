@@ -10,11 +10,11 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = ['aiohttp>=3', 'semver>=2.9.1']
+requirements = ['aiohttp>=3']
 
 setup_requirements = ['pytest-runner', ]
 
-test_requirements = ['pytest>=3', 'pytest-asyncio>=0.10.0', 'asynctest>=0.13', 'semver', 'deepmerge']
+test_requirements = ['pytest>=3', 'pytest-asyncio>=0.10.0', 'asynctest>=0.13', 'deepmerge']
 
 setup(
     author="BleBox",

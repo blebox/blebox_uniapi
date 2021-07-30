@@ -2,7 +2,9 @@
 
 import json
 
-from .conftest import DefaultBoxTest, CommonEntity, jmerge
+from blebox_uniapi.box_types import get_latest_api_level
+
+from .conftest import CommonEntity, DefaultBoxTest, future_date, jmerge
 
 TEMP_CELSIUS = "celsius"
 DEVICE_CLASS_TEMPERATURE = "temperature class"
@@ -58,10 +60,10 @@ class TestTempSensor(DefaultBoxTest):
         {{ "device": {{ "apiLevel": {apiLevel} }} }}
         """
 
-    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(20180605))
-    DEVICE_INFO_LATEST = jmerge(DEVICE_INFO, patch_version(20180604))
-    DEVICE_INFO_OUTDATED = jmerge(DEVICE_INFO, patch_version(20180604))
-    DEVICE_INFO_MINIMUM = jmerge(DEVICE_INFO, patch_version(20180604))
+    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(future_date()))
+    DEVICE_INFO_LATEST = jmerge(
+        DEVICE_INFO, patch_version(get_latest_api_level("tempSensor"))
+    )
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180603))
 
     DEVICE_INFO_UNSPECIFIED_API = json.loads(
@@ -108,7 +110,7 @@ class TestTempSensor(DefaultBoxTest):
         assert entity.unique_id == "BleBox-tempSensor-1afe34db9437-0.temperature"
         assert entity.unit_of_measurement == TEMP_CELSIUS
         assert entity.state is None
-        assert entity.outdated is False
+        # assert entity.outdated is False
 
     async def test_device_info(self, aioclient_mock):
         await self.allow_get_info(aioclient_mock, self.DEVICE_INFO)

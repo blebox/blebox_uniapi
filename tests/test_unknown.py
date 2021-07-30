@@ -48,7 +48,7 @@ class TestUnknownDevice:
     async def test_unknown_product_without_device_and_type(self, aioclient_mock, data):
         host = "172.1.2.3"
         with pytest.raises(
-            error.UnsupportedBoxResponse, match=r"Missing 'type' field:"
+            error.UnsupportedBoxResponse, match=r"has no type"
         ):
             del data["type"]
             json_get_expect(

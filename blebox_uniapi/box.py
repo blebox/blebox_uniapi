@@ -4,8 +4,8 @@ import asyncio
 import time
 
 from .air_quality import AirQuality
+from .box_types import default_api_level, get_conf, get_conf_set
 from .climate import Climate
-from .config import default_api_level, get_conf, get_conf_set
 from .cover import Cover
 from .light import Light
 from .sensor import Temperature

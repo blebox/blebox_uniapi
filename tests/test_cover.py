@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from blebox_uniapi.config import get_latest_api_level
+from blebox_uniapi.box_types import get_latest_api_level
 from blebox_uniapi import error
 
 from .conftest import CommonEntity, DefaultBoxTest, future_date, jmerge

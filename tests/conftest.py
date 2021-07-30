@@ -18,7 +18,7 @@ from aiohttp import ClientResponseError
 
 import pytest
 
-from blebox_uniapi.config import get_latest_conf
+from blebox_uniapi.box_types import get_latest_conf
 from blebox_uniapi.session import ApiHost
 from blebox_uniapi.products import Products
 from blebox_uniapi.error import UnsupportedBoxVersion

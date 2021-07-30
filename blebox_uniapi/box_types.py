@@ -7,7 +7,7 @@ default_api_level = 20151206
 
 def get_conf_set(product_type):
     """Get all configurations for provided product type."""
-    conf_set = CONFIGURATION.get(product_type, {})
+    conf_set = BOX_TYPE_CONF.get(product_type, {})
     return conf_set
 
 
@@ -36,10 +36,11 @@ def get_latest_api_level(product_type):
     if conf_set:
         return sorted(conf_set, reverse=True)[0]
 
-    return conf_set
+    return 0
 
-# Configuration for all device types
-CONFIGURATION = {
+
+# Configuration for all box types
+BOX_TYPE_CONF = {
     # airSensor
     "airSensor": {
         20180403: {

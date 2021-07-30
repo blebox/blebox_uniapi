@@ -2,7 +2,7 @@
 
 import json
 
-from blebox_uniapi.config import get_latest_api_level
+from blebox_uniapi.box_types import get_latest_api_level
 
 from .conftest import CommonEntity, DefaultBoxTest, future_date, jmerge
 

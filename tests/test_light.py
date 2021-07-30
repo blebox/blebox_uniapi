@@ -3,7 +3,7 @@ import json
 
 from .conftest import CommonEntity, DefaultBoxTest, future_date, jmerge
 
-from blebox_uniapi.config import get_latest_api_level
+from blebox_uniapi.box_types import get_latest_api_level
 from blebox_uniapi.error import BadOnValueError, UnsupportedBoxVersion
 
 # TODO: remove

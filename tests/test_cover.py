@@ -56,7 +56,6 @@ class BleBoxCoverEntity(CommonEntity):
         types = {
             "shutter": DEVICE_CLASS_SHUTTER,
             "gatebox": DEVICE_CLASS_DOOR,
-            # "gateboxB": DEVICE_CLASS_DOOR,
             "gate": DEVICE_CLASS_DOOR,
         }
         return types[self._feature.device_class]
@@ -533,7 +532,6 @@ class TestGateBoxB(CoverTest):
 
         await self.allow_get_info(aioclient_mock, self.DEVICE_INFO)
         entity = (await self.async_entities(aioclient_mock))[0]
-        # import pdb;pdb.set_trace()
         assert entity.device_info["name"] == "My gateBox 1"
         assert entity.device_info["mac"] == "1afe34d27e4f"
         assert entity.device_info["manufacturer"] == "BleBox"

@@ -33,6 +33,11 @@ def aioclient_mock():
     with patch("aiohttp.ClientSession", spec_set=True, autospec=True) as mocked_session:
         yield mocked_session.return_value
 
+@pytest.fixture
+def entity_data_mock():
+    with patch("blebox_uniapi.products.Products.get_entity_data", spec_set=True, autospec=True) as status_data:
+        yield status_data
+
 
 def array_merge(config, path, base, nxt):
     """Replace an array element with the merge result of elements."""
@@ -124,7 +129,6 @@ def json_post_expect(mock, url, **kwargs):
         def __call__(self, url, **kwargs):
             # TODO: timeout
             params = kwargs.get("data")
-
             # TODO: better checking of params (content vs raw json)
             data = HTTP_MOCKS[self._key][url][params]
             response = _json.dumps(data).encode("utf-8")
@@ -196,10 +200,11 @@ class DefaultBoxTest:
         await entity.async_update()
         return entity
 
-    async def test_future_version(self, aioclient_mock):
+    async def test_future_version(self, aioclient_mock, entity_data_mock):
         """
         Test support for future versions, that is last supported entry in config type file.
         """
+        entity_data_mock.return_value = getattr(self, 'STATUS', None)
         await self.allow_get_info(aioclient_mock, self.DEVICE_INFO_FUTURE)
         entity = (await self.async_entities(aioclient_mock))[0]
 
@@ -208,10 +213,11 @@ class DefaultBoxTest:
             get_latest_conf(entity._feature.product.type)
         )
 
-    async def test_latest_version(self, aioclient_mock):
+    async def test_latest_version(self, aioclient_mock, entity_data_mock):
         """
         Test support for latest versions, that is last supported entry in config type file.
         """
+        entity_data_mock.return_value = getattr(self, 'STATUS', None)
         await self.allow_get_info(aioclient_mock, self.DEVICE_INFO_LATEST)
         entity = (await self.async_entities(aioclient_mock))[0]
 
@@ -220,20 +226,22 @@ class DefaultBoxTest:
             get_latest_conf(entity._feature.product.type)
         )
 
-    async def test_unsupported_version(self, aioclient_mock):
+    async def test_unsupported_version(self, aioclient_mock, entity_data_mock):
         """Test version support."""
 
+        entity_data_mock.return_value = getattr(self, 'STATUS', None)
         # only gateBox is same
         if self.DEVICE_INFO != self.DEVICE_INFO_UNSUPPORTED:
             await self.allow_get_info(aioclient_mock, self.DEVICE_INFO_UNSUPPORTED)
             with pytest.raises(UnsupportedBoxVersion):
                 await self.async_entities(aioclient_mock)
 
-    async def test_unspecified_version(self, aioclient_mock):
+    async def test_unspecified_version(self, aioclient_mock, entity_data_mock):
         """
         Test default_api_level when api level is not specified in device info.
 
         """
+        entity_data_mock.return_value = getattr(self, 'STATUS', None)
         if self.DEVICE_INFO_UNSPECIFIED_API is not None:
             await self.allow_get_info(aioclient_mock, self.DEVICE_INFO_UNSPECIFIED_API)
             with pytest.raises(UnsupportedBoxVersion):

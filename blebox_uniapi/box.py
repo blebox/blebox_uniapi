@@ -8,7 +8,7 @@ from .box_types import default_api_level, get_conf, get_conf_set
 from .climate import Climate
 from .cover import Cover
 from .light import Light
-from .sensor import Temperature
+from .sensor import Temperature, Sensor
 from .switch import Switch
 
 from .error import (
@@ -28,7 +28,7 @@ DEFAULT_PORT = 80
 
 class Box:
     # TODO: pass IP? (For better error messages).
-    def __init__(self, api_session, info):
+    def __init__(self, api_session, info, entities_data=None):
         self._last_real_update = None
         self._sem = asyncio.BoundedSemaphore()
         self._session = api_session
@@ -110,26 +110,8 @@ class Box:
 
         self._api = config.get("api", {})
 
-        self._features = {}
-        for field, klass in {
-            "air_qualities": AirQuality,
-            "covers": Cover,
-            "sensors": Temperature,  # TODO: too narrow
-            "lights": Light,
-            "climates": Climate,
-            "switches": Switch,
-        }.items():
-            try:
-                self._features[field] = [
-                    klass(self, *args) for args in config.get(field, [])
-                ]
-            # TODO: fix constructors instead
-            except KeyError as ex:
-                raise UnsupportedBoxResponse(
-                    info, f"{location} failed to initialize: {ex}"
-                )  # from ex
-
         self._config = config
+        self._features = self.create_feature_set(entities_data)
 
         self._update_last_data(None)
 
@@ -177,13 +159,26 @@ class Box:
     def model(self):
         return self._model
 
-    # TODO: report timestamp of last measurement (if possible)
+    def create_feature_set(self, entities_data):
+        features = {}
+
+        klass = self._config['class']
+        entity_type = self._config['entity_type']
+        if not self._config['methods'] and entities_data is not None:
+            # create dynamic entities from first /state call to device
+            features[entity_type] = klass(self, entities_data).create_entities()
+        else:
+            # create static entities from 'box_types.BOX_TYPE_CONF'
+            features[entity_type] = [klass(self, *args) for args in self._config.get('methods', [])]
+
+        return features
 
     async def async_update_data(self):
         await self._async_api(True, "GET", self._data_path)
 
     def _update_last_data(self, new_data):
         self._last_data = new_data
+
         for feature_set in self._features.values():
             for feature in feature_set:
                 feature.after_update()

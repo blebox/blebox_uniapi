@@ -104,6 +104,7 @@ class Box:
         self._firmware_version = firmware_version
         self._hardware_version = hardware_version
         self._api_version = level
+        self._configuration_url = f"http://{address}"
 
         self._model = config.get("model", type)
         self._subclass = config.get('subclass', None)
@@ -156,6 +157,10 @@ class Box:
     @property
     def firmware_version(self):
         return self._firmware_version
+
+    @property
+    def configuration_url(self):
+        return self._configuration_url
 
     @property
     def hardware_version(self):

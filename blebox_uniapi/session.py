@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import aiohttp
+import aiohttp_retry
 import asyncio
 import logging
 
@@ -25,7 +26,7 @@ class ApiHost:
         self._session = session
 
         if not self._session:
-            self._session = aiohttp.ClientSession(loop=loop, timeout=timeout)
+            self._session = aiohttp_retry.RetryClient(loop=loop, timeout=timeout)
 
         # TODO: remove?
         self._loop = loop

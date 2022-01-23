@@ -2,6 +2,11 @@
 History
 =======
 
+1.4.0 (2022-01-23)
+------------------
+
+* handle temporary error retrying HTTP request
+
 1.3.3 (2021-05-12)
 ------------------
 

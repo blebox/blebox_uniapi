@@ -10,7 +10,7 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = ['aiohttp>=3']
+requirements = ['aiohttp>=3', 'aiohttp_retry>=2.5.6']
 
 setup_requirements = ['pytest-runner', ]
 
@@ -42,6 +42,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/blebox/blebox_uniapi',
-    version='1.3.3',
+    version='1.4.0',
     zip_safe=False,
 )

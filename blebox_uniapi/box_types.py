@@ -167,6 +167,31 @@ BOX_TYPE_CONF = {
             ],
         }
     },
+    # thermoboxBox
+    "thermoBox": {
+        20180604: {
+            # TODO: read extended state only once on startup
+            "api_path": "/api/thermo/extended/state",
+            # TODO: use an api map (map to semver)? Or constraints?
+            "api": {
+                "on": lambda x=None: ("GET", "/s/1", None),
+                "off": lambda x=None: ("GET", "/s/0", None),
+                "set": lambda x=None: ("GET", "/s/t/" + str(x), None),
+            },
+            "climates": [
+                [
+                    "thermostat",
+                    {
+                        "desired": "thermo/desiredTemp",
+                        "minimum": "thermo/minimumTemp",
+                        "maximum": "thermo/maximumTemp",
+                        "temperature": "sensors/[id=0]/value",
+                        "state": "thermo/state",
+                    },
+                ]
+            ],
+        }
+    },
     "shutterBox": {
         20180604: {
             # name of the subclass class of shutter family

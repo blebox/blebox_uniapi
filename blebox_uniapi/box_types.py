@@ -266,6 +266,50 @@ BOX_TYPE_CONF = {
             ],
         }
     },
+    # multiSensor (tempSensor Pro)
+    "multiSensor": {
+        20180604: {
+            "api_path": "/api/multiensor/state",
+            "sensors": [
+                [
+                    "0.temperature",
+                    {
+                        "temperature": "multiSensor/sensors/[id=0]/value",
+                        "trend": "multiSensor/sensors/[id=0]/trend",
+                        "state": "multiSensor/sensors/[id=0]/state",
+                        "elapsed": "multiSensor/sensors/[id=0]/elapsedTimeS",
+                    },
+                ],
+                [
+                    "1.temperature",
+                    {
+                        "temperature": "multiSensor/sensors/[id=1]/value",
+                        "trend": "multiSensor/sensors/[id=1]/trend",
+                        "state": "multiSensor/sensors/[id=1]/state",
+                        "elapsed": "multiSensor/sensors/[id=1]/elapsedTimeS",
+                    },
+                ],
+                [
+                    "2.temperature",
+                    {
+                        "temperature": "multiSensor/sensors/[id=2]/value",
+                        "trend": "multiSensor/sensors/[id=2]/trend",
+                        "state": "multiSensor/sensors/[id=2]/state",
+                        "elapsed": "multiSensor/sensors/[id=2]/elapsedTimeS",
+                    },
+                ],
+                [
+                    "3.temperature",
+                    {
+                        "temperature": "multiSensor/sensors/[id=3]/value",
+                        "trend": "multiSensor/sensors/[id=3]/trend",
+                        "state": "multiSensor/sensors/[id=3]/state",
+                        "elapsed": "multiSensor/sensors/[id=3]/elapsedTimeS",
+                    },
+                ]
+            ],
+        }
+    },
     # wLightBox
     "wLightBox": {
         20180718: {

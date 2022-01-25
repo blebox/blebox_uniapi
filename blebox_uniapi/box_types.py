@@ -167,7 +167,7 @@ BOX_TYPE_CONF = {
             ],
         }
     },
-    # thermoboxBox
+    # thermoBox
     "thermoBox": {
         20180604: {
             # TODO: read extended state only once on startup

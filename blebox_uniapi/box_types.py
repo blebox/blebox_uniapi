@@ -269,7 +269,7 @@ BOX_TYPE_CONF = {
     # multiSensor (tempSensor Pro)
     "multiSensor": {
         20180604: {
-            "api_path": "/api/multiensor/state",
+            "api_path": "/api/multisensor/state",
             "sensors": [
                 [
                     "0.temperature",

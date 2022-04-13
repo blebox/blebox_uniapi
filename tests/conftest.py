@@ -20,7 +20,7 @@ import pytest
 
 from blebox_uniapi.box_types import get_latest_conf
 from blebox_uniapi.session import ApiHost
-from blebox_uniapi.products import Products
+from blebox_uniapi.box import Box
 from blebox_uniapi.error import UnsupportedBoxVersion
 
 _LOGGER = logging.getLogger(__name__)
@@ -147,7 +147,7 @@ class DefaultBoxTest:
         port = 80
         timeout = 2
         api_host = ApiHost(host, port, timeout, session, None, self.LOGGER)
-        product = await Products.async_from_host(api_host)
+        product = await Box.async_from_host(api_host)
         return [
             self.ENTITY_CLASS(feature) for feature in product.features[self.DEVCLASS]
         ]

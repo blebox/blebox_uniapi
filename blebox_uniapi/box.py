@@ -21,6 +21,7 @@ from .error import (
     BadFieldNotANumber,
     BadFieldNotAString,
     BadFieldNotRGBW,
+    HttpError
 )
 
 DEFAULT_PORT = 80
@@ -132,6 +133,19 @@ class Box:
         self._config = config
 
         self._update_last_data(None)
+
+    @classmethod
+    async def async_from_host(cls, api_host):
+        try:
+            path = "/api/device/state"
+            data = await api_host.async_api_get(path)
+        except HttpError:
+            path = "/info"
+            data = await api_host.async_api_get(path)
+
+        info = data.get("device", data)
+
+        return cls(api_host, info)
 
     @property
     def name(self):

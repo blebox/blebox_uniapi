@@ -146,7 +146,7 @@ BOX_TYPE_CONF = {
     "saunaBox": {
         20180604: {
             # TODO: read extended state only once on startup
-            "api_path": "/api/heat/extended/state",
+                "api_path": "/api/heat/extended/state",
             # TODO: use an api map (map to semver)? Or constraints?
             "api": {
                 "on": lambda x=None: ("GET", "/s/1", None),
@@ -172,6 +172,7 @@ BOX_TYPE_CONF = {
             # name of the subclass class of shutter family
             "subclass": Shutter,
             "api_path": "/api/shutter/state",
+            "extended_state_path": "/api/shutter/extended/state",
             "api": {
                 "open": lambda x=None: ("GET", "/s/u", None),
                 "close": lambda x=None: ("GET", "/s/d", None),

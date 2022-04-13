@@ -145,7 +145,11 @@ class Box:
         info = data.get("device", data)
 
         config = cls._match_device_config(info)
-        extended_state = await api_host.async_api_get(config.get("extended_state_path"))
+
+        try:
+            extended_state = await api_host.async_api_get(config["extended_state_path"])
+        except (HttpError, KeyError):
+            extended_state = {}
 
         return cls(api_host, info, config, extended_state)
 

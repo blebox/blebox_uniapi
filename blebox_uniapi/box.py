@@ -99,7 +99,6 @@ class Box:
 
         self._data_path = config["api_path"]
         self._type = type
-        self._product = product
         self._unique_id = unique_id
         self._name = name
         self._firmware_version = firmware_version
@@ -158,10 +157,6 @@ class Box:
     @property
     def type(self):
         return self._type
-
-    @property
-    def product(self):
-        return self._product
 
     @property
     def unique_id(self):

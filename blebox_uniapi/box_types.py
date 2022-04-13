@@ -261,6 +261,17 @@ BOX_TYPE_CONF = {
                     },
                 ]
             ],
+        },
+        20200229: {
+            "api_path": "/api/rgbw/state",
+            "api": {
+                "set": lambda x: (
+                    "POST",
+                    "/api/rgbw/set",
+                    f'{{"rgbw": {{"desiredColor": "{x}"}}}}',
+                )
+            },
+            "lights": [["brightness", {"desired": "rgbw/desiredColor"}]],
         }
     },
     # wLightBoxS

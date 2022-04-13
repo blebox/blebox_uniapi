@@ -9,6 +9,7 @@ from .climate import Climate
 from .cover import Cover
 from .light import Light
 from .sensor import Temperature
+from .session import ApiHost
 from .switch import Switch
 
 from .error import (
@@ -29,7 +30,7 @@ DEFAULT_PORT = 80
 
 class Box:
     # TODO: pass IP? (For better error messages).
-    def __init__(self, api_session, info):
+    def __init__(self, api_session: ApiHost, info, config, extended_state):
         self._last_real_update = None
         self._sem = asyncio.BoundedSemaphore()
         self._session = api_session
@@ -89,14 +90,6 @@ class Box:
 
         level = int(info.get("apiLevel", default_api_level))
 
-        config_set = get_conf_set(type)
-        if not config_set:
-            raise UnsupportedBoxResponse(f"{location} is not a supported type")
-
-        config = get_conf(level, config_set)
-        if not config:
-            raise UnsupportedBoxVersion(f"{location} has unsupported version ({level}).")
-
         self._data_path = config["api_path"]
         self._type = type
         self._unique_id = unique_id
@@ -109,8 +102,17 @@ class Box:
         self._subclass = config.get('subclass', None)
 
         self._api = config.get("api", {})
+        #todo get extended_state as param for init
 
-        self._features = {}
+        self._features = self.create_features(config, info, extended_state)
+
+        self._config = config
+
+        self._update_last_data(None)
+
+
+    def create_features(self, config, info, extended_state):
+        features = {}
         for field, klass in {
             "air_qualities": AirQuality,
             "covers": Cover,
@@ -120,21 +122,19 @@ class Box:
             "switches": Switch,
         }.items():
             try:
-                self._features[field] = [
-                    klass(self, *args) for args in config.get(field, [])
+                features[field] = [
+                    klass(self, *args) for args in config.get(field, [])  # todo taks 2
                 ]
             # TODO: fix constructors instead
             except KeyError as ex:
                 raise UnsupportedBoxResponse(
-                    info, f"{location} failed to initialize: {ex}"
-                )  # from ex
+                    info, f"Failed to initialize: {ex}"
+                )
 
-        self._config = config
-
-        self._update_last_data(None)
+        return features
 
     @classmethod
-    async def async_from_host(cls, api_host):
+    async def async_from_host(cls, api_host: ApiHost):
         try:
             path = "/api/device/state"
             data = await api_host.async_api_get(path)
@@ -144,7 +144,32 @@ class Box:
 
         info = data.get("device", data)
 
-        return cls(api_host, info)
+        config = cls._match_device_config(info)
+        extended_state = await api_host.async_api_get(config.get("extended_state_path"))
+
+        return cls(api_host, info, config, extended_state)
+
+    @classmethod
+    def _match_device_config(cls, info):
+        try:
+            type = info["type"]
+        except KeyError as ex:
+            raise UnsupportedBoxResponse(info, f"Device info has no type key") from ex
+        try:
+            product = info["product"]
+        except KeyError:
+            product = type
+        if type == "wLightBox" and product == "wLightBoxS":
+            type = "wLightBoxS"
+        level = int(info.get("apiLevel", default_api_level))
+        config_set = get_conf_set(type)
+        if not config_set:
+            raise UnsupportedBoxResponse(f"{type} is not a supported type")
+        config = get_conf(level, config_set)
+        if not config:
+            raise UnsupportedBoxVersion(f"{type} has unsupported version ({level}).")
+
+        return config
 
     @property
     def name(self):

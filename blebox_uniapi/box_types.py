@@ -1,17 +1,17 @@
 from .cover import Gate, GateBox, GateBoxB, Shutter
-
+from typing import Union, Any
 
 # default api level for all products that don't have one
 default_api_level = 20151206
 
 
-def get_conf_set(product_type):
+def get_conf_set(product_type: str) -> dict:
     """Get all configurations for provided product type."""
     conf_set = BOX_TYPE_CONF.get(product_type, {})
     return conf_set
 
 
-def get_conf(api_level, conf_set):
+def get_conf(api_level: Union[int, str], conf_set: dict) -> dict:
     """Get configuration from conf_set for provided api_level."""
     for min_api_level in sorted(conf_set, reverse=True):
         if api_level >= min_api_level:
@@ -20,7 +20,7 @@ def get_conf(api_level, conf_set):
     return {}
 
 
-def get_latest_conf(product_type):
+def get_latest_conf(product_type: str) -> dict:
     """Get latest configuration for provided product type."""
     conf_set = get_conf_set(product_type)
     if conf_set:
@@ -30,7 +30,7 @@ def get_latest_conf(product_type):
     return conf_set
 
 
-def get_latest_api_level(product_type):
+def get_latest_api_level(product_type: str) -> Union[dict, int]:
     """Get latest supported api_level for provided product type."""
     conf_set = get_conf_set(product_type)
     if conf_set:

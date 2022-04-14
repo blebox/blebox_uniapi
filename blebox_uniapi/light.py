@@ -1,6 +1,9 @@
 from .feature import Feature
-
 from .error import BadOnValueError
+from typing import TYPE_CHECKING, Optional, Dict, Any, Union
+
+if TYPE_CHECKING:
+    from .box import Box
 
 
 class Light(Feature):
@@ -40,22 +43,24 @@ class Light(Feature):
         },
     }
 
-    def __init__(self, product, alias, methods):
+    def __init__(self, product: "Box", alias: str, methods: dict) -> None:
         super().__init__(product, alias, methods)
 
         config = self.CONFIG[product.type]
+        print(f'product light: {self.product} {type(self.product)}')
+
         self._off_value = config["off"]
         self._last_on_state = self._default_on_value = config["default"]
 
     @property
-    def supports_brightness(self):
+    def supports_brightness(self) -> Any:
         return self.CONFIG[self._product.type]["brightness?"]
 
     @property
-    def brightness(self):
+    def brightness(self) -> Optional[str]:
         return self._desired if self.supports_brightness else None
 
-    def apply_brightness(self, value, brightness):
+    def apply_brightness(self, value: int, brightness: int) -> Any:
         if brightness is None:
             return value
 
@@ -77,14 +82,14 @@ class Light(Feature):
         return method(brightness)  # ok since not implemented for rgbw
 
     @property
-    def supports_white(self):
+    def supports_white(self) -> Any:
         return self.CONFIG[self._product.type]["white?"]
 
     @property
-    def white_value(self):
+    def white_value(self) -> int:
         return self._white_value
 
-    def apply_white(self, value, white):
+    def apply_white(self, value: str, white: int) -> Union[int, str]:
         if white is None:
             return value
 
@@ -96,10 +101,10 @@ class Light(Feature):
         return f"{rgbhex}{white_raw}"
 
     @property
-    def supports_color(self):
+    def supports_color(self) -> Any:
         return self.CONFIG[self._product.type]["color?"]
 
-    def apply_color(self, value, rgb_hex):
+    def apply_color(self, value: str, rgb_hex: str) -> Union[int, str]:
         if rgb_hex is None:
             return value
 
@@ -110,10 +115,10 @@ class Light(Feature):
         return f"{rgb_hex}{white_hex}"
 
     @property
-    def is_on(self):
+    def is_on(self) -> Optional[bool]:
         return self._is_on
 
-    def after_update(self):
+    def after_update(self) -> None:
         alias = self._alias
         product = self._product
         if product.last_data is None:

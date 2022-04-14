@@ -1,7 +1,12 @@
 from .feature import Feature
+from typing import Optional
 
 
 class AirQuality(Feature):
+    _pm1:   Optional[int]
+    _pm2_5: Optional[int]
+    _pm10:  Optional[int]
+
     def __init__(self, product, alias, methods):
         super().__init__(product, alias, methods)
 
@@ -17,7 +22,7 @@ class AirQuality(Feature):
     def pm10(self):
         return self._pm10
 
-    def _pm_value(self, name):
+    def _pm_value(self, name: str) -> Optional[int]:
         product = self._product
         if product.last_data is not None:
             raw = self.raw_value(name)

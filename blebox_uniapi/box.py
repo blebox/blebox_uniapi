@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 import re
 import asyncio
 import time
+from typing import Optional
 
 from .air_quality import AirQuality
 from .box_types import default_api_level, get_conf, get_conf_set
@@ -25,12 +28,14 @@ from .error import (
     HttpError
 )
 
+import pdb
+
 DEFAULT_PORT = 80
 
 
 class Box:
     # TODO: pass IP? (For better error messages).
-    def __init__(self, api_session: ApiHost, info, config, extended_state):
+    def __init__(self, api_session: ApiHost, info: dict, config: dict, extended_state: dict) -> None:
         self._last_real_update = None
         self._sem = asyncio.BoundedSemaphore()
         self._session = api_session
@@ -109,9 +114,9 @@ class Box:
         self._config = config
 
         self._update_last_data(None)
+        # pdb.set_trace()
 
-
-    def create_features(self, config, info, extended_state):
+    def create_features(self, config: dict, info, extended_state: dict) -> dict:
         features = {}
         for field, klass in {
             "air_qualities": AirQuality,
@@ -134,7 +139,7 @@ class Box:
         return features
 
     @classmethod
-    async def async_from_host(cls, api_host: ApiHost):
+    async def async_from_host(cls, api_host: ApiHost) -> Box:
         try:
             path = "/api/device/state"
             data = await api_host.async_api_get(path)
@@ -154,7 +159,7 @@ class Box:
         return cls(api_host, info, config, extended_state)
 
     @classmethod
-    def _match_device_config(cls, info):
+    def _match_device_config(cls, info: dict) -> dict:
         try:
             type = info["type"]
         except KeyError as ex:
@@ -217,10 +222,10 @@ class Box:
 
     # TODO: report timestamp of last measurement (if possible)
 
-    async def async_update_data(self):
+    async def async_update_data(self) -> None:
         await self._async_api(True, "GET", self._data_path)
 
-    def _update_last_data(self, new_data):
+    def _update_last_data(self, new_data: Optional[dict]) -> None:
         self._last_data = new_data
         for feature_set in self._features.values():
             for feature in feature_set:
@@ -309,16 +314,16 @@ class Box:
 
         return current_tree
 
-    def expect_int(self, field, raw_value, maximum=-1, minimum=0):
+    def expect_int(self, field, raw_value, maximum=-1, minimum=0) -> int:
         return self.check_int(raw_value, field, maximum, minimum)
 
-    def expect_hex_str(self, field, raw_value, maximum=-1, minimum=0):
+    def expect_hex_str(self, field, raw_value, maximum=-1, minimum=0) -> int:
         return self.check_hex_str(raw_value, field, maximum, minimum)
 
-    def expect_rgbw(self, field, raw_value):
+    def expect_rgbw(self, field, raw_value) -> str:
         return self.check_rgbw(raw_value, field)
 
-    def check_int_range(self, value, field, max, min):
+    def check_int_range(self, value: int, field: str, max: int, min: int) -> int:
         if max >= min:
             if value > max:
                 raise BadFieldExceedsMax(self.name, field, value, max)

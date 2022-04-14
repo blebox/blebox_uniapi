@@ -118,7 +118,8 @@ class GateBoxB(GateBox):
 # TODO: handle tilt
 class Cover(Feature):
 
-    def __init__(self, product, alias, methods, dev_class):
+    def __init__(self, product, alias: str, methods, dev_class) -> None:
+
         self._device_class = dev_class
         self._attributes = product._subclass()
 

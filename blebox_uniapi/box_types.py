@@ -40,11 +40,13 @@ def get_latest_api_level(product_type: str) -> Union[dict, int]:
 
 
 # Configuration for all box types
-BOX_TYPE_CONF = {
+
+BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     # airSensor
     "airSensor": {
         20180403: {
             "api_path": "/api/air/state",
+            "extended_state_path": "", # brak endpointu w api tej wersji
             "air_qualities": [
                 [
                     "0.air",
@@ -64,6 +66,7 @@ BOX_TYPE_CONF = {
     "dimmerBox": {
         20170829: {
             "api_path": "/api/dimmer/state",
+            "extended_state_path": "",
             "api": {
                 "set": lambda x: (
                     "POST",
@@ -80,6 +83,7 @@ BOX_TYPE_CONF = {
             # name of the subclass class of gatebox family
             "subclass": GateBox,
             "api_path": "/api/gate/state",
+            "extended_state_path": "",
             "api": {
                 "primary": lambda x=None: ("GET", "/s/p", None),
                 "secondary": lambda x=None: ("GET", "/s/s", None),
@@ -100,6 +104,7 @@ BOX_TYPE_CONF = {
             # name of the subclass class of gatebox family
             "subclass": GateBoxB,
             "api_path": "/state",
+            "extended_state_path": "/state/extended",
             "api": {
                 "primary": lambda x=None: ("GET", "/s/p", None),
                 "secondary": lambda x=None: ("GET", "/s/s", None),
@@ -121,6 +126,7 @@ BOX_TYPE_CONF = {
             # name of the subclass class of gate family
             "subclass": Gate,
             "api_path": "/api/gatecontroller/state",
+            "extended_state_path": "/api/gatecontroller/extended/state",
             "api": {
                 "open": lambda x=None: ("GET", "/s/o", None),
                 "close": lambda x=None: ("GET", "/s/c", None),
@@ -146,7 +152,8 @@ BOX_TYPE_CONF = {
     "saunaBox": {
         20180604: {
             # TODO: read extended state only once on startup
-                "api_path": "/api/heat/extended/state",
+            "api_path": "/api/heat/extended/state",
+            "extended_state_path": "/api/heat/extended/state",
             # TODO: use an api map (map to semver)? Or constraints?
             "api": {
                 "on": lambda x=None: ("GET", "/s/1", None),
@@ -196,6 +203,7 @@ BOX_TYPE_CONF = {
         20180604: {
             "model": "switchBox",
             "api_path": "/api/relay/state",
+            "extended_state_path": "/api/relay/extended/state",
             "api": {
                 "on": lambda x=None: ("GET", "/s/1", None),
                 "off": lambda x=None: ("GET", "/s/0", None),
@@ -204,6 +212,7 @@ BOX_TYPE_CONF = {
         },
         20190808: {
             "api_path": "/api/relay/state",
+            "extended_state_path": "/api/relay/extended/state",
             "api": {
                 "on": lambda x=None: ("GET", "/s/1", None),
                 "off": lambda x=None: ("GET", "/s/0", None),
@@ -215,6 +224,7 @@ BOX_TYPE_CONF = {
     "switchBoxD": {
         20190808: {
             "api_path": "/api/relay/state",
+            "extended_state_path": "",
             "api": {
                 "on": lambda x: ("GET", f"/s/{int(x)}/1", None),
                 "off": lambda x=None: ("GET", f"/s/{int(x)}/0", None),
@@ -229,6 +239,7 @@ BOX_TYPE_CONF = {
     "tempSensor": {
         20180604: {
             "api_path": "/api/tempsensor/state",
+            "extended_state_path": "",
             "sensors": [
                 [
                     "0.temperature",
@@ -246,6 +257,7 @@ BOX_TYPE_CONF = {
     "wLightBox": {
         20180718: {
             "api_path": "/api/rgbw/state",
+            "extended_state_path": "",
             "api": {
                 "set": lambda x: (
                     "POST",
@@ -265,6 +277,7 @@ BOX_TYPE_CONF = {
         },
         20200229: {
             "api_path": "/api/rgbw/state",
+            "extended_state_path": "/api/rgbw/extended/state",
             "api": {
                 "set": lambda x: (
                     "POST",
@@ -279,6 +292,7 @@ BOX_TYPE_CONF = {
     "wLightBoxS": {
         20180718: {
             "api_path": "/api/light/state",
+            "extended_state_path": "",
             "api": {
                 "set": lambda x: (
                     "POST",
@@ -290,6 +304,7 @@ BOX_TYPE_CONF = {
         },
         20200229: {
             "api_path": "/api/rgbw/state",
+            "extended_state_path": "/api/rgbw/extended/state",
             "api": {
                 "set": lambda x: (
                     "POST",

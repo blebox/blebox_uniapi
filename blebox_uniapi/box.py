@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 import asyncio
 import time
-from typing import Optional
+from typing import Optional, Any, Dict, Union
 
 from .air_quality import AirQuality
 from .box_types import default_api_level, get_conf, get_conf_set
@@ -25,7 +25,7 @@ from .error import (
     BadFieldNotANumber,
     BadFieldNotAString,
     BadFieldNotRGBW,
-    HttpError
+    HttpError,
 )
 
 import pdb
@@ -35,7 +35,13 @@ DEFAULT_PORT = 80
 
 class Box:
     # TODO: pass IP? (For better error messages).
-    def __init__(self, api_session: ApiHost, info: dict, config: dict, extended_state: dict) -> None:
+    def __init__(
+        self,
+        api_session: ApiHost,
+        info: dict,
+        config: dict,
+        extended_state: Optional[Dict[Any, Any]],
+    ) -> None:
         self._last_real_update = None
         self._sem = asyncio.BoundedSemaphore()
         self._session = api_session
@@ -104,10 +110,9 @@ class Box:
         self._api_version = level
 
         self._model = config.get("model", type)
-        self._subclass = config.get('subclass', None)
 
         self._api = config.get("api", {})
-        #todo get extended_state as param for init
+        # todo get extended_state as param for init
 
         self._features = self.create_features(config, info, extended_state)
 
@@ -116,8 +121,9 @@ class Box:
         self._update_last_data(None)
         # pdb.set_trace()
 
-    def create_features(self, config: dict, info, extended_state: dict) -> dict:
+    def create_features(self, config: dict, info: dict, extended_state: dict) -> dict:
         features = {}
+        print(f"estate: {extended_state}")
         for field, klass in {
             "air_qualities": AirQuality,
             "covers": Cover,
@@ -126,15 +132,15 @@ class Box:
             "climates": Climate,
             "switches": Switch,
         }.items():
+            print(f"Create_features: {field}")
             try:
                 features[field] = [
                     klass(self, *args) for args in config.get(field, [])  # todo taks 2
                 ]
+                print(features)
             # TODO: fix constructors instead
             except KeyError as ex:
-                raise UnsupportedBoxResponse(
-                    info, f"Failed to initialize: {ex}"
-                )
+                raise UnsupportedBoxResponse(info, f"Failed to initialize: {ex}")
 
         return features
 
@@ -181,43 +187,43 @@ class Box:
         return config
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
-    def last_data(self):
+    def last_data(self) -> Optional[Dict[Any, Any]]:
         return self._last_data
 
     @property
-    def type(self):
+    def type(self) -> str:
         return self._type
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> Any:
         return self._unique_id
 
     @property
-    def firmware_version(self):
+    def firmware_version(self) -> Any:
         return self._firmware_version
 
     @property
-    def hardware_version(self):
+    def hardware_version(self) -> Any:
         return self._hardware_version
 
     @property
-    def api_version(self):
+    def api_version(self) -> int:
         return self._api_version
 
     @property
-    def features(self):
+    def features(self) -> dict:
         return self._features
 
     @property
-    def brand(self):
+    def brand(self) -> str:
         return "BleBox"
 
     @property
-    def model(self):
+    def model(self) -> Any:
         return self._model
 
     # TODO: report timestamp of last measurement (if possible)
@@ -231,12 +237,12 @@ class Box:
             for feature in feature_set:
                 feature.after_update()
 
-    async def async_api_command(self, command, value=None):
+    async def async_api_command(self, command: str, value: Any = None) -> None:
         method, *args = self._api[command](value)
         self._last_real_update = None  # force update
         return await self._async_api(False, method, *args)
 
-    def follow(self, data, path):
+    def follow(self, data: dict, path: str) -> Any:
         if data is None:
             raise RuntimeError(f"bad argument: data {data}")  # pragma: no cover
 
@@ -314,43 +320,51 @@ class Box:
 
         return current_tree
 
-    def expect_int(self, field, raw_value, maximum=-1, minimum=0) -> int:
+    def expect_int(
+        self, field: str, raw_value: int, maximum: int = -1, minimum: int = 0
+    ) -> int:
         return self.check_int(raw_value, field, maximum, minimum)
 
-    def expect_hex_str(self, field, raw_value, maximum=-1, minimum=0) -> int:
+    def expect_hex_str(
+        self, field: str, raw_value: int, maximum: int = -1, minimum: int = 0
+    ) -> int:
         return self.check_hex_str(raw_value, field, maximum, minimum)
 
-    def expect_rgbw(self, field, raw_value) -> str:
+    def expect_rgbw(self, field: str, raw_value: int) -> int:
         return self.check_rgbw(raw_value, field)
 
-    def check_int_range(self, value: int, field: str, max: int, min: int) -> int:
-        if max >= min:
-            if value > max:
-                raise BadFieldExceedsMax(self.name, field, value, max)
-            if value < min:
-                raise BadFieldLessThanMin(self.name, field, value, min)
+    def check_int_range(
+        self, value: int, field: str, max_value: int, min_value: int
+    ) -> int:
+        if max_value >= min_value:
+            if value > max_value:
+                raise BadFieldExceedsMax(self.name, field, value, max_value)
+            if value < min_value:
+                raise BadFieldLessThanMin(self.name, field, value, min_value)
 
         return value
 
-    def check_int(self, value, field, maximum, minimum):
+    def check_int(self, value: int, field: str, max_value: int, min_value: int) -> int:
         if value is None:
             raise BadFieldMissing(self.name, field)
 
         if not type(value) is int:
             raise BadFieldNotANumber(self.name, field, value)
 
-        return self.check_int_range(value, field, maximum, minimum)
+        return self.check_int_range(value, field, max_value, min_value)
 
-    def check_hex_str(self, value, field, maximum, minimum):
+    def check_hex_str(
+        self, value: int, field: str, max_value: int, min_value: int
+    ) -> int:
         if value is None:
             raise BadFieldMissing(self.name, field)
 
         if not isinstance(value, str):
             raise BadFieldNotAString(self.name, field, value)
 
-        return self.check_int_range(int(value, 16), field, maximum, minimum)
+        return self.check_int_range(int(value, 16), field, max_value, min_value)
 
-    def check_rgbw(self, value, field):
+    def check_rgbw(self, value: int, field: str) -> int:
         if value is None:
             raise BadFieldMissing(self.name, field)
 
@@ -363,11 +377,17 @@ class Box:
             raise BadFieldNotRGBW(self.name, field, value)
         return value
 
-    def _has_recent_data(self):
+    def _has_recent_data(self) -> bool:
         last = self._last_real_update
-        return time.time() - 2 <= last if last is not None else False
+        return (time.time() - 2) <= last if last is not None else False
 
-    async def _async_api(self, is_update, method, path, post_data=None):
+    async def _async_api(
+        self,
+        is_update: bool,
+        method: Any,
+        path: Union[dict, str, None],
+        post_data: dict = None,
+    ) -> None:
         if method not in ("GET", "POST"):
             raise NotImplementedError(method)  # pragma: no cover
 

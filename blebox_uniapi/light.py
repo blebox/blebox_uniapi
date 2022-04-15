@@ -47,7 +47,7 @@ class Light(Feature):
         super().__init__(product, alias, methods)
 
         config = self.CONFIG[product.type]
-        print(f'product light: {self.product} {type(self.product)}')
+        print(f"product light: {self.product} {type(self.product)}")
 
         self._off_value = config["off"]
         self._last_on_state = self._default_on_value = config["default"]
@@ -77,16 +77,16 @@ class Light(Feature):
         if not self.supports_brightness:
             return value
 
-        method = self.CONFIG[self._product.type]["to_value"]
-
-        return method(brightness)  # ok since not implemented for rgbw
+        method = self.CONFIG[self._product.type]["to_value"]  # type: ignore
+        # ok since not implemented for rgbw
+        return method(brightness)  # type: ignore
 
     @property
     def supports_white(self) -> Any:
         return self.CONFIG[self._product.type]["white?"]
 
     @property
-    def white_value(self) -> int:
+    def white_value(self) -> Optional[int]:
         return self._white_value
 
     def apply_white(self, value: str, white: int) -> Union[int, str]:
@@ -135,7 +135,7 @@ class Light(Feature):
 
         self._desired = self.CONFIG[self._product.type]["validator"](
             product, alias, raw
-        )
+        )  # type: ignore
 
         if product.type == "wLightBox":
             self._white_value = int(raw[6:8], 16)
@@ -154,14 +154,14 @@ class Light(Feature):
         self._is_on = self._desired_raw != self._off_value
 
     @property
-    def sensible_on_value(self):
+    def sensible_on_value(self) -> Any:
         return self._last_on_state
 
     @property
-    def rgbw_hex(self):
+    def rgbw_hex(self) -> Any:
         return self._desired
 
-    async def async_on(self, value):
+    async def async_on(self, value: Any) -> None:
         if not isinstance(value, type(self._off_value)):
             raise BadOnValueError(
                 f"turn_on called with bad parameter ({value} is {type(value)}, compared to {self._off_value} which is {type(self._off_value)})"
@@ -172,5 +172,5 @@ class Light(Feature):
 
         await self.async_api_command("set", value)
 
-    async def async_off(self, **kwargs):
+    async def async_off(self) -> None:
         await self.async_api_command("set", self._off_value)

@@ -12,9 +12,9 @@ class Feature:
         self._product = product
         self._alias = alias
         self._methods = methods
-        print(f'alias: {self._alias} {type(self._alias)}')
-        print(f'product: {self._product} {type(self._product)}')
-        print(f'_methods: {self._methods} {type(self._methods)}')
+        print(f"alias: {self._alias} {type(self._alias)}")
+        print(f"product: {self._product} {type(self._product)}")
+        print(f"_methods: {self._methods} {type(self._methods)}")
 
     @property
     def unique_id(self) -> str:
@@ -33,7 +33,7 @@ class Feature:
         return self._device_class
 
     @property
-    def product(self) -> Box:
+    def product(self) -> "Box":
         return self._product
 
     # TODO: (cleanup) move to product/box ?

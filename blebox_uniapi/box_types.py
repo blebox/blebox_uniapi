@@ -46,7 +46,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     "airSensor": {
         20180403: {
             "api_path": "/api/air/state",
-            "extended_state_path": "", # brak endpointu w api tej wersji
+            "extended_state_path": "",  # brak endpointu w api tej wersji
             "air_qualities": [
                 [
                     "0.air",
@@ -80,8 +80,6 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     # gateBox
     "gateBox": {
         default_api_level: {
-            # name of the subclass class of gatebox family
-            "subclass": GateBox,
             "api_path": "/api/gate/state",
             "extended_state_path": "",
             "api": {
@@ -97,12 +95,11 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                         "extraButtonType": "extraButtonType",
                     },
                     "gatebox",
+                    GateBox,
                 ]
             ],
         },
         20200831: {
-            # name of the subclass class of gatebox family
-            "subclass": GateBoxB,
             "api_path": "/state",
             "extended_state_path": "/state/extended",
             "api": {
@@ -116,15 +113,14 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                         "position": "gate/currentPos",
                     },
                     "gatebox",
+                    GateBoxB,
                 ]
             ],
-        }
+        },
     },
     # gateController
     "gateController": {
         20180604: {
-            # name of the subclass class of gate family
-            "subclass": Gate,
             "api_path": "/api/gatecontroller/state",
             "extended_state_path": "/api/gatecontroller/extended/state",
             "api": {
@@ -144,6 +140,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                         "state": "gateController/state",
                     },
                     "gate",
+                    Gate,
                 ]
             ],
         }
@@ -176,8 +173,6 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     },
     "shutterBox": {
         20180604: {
-            # name of the subclass class of shutter family
-            "subclass": Shutter,
             "api_path": "/api/shutter/state",
             "extended_state_path": "/api/shutter/extended/state",
             "api": {
@@ -195,6 +190,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                         "state": "shutter/state",
                     },
                     "shutter",
+                    Shutter,
                 ]
             ],
         }
@@ -218,7 +214,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 "off": lambda x=None: ("GET", "/s/0", None),
             },
             "switches": [["0.relay", {"state": "relays/[relay=0]/state"}, "relay"]],
-        }
+        },
     },
     # switchBoxD
     "switchBoxD": {
@@ -286,7 +282,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 )
             },
             "lights": [["brightness", {"desired": "rgbw/desiredColor"}]],
-        }
+        },
     },
     # wLightBoxS
     "wLightBoxS": {
@@ -313,6 +309,6 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 )
             },
             "lights": [["brightness", {"desired": "rgbw/desiredColor"}]],
-        }
-    }
+        },
+    },
 }

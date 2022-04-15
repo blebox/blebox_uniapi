@@ -8,7 +8,14 @@ if TYPE_CHECKING:
 class Switch(Feature):
     _is_on: Optional[bool]
 
-    def __init__(self, product: "Box", alias: str, methods: dict, dev_class: str, unit_id: Optional[str] = None):
+    def __init__(
+        self,
+        product: "Box",
+        alias: str,
+        methods: dict,
+        dev_class: str,
+        unit_id: Optional[str] = None,
+    ):
         super().__init__(product, alias, methods)
         self._device_class = dev_class
         self._unit_id = unit_id

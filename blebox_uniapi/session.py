@@ -13,8 +13,17 @@ DEFAULT_PORT = 80
 LOGGER = logging.getLogger(__name__)
 Alias = LOGGER
 
+
 class ApiHost:
-    def __init__(self, host: str, port: int, timeout: int, session: Any, loop: Any, logger: str = LOGGER):
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        timeout: int,
+        session: Any,
+        loop: Any,
+        logger: logging.Logger = LOGGER,
+    ):
         self._host = host
         self._port = port
 
@@ -31,7 +40,9 @@ class ApiHost:
         # TODO: remove?
         self._loop = loop
 
-    async def async_request(self, path: str, async_method: Any, data: Optional[dict] = None) -> Optional[dict]:
+    async def async_request(
+        self, path: str, async_method: Any, data: Optional[dict] = None
+    ) -> Optional[dict]:
         # TODO: check timeout
         client_timeout = self._timeout
 
@@ -66,7 +77,7 @@ class ApiHost:
     async def async_api_get(self, path: str) -> Optional[dict]:
         return await self.async_request(path, self._session.get)
 
-    async def async_api_post(self, path: str, data: Optional[dict]) -> Optional[dict]:
+    async def async_api_post(self, path: str, data: Any) -> Optional[dict]:
         return await self.async_request(path, self._session.post, data)
 
     def api_path(self, path: str) -> str:

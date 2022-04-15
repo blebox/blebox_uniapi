@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import Any, Optional
+from typing import Any, Optional, Dict, Union
 
 import aiohttp
 import asyncio
@@ -41,7 +41,7 @@ class ApiHost:
         self._loop = loop
 
     async def async_request(
-        self, path: str, async_method: Any, data: Optional[dict] = None
+        self, path: str, async_method: Any, data: Union[dict, str, None] = None
     ) -> Optional[dict]:
         # TODO: check timeout
         client_timeout = self._timeout
@@ -77,7 +77,7 @@ class ApiHost:
     async def async_api_get(self, path: str) -> Optional[dict]:
         return await self.async_request(path, self._session.get)
 
-    async def async_api_post(self, path: str, data: Any) -> Optional[dict]:
+    async def async_api_post(self, path: str, data: Union[dict, str, None]) -> Optional[dict]:
         return await self.async_request(path, self._session.post, data)
 
     def api_path(self, path: str) -> str:

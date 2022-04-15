@@ -42,11 +42,11 @@ class Box:
         config: dict,
         extended_state: Optional[Dict[Any, Any]],
     ) -> None:
-        self._last_real_update = None
+        self._last_real_update: Optional[float] = None
         self._sem = asyncio.BoundedSemaphore()
         self._session = api_session
-        self._name = "(unnamed)"
-        self._data_path = None
+        self._name: str
+        self._data_path: str
 
         address = f"{api_session.host}:{api_session.port}"
 
@@ -121,7 +121,7 @@ class Box:
         self._update_last_data(None)
         # pdb.set_trace()
 
-    def create_features(self, config: dict, info: dict, extended_state: dict) -> dict:
+    def create_features(self, config: dict, info: dict, extended_state: Optional[dict]) -> dict:
         features = {}
         print(f"estate: {extended_state}")
         for field, klass in {
@@ -153,7 +153,7 @@ class Box:
             path = "/info"
             data = await api_host.async_api_get(path)
 
-        info = data.get("device", data)
+        info = data.get("device", data)  # type: ignore
 
         config = cls._match_device_config(info)
 
@@ -385,7 +385,7 @@ class Box:
         self,
         is_update: bool,
         method: Any,
-        path: Union[dict, str, None],
+        path: str,
         post_data: dict = None,
     ) -> None:
         if method not in ("GET", "POST"):

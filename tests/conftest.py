@@ -76,7 +76,7 @@ def jmerge(base, ext):
 def future_date(delta_days=300):
     """Generate future date string in 'YYYYMMDD' format."""
     future_date = date.today() + timedelta(days=delta_days)
-    return future_date.strftime('%Y%m%d')
+    return future_date.strftime("%Y%m%d")
 
 
 HTTP_MOCKS = {}
@@ -203,9 +203,8 @@ class DefaultBoxTest:
         await self.allow_get_info(aioclient_mock, self.DEVICE_INFO_FUTURE)
         entity = (await self.async_entities(aioclient_mock))[0]
 
-        assert (
-            entity._feature.product._config is
-            get_latest_conf(entity._feature.product.type)
+        assert entity._feature.product._config is get_latest_conf(
+            entity._feature.product.type
         )
 
     async def test_latest_version(self, aioclient_mock):
@@ -215,9 +214,8 @@ class DefaultBoxTest:
         await self.allow_get_info(aioclient_mock, self.DEVICE_INFO_LATEST)
         entity = (await self.async_entities(aioclient_mock))[0]
 
-        assert (
-            entity._feature.product._config is
-            get_latest_conf(entity._feature.product.type)
+        assert entity._feature.product._config is get_latest_conf(
+            entity._feature.product.type
         )
 
     async def test_unsupported_version(self, aioclient_mock):

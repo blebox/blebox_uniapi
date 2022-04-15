@@ -25,7 +25,7 @@ SUPPORT_WHITE_VALUE = 4
 def rgb_hex_to_rgb_list(hex_string: str):
     """Return an RGB color value list from a hex color string."""
     return [
-        int(hex_string[i: i + len(hex_string) // 3], 16)
+        int(hex_string[i : i + len(hex_string) // 3], 16)
         for i in range(0, len(hex_string), len(hex_string) // 3)
     ]
 
@@ -361,7 +361,7 @@ class TestWLightBoxS(DefaultBoxTest):
             "apiLevel": "20200229",
             "id": "ce50e32d2707",
             "ip": "192.168.1.25",
-            "availableFv": None
+            "availableFv": None,
         }
     }
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 import re
 import asyncio
 import time
+import traceback
 from typing import Optional, Any, Dict, Union
 
 from .air_quality import AirQuality

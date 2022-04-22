@@ -310,6 +310,10 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     "POST",
                     "/api/light/set",
                     f'{{"light": {{"desiredColor": "{x}"}}}}',
+                ),
+                "effect": lambda x: (
+                    "GET",
+                    f"/s/x/{x}"
                 )
             },
             "lights": [["brightness", {"desired": "light/desiredColor"}]],
@@ -323,6 +327,10 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     "/api/rgbw/set",
                     f'{{"rgbw": {{"desiredColor": "{x}"}}}}',
                 ),
+                "effect": lambda x: (
+                    "GET",
+                    f"/s/x/{x}"
+                )
 
             },
             "lights": [["brightness", {"desired": "rgbw/desiredColor"}]],

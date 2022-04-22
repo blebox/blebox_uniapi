@@ -47,8 +47,7 @@ class Light(Feature):
         super().__init__(product, alias, methods)
 
         config = self.CONFIG[product.type]
-        print(f"product light: {self.product} {type(self.product)}")
-        print(f"init ext state light: {extended_state}")
+        print("Light init executed")
         self.extended_state = extended_state
         self._off_value = config["off"]
         self._last_on_state = self._default_on_value = config["default"]

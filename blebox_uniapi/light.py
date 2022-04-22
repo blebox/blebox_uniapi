@@ -43,14 +43,16 @@ class Light(Feature):
         },
     }
 
-    def __init__(self, product: "Box", alias: str, methods: dict) -> None:
+    def __init__(self, product: "Box", alias: str, methods: dict, extended_state: Optional[Dict]) -> None:
         super().__init__(product, alias, methods)
 
         config = self.CONFIG[product.type]
         print(f"product light: {self.product} {type(self.product)}")
-
+        print(f"init ext state light: {extended_state}")
+        self.extended_state = extended_state
         self._off_value = config["off"]
         self._last_on_state = self._default_on_value = config["default"]
+        self.config_attribute_value("test")
 
     @property
     def supports_brightness(self) -> Any:
@@ -174,3 +176,12 @@ class Light(Feature):
 
     async def async_off(self) -> None:
         await self.async_api_command("set", self._off_value)
+
+    def config_attribute_value(self, att_name: str) -> Union[None, str, list]:
+        rgbw = self.extended_state.get("rgbw", None)
+        if att_name == "_attr_effect_list":
+            return [_.upper() for _ in list(rgbw['effectsNames'].values())]
+
+        if att_name == "_attr_effect":
+            effectid = str(rgbw.get("effectID", None))
+            return rgbw.get("effectsNames")[effectid]

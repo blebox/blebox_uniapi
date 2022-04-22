@@ -279,9 +279,25 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     "POST",
                     "/api/rgbw/set",
                     f'{{"rgbw": {{"desiredColor": "{x}"}}}}',
+                ),
+                "effect": lambda x: (
+                    "GET",
+                    f"/s/x/{x}"
                 )
             },
-            "lights": [["brightness", {"desired": "rgbw/desiredColor"}]],
+            "lights": [
+                [
+                "color",
+                {
+                    "desired": "rgbw/desiredColor",
+                    "last_color": "rgbw/lastOnColor"}
+                ]
+                        ],
+
+            # "sparkles": lambda x: (
+            #         "GET",
+            #         f"/s/x/9",
+            #     ),
         },
     },
     # wLightBoxS
@@ -306,7 +322,8 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     "POST",
                     "/api/rgbw/set",
                     f'{{"rgbw": {{"desiredColor": "{x}"}}}}',
-                )
+                ),
+
             },
             "lights": [["brightness", {"desired": "rgbw/desiredColor"}]],
         },

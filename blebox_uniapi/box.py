@@ -120,7 +120,7 @@ class Box:
         self._config = config
 
         self._update_last_data(None)
-        # pdb.set_trace()
+        print("Box instance created")
 
     def create_features(self, config: dict, info: dict, extended_state: Optional[dict]) -> dict:
         features = {}
@@ -133,12 +133,10 @@ class Box:
             "climates": Climate,
             "switches": Switch,
         }.items():
-            print(f"Create_features: {field}")
             try:
                 features[field] = [
-                    klass(self, *args) for args in config.get(field, [])  # todo taks 2
+                    klass(self, *args, extended_state) for args in config.get(field, [])  # todo taks 2
                 ]
-                print(features)
             # TODO: fix constructors instead
             except KeyError as ex:
                 raise UnsupportedBoxResponse(info, f"Failed to initialize: {ex}")
@@ -240,10 +238,14 @@ class Box:
 
     async def async_api_command(self, command: str, value: Any = None) -> None:
         method, *args = self._api[command](value)
+        # traceback.print_stack()
+        if command == "effect":
+            print(f"asyncapicommand: {value} \nCommand:{command}\nMethod:{method}\nargs:{args}")
         self._last_real_update = None  # force update
         return await self._async_api(False, method, *args)
 
     def follow(self, data: dict, path: str) -> Any:
+        print(f"'Follow {data},'\n' path: {path}")
         if data is None:
             raise RuntimeError(f"bad argument: data {data}")  # pragma: no cover
 
@@ -402,6 +404,7 @@ class Box:
                     return
 
             if method == "GET":
+                print(f"\nWTF:{path}")
                 response = await self._session.async_api_get(path)
             else:
                 response = await self._session.async_api_post(path, post_data)

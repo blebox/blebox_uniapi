@@ -1,3 +1,5 @@
+import traceback
+
 from .cover import Gate, GateBox, GateBoxB, Shutter
 from typing import Union, Any
 
@@ -74,7 +76,14 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     '{"dimmer":{"desiredBrightness": ' + str(x) + "}}",
                 ),
             },
-            "lights": [["brightness", {"desired": "dimmer/desiredBrightness"}]],
+            "lights": [
+                [
+                    "brightness",
+                    {
+                        "desired": "dimmer/desiredBrightness"
+                    }
+                ]
+            ],
         }
     },
     # gateBox
@@ -204,7 +213,15 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 "on": lambda x=None: ("GET", "/s/1", None),
                 "off": lambda x=None: ("GET", "/s/0", None),
             },
-            "switches": [["0.relay", {"state": "[relay=0]/state"}, "relay"]],
+            "switches": [
+                [
+                    "0.relay",
+                    {
+                        "state": "[relay=0]/state"
+                    },
+                    "relay"
+                ]
+            ],
         },
         20190808: {
             "api_path": "/api/relay/state",
@@ -213,21 +230,42 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 "on": lambda x=None: ("GET", "/s/1", None),
                 "off": lambda x=None: ("GET", "/s/0", None),
             },
-            "switches": [["0.relay", {"state": "relays/[relay=0]/state"}, "relay"]],
+            "switches": [
+                [
+                    "0.relay",
+                    {
+                        "state": "relays/[relay=0]/state"
+                    },
+                    "relay"
+                ]
+            ],
         },
     },
     # switchBoxD
     "switchBoxD": {
         20190808: {
             "api_path": "/api/relay/state",
-            "extended_state_path": "",
             "api": {
                 "on": lambda x: ("GET", f"/s/{int(x)}/1", None),
                 "off": lambda x=None: ("GET", f"/s/{int(x)}/0", None),
             },
             "switches": [
-                ["0.relay", {"state": "relays/[relay=0]/state"}, "relay", 0],
-                ["1.relay", {"state": "relays/[relay=1]/state"}, "relay", 1],
+                [
+                    "0.relay",
+                    {
+                        "state": "relays/[relay=0]/state"
+                    },
+                    "relay",
+                    0
+                 ],
+                [
+                    "1.relay",
+                    {
+                        "state": "relays/[relay=1]/state"
+                    },
+                    "relay",
+                    1,
+                ],
             ],
         }
     },
@@ -235,7 +273,6 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     "tempSensor": {
         20180604: {
             "api_path": "/api/tempsensor/state",
-            "extended_state_path": "",
             "sensors": [
                 [
                     "0.temperature",
@@ -251,14 +288,18 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     },
     # wLightBox
     "wLightBox": {
-        20180718: {
+        20190808: {
             "api_path": "/api/rgbw/state",
-            "extended_state_path": "",
+            "extended_state_path": "/api/rgbw/extended/state",
             "api": {
                 "set": lambda x: (
                     "POST",
                     "/api/rgbw/set",
                     f'{{"rgbw":{{"desiredColor": "{str(x)}"}}}}',
+                ),
+                "effect": lambda x: (
+                    "GET",
+                    f"/s/x/{x}"
                 )
             },
             "lights": [
@@ -267,7 +308,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     {
                         "desired": "rgbw/desiredColor",
                         "last_color": "rgbw/lastOnColor",
+                        "currentEffect": "rgbw/effectID",
                     },
+
                 ]
             ],
         },
@@ -287,24 +330,21 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
             },
             "lights": [
                 [
-                "color",
-                {
-                    "desired": "rgbw/desiredColor",
-                    "last_color": "rgbw/lastOnColor"}
-                ]
-                        ],
-
-            # "sparkles": lambda x: (
-            #         "GET",
-            #         f"/s/x/9",
-            #     ),
+                    "color",
+                    {
+                        "desired": "rgbw/desiredColor",
+                        "last_color": "rgbw/lastOnColor",
+                        "currentEffect": "rgbw/effectID",
+                    }
+                ],
+                #traceback.print_stack()
+            ],
         },
     },
     # wLightBoxS
     "wLightBoxS": {
         20180718: {
             "api_path": "/api/light/state",
-            "extended_state_path": "",
             "api": {
                 "set": lambda x: (
                     "POST",
@@ -333,7 +373,14 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 )
 
             },
-            "lights": [["brightness", {"desired": "rgbw/desiredColor"}]],
+            "lights": [
+                [
+                    "brightness",
+                    {
+                        "desired": "rgbw/desiredColor"
+                    }
+                ]
+            ],
         },
     },
 }

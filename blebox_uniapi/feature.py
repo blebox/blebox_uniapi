@@ -38,14 +38,16 @@ class Feature:
 
     # TODO: (cleanup) move to product/box ?
     def raw_value(self, name: str) -> Any:
+        #sprawdza czy payload w zmiennej last_data dostępny
         product = self._product
-
+        print(f"name raw val: {name}")
         # TODO: better exception?
         if product.last_data is None:
             # TODO: coverage
             raise DeviceStateNotAvailable  # pragma: no cover
 
         methods = self._methods
+        print(f"last data: {product.last_data}\nmethods:{methods}")
         return product.follow(product.last_data, methods[name])
 
     async def async_api_command(self, *args: Any, **kwargs: Any) -> None:

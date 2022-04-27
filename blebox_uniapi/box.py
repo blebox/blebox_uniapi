@@ -124,7 +124,6 @@ class Box:
 
     def create_features(self, config: dict, info: dict, extended_state: Optional[dict]) -> dict:
         features = {}
-        print(f"estate: {extended_state}")
         for field, klass in {
             "air_qualities": AirQuality,
             "covers": Cover,
@@ -133,10 +132,15 @@ class Box:
             "climates": Climate,
             "switches": Switch,
         }.items():
+            print(f"field create: {field}")
             try:
-                features[field] = [
-                    klass(self, *args, extended_state) for args in config.get(field, [])  # todo taks 2
-                ]
+                if field == "lights":
+                    features[field] = klass.many_from_config(self, box_type_config=config.get(field, []), extended_state=extended_state)
+                else:
+                    features[field] = [
+                        klass(self, *args, extended_state) for args in config.get(field, [])  # todo taks 2
+                    ]
+                print(f"features {features}")
             # TODO: fix constructors instead
             except KeyError as ex:
                 raise UnsupportedBoxResponse(info, f"Failed to initialize: {ex}")
@@ -155,11 +159,12 @@ class Box:
         info = data.get("device", data)  # type: ignore
 
         config = cls._match_device_config(info)
-
-        try:
-            extended_state = await api_host.async_api_get(config["extended_state_path"])
-        except (HttpError, KeyError):
-            extended_state = {}
+        print(f"conf: {config}")
+        if config["extended_state_path"] is not None:
+            try:
+                extended_state = await api_host.async_api_get(config["extended_state_path"])
+            except (HttpError, KeyError):
+                extended_state = {}
 
         return cls(api_host, info, config, extended_state)
 
@@ -231,6 +236,7 @@ class Box:
         await self._async_api(True, "GET", self._data_path)
 
     def _update_last_data(self, new_data: Optional[dict]) -> None:
+        print(f"{self.name=}")
         self._last_data = new_data
         for feature_set in self._features.values():
             for feature in feature_set:
@@ -238,13 +244,17 @@ class Box:
 
     async def async_api_command(self, command: str, value: Any = None) -> None:
         method, *args = self._api[command](value)
-        # traceback.print_stack()
-        if command == "effect":
-            print(f"asyncapicommand: {value} \nCommand:{command}\nMethod:{method}\nargs:{args}")
         self._last_real_update = None  # force update
         return await self._async_api(False, method, *args)
 
     def follow(self, data: dict, path: str) -> Any:
+        '''
+        Funkcja ma za zadanie zwrócić  wartość z payloadu ze zwrotki json. jak Api extended
+        :param self:
+        :param data:
+        :param path:
+        :return:
+        '''
         print(f"'Follow {data},'\n' path: {path}")
         if data is None:
             raise RuntimeError(f"bad argument: data {data}")  # pragma: no cover
@@ -320,7 +330,6 @@ class Box:
                     path,
                     data,
                 )
-
         return current_tree
 
     def expect_int(
@@ -404,7 +413,6 @@ class Box:
                     return
 
             if method == "GET":
-                print(f"\nWTF:{path}")
                 response = await self._session.async_api_get(path)
             else:
                 response = await self._session.async_api_post(path, post_data)

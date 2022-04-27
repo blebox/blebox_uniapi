@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from .feature import Feature
 from .error import BadOnValueError
 from typing import TYPE_CHECKING, Optional, Dict, Any, Union
@@ -43,15 +45,69 @@ class Light(Feature):
         },
     }
 
-    def __init__(self, product: "Box", alias: str, methods: dict, extended_state: Optional[Dict]) -> None:
+    COLOR_MODE_CONFIG = {
+        "CT": {
+            "default" :"FFFFFFFF",
+            "off": "00000000",
+            "brightness?": True,
+            "color_temp?": True,
+            "to_value": lambda int_value: "{:02x}".format(int_value),
+            "validator": lambda product, alias, raw: product.expect_hex_str(
+                alias, raw, 255, 0
+            ),
+        }
+    }
+
+    def __init__(self, product: "Box", alias: str, methods: dict, extended_state: Optional[Dict], mask: str) -> None:
         super().__init__(product, alias, methods)
 
         config = self.CONFIG[product.type]
-        print("Light init executed")
+        print(f"{mask=}")
+        print(f"{config=}")
+        # print(f"Uniapi Light init\n{self.unique_id}")
+        self.mask = mask
         self.extended_state = extended_state
         self._off_value = config["off"]
         self._last_on_state = self._default_on_value = config["default"]
-        self.config_attribute_value("test")
+
+    @classmethod
+    def many_from_config(cls, product, box_type_config, extended_state) -> list["Light"]:
+        # maska przekazywana w box type config dodatkowy klucza, a potem obsluzyc maskę
+        # tu ma się wyjasnić ile tych instancji ma zostać zwrócone, najpierw dwa na sztywno
+        print(f"many from conf: {box_type_config}")
+        mask = "maska"
+        object_list = list()
+        BLEBOX_COLOR_MODES = {
+            1: "RGBW",
+            2: "RGB",
+            3: "MONO",
+            4: "RGBorW",
+            5: "CT", # colortemp, brightness, effect
+            6: "CTx2", # colortemp, brightness, effect two instances
+            7: "RGBWCCT"
+        }
+
+        ctx2 = [
+                    # lambda a: a + "------",
+                    # lambda a:  "----" + a + "--",
+
+                    "1",
+                    "2"
+                ]
+
+        print(f"colormode dict :{BLEBOX_COLOR_MODES[extended_state['rgbw']['colorMode']]}")
+        if BLEBOX_COLOR_MODES[extended_state['rgbw']['colorMode']] == "CTx2":
+            alias, methods = box_type_config[0]
+            for _ in ctx2:
+                object_list.append(cls(product, alias=alias + _, methods=methods, extended_state=extended_state, mask=_)
+                                   )
+            return object_list
+
+        return [cls(product, *args, extended_state=extended_state, mask=mask) for args in box_type_config]
+
+    # @property
+    # def unique_id(self) -> str:
+    #     return self.unique_id + self.mask
 
     @property
     def supports_brightness(self) -> Any:
@@ -119,15 +175,22 @@ class Light(Feature):
     def is_on(self) -> Optional[bool]:
         return self._is_on
 
+    @property
+    def effect(self) -> Optional[str]:
+        return self._effect
+
+
     def after_update(self) -> None:
         alias = self._alias
         product = self._product
+
         if product.last_data is None:
             self._desired_raw = None
             self._desired = None
             self._is_on = None
             if product.type == "wLightBox":
                 self._white_value = None
+                self._effect = None
             return
 
         raw = self.raw_value("desired")
@@ -137,7 +200,6 @@ class Light(Feature):
         self._desired = self.CONFIG[self._product.type]["validator"](
             product, alias, raw
         )  # type: ignore
-
         if product.type == "wLightBox":
             self._white_value = int(raw[6:8], 16)
 
@@ -153,6 +215,9 @@ class Light(Feature):
         # TODO: store as custom value permanently (exposed by API consumer)
         self._last_on_state = raw
         self._is_on = self._desired_raw != self._off_value
+        self._effect = self.raw_value("currentEffect")
+
+        print(f"feature last data:\n{product.last_data}\n method after_update() executed")
 
     @property
     def sensible_on_value(self) -> Any:
@@ -163,6 +228,7 @@ class Light(Feature):
         return self._desired
 
     async def async_on(self, value: Any) -> None:
+        print(f"async on validation:\nvalue:{value}\noff_val:{self._off_value}\n{type(self._off_value)}")
         if not isinstance(value, type(self._off_value)):
             raise BadOnValueError(
                 f"turn_on called with bad parameter ({value} is {type(value)}, compared to {self._off_value} which is {type(self._off_value)})"

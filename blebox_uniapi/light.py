@@ -10,12 +10,13 @@ if TYPE_CHECKING:
 
 class Light(Feature):
     # TODO: better defaults?
-
+    CURRENT_CONF = dict()
     CONFIG = {
         "wLightBox": {
             "default": "FFFFFFFF",
             "off": "00000000",
             "brightness?": False,
+            "color_temp?": False,
             "white?": True,
             "color?": True,
             "to_value": lambda int_value: int_value,
@@ -25,6 +26,7 @@ class Light(Feature):
             "default": "FF",
             "off": "00",
             "brightness?": True,
+            "color_temp?": False,
             "white?": False,
             "color?": False,
             "to_value": lambda int_value: "{:02x}".format(int_value),
@@ -36,6 +38,7 @@ class Light(Feature):
             "default": 0xFF,
             "off": 0x0,
             "brightness?": True,
+            "color_temp?": False,
             "white?": False,
             "color?": False,
             "to_value": lambda int_value: int_value,
@@ -47,10 +50,12 @@ class Light(Feature):
 
     COLOR_MODE_CONFIG = {
         "CT": {
-            "default" :"FFFFFFFF",
+            "default": "FFFFFFFF",
             "off": "00000000",
             "brightness?": True,
             "color_temp?": True,
+            "white?": False,
+            "color?": False,
             "to_value": lambda int_value: "{:02x}".format(int_value),
             "validator": lambda product, alias, raw: product.expect_hex_str(
                 alias, raw, 255, 0
@@ -58,7 +63,7 @@ class Light(Feature):
         }
     }
 
-    def __init__(self, product: "Box", alias: str, methods: dict, extended_state: Optional[Dict], mask: str) -> None:
+    def __init__(self, product: "Box", alias: str, methods: dict, extended_state: Optional[Dict], mask: Any) -> None:
         super().__init__(product, alias, methods)
 
         config = self.CONFIG[product.type]
@@ -67,6 +72,11 @@ class Light(Feature):
         # print(f"Uniapi Light init\n{self.unique_id}")
         self.mask = mask
         self.extended_state = extended_state
+        rgbw = self.extended_state.get("rgbw", None)
+        if rgbw.get('colorMode') == 6:
+            config = self.COLOR_MODE_CONFIG["CT"]
+        self.CURRENT_CONF = config
+        print(f"color mode config: {config}")
         self._off_value = config["off"]
         self._last_on_state = self._default_on_value = config["default"]
 
@@ -75,7 +85,7 @@ class Light(Feature):
         # maska przekazywana w box type config dodatkowy klucza, a potem obsluzyc maskę
         # tu ma się wyjasnić ile tych instancji ma zostać zwrócone, najpierw dwa na sztywno
         print(f"many from conf: {box_type_config}")
-        mask = "maska"
+
         object_list = list()
         BLEBOX_COLOR_MODES = {
             1: "RGBW",
@@ -87,23 +97,20 @@ class Light(Feature):
             7: "RGBWCCT"
         }
 
-        ctx2 = [
-                    # lambda a: a + "------",
-                    # lambda a:  "----" + a + "--",
-
-                    "1",
-                    "2"
-                ]
+        ctx2 = {
+                    "1": lambda x: f"{x}------",
+                    "2": lambda x: f"----{x}--"
+                    }
 
         print(f"colormode dict :{BLEBOX_COLOR_MODES[extended_state['rgbw']['colorMode']]}")
         if BLEBOX_COLOR_MODES[extended_state['rgbw']['colorMode']] == "CTx2":
             alias, methods = box_type_config[0]
-            for _ in ctx2:
-                object_list.append(cls(product, alias=alias + _, methods=methods, extended_state=extended_state, mask=_)
+            for indicator, mask in ctx2.items():
+                object_list.append(cls(product, alias=alias + indicator, methods=methods, extended_state=extended_state, mask=mask)
                                    )
             return object_list
 
-        return [cls(product, *args, extended_state=extended_state, mask=mask) for args in box_type_config]
+        return [cls(product, *args, extended_state=extended_state, mask=None) for args in box_type_config]
 
     # @property
     # def unique_id(self) -> str:
@@ -111,7 +118,13 @@ class Light(Feature):
 
     @property
     def supports_brightness(self) -> Any:
-        return self.CONFIG[self._product.type]["brightness?"]
+        return self.CURRENT_CONF["brightness?"]
+        # return self.CONFIG[self._product.type]["brightness?"]
+
+    @property
+    def supports_color_temp(self) -> Any:
+        return self.CURRENT_CONF["color_temp?"]
+        # return self.CONFIG[self._product.type]["color_temp?"]
 
     @property
     def brightness(self) -> Optional[str]:
@@ -140,7 +153,8 @@ class Light(Feature):
 
     @property
     def supports_white(self) -> Any:
-        return self.CONFIG[self._product.type]["white?"]
+        return self.CURRENT_CONF["white?"]
+        # return self.CONFIG[self._product.type]["white?"]
 
     @property
     def white_value(self) -> Optional[int]:
@@ -159,7 +173,8 @@ class Light(Feature):
 
     @property
     def supports_color(self) -> Any:
-        return self.CONFIG[self._product.type]["color?"]
+        return self.CURRENT_CONF["color?"]
+        # return self.CONFIG[self._product.type]["color?"]
 
     def apply_color(self, value: str, rgb_hex: str) -> Union[int, str]:
         if rgb_hex is None:
@@ -171,6 +186,23 @@ class Light(Feature):
         white_hex = value[6:8]
         return f"{rgb_hex}{white_hex}"
 
+    def return_color_temp_with_brightness(self, value, brightness: Any) -> Optional[str]:
+        # funkcja musi zwrócić HEXa z kolorem, z nałożonym brightness
+        # Brightness pobrane z encji, HA wysyła pojedyncze słowniki z ustawieniem.
+        # tutaj musi byc wykorzystana maska
+        value = value-1
+        if value < 128:
+            warm = 255
+            cold = min(255, value * 2)
+        else:
+            warm = max(0, min(255, (255 - value)))
+            cold = 255
+
+        cold = "{:02x}".format(cold)
+        warm = "{:02x}".format(warm)
+
+        return self.mask(cold+warm)
+
     @property
     def is_on(self) -> Optional[bool]:
         return self._is_on
@@ -178,7 +210,6 @@ class Light(Feature):
     @property
     def effect(self) -> Optional[str]:
         return self._effect
-
 
     def after_update(self) -> None:
         alias = self._alias
@@ -216,8 +247,8 @@ class Light(Feature):
         self._last_on_state = raw
         self._is_on = self._desired_raw != self._off_value
         self._effect = self.raw_value("currentEffect")
-
-        print(f"feature last data:\n{product.last_data}\n method after_update() executed")
+        # if 'My wLightBox v3' in self.product.name:
+        #     print(f"{product.name} last data:\n{product.last_data}\n method after_update() executed")
 
     @property
     def sensible_on_value(self) -> Any:

@@ -132,7 +132,7 @@ class Box:
             "climates": Climate,
             "switches": Switch,
         }.items():
-            print(f"field create: {field}")
+            # print(f"field create: {field}")
             try:
                 if field == "lights":
                     features[field] = klass.many_from_config(self, box_type_config=config.get(field, []), extended_state=extended_state)
@@ -140,7 +140,7 @@ class Box:
                     features[field] = [
                         klass(self, *args, extended_state) for args in config.get(field, [])  # todo taks 2
                     ]
-                print(f"features {features}")
+                # print(f"features {features}")
             # TODO: fix constructors instead
             except KeyError as ex:
                 raise UnsupportedBoxResponse(info, f"Failed to initialize: {ex}")
@@ -236,7 +236,7 @@ class Box:
         await self._async_api(True, "GET", self._data_path)
 
     def _update_last_data(self, new_data: Optional[dict]) -> None:
-        print(f"{self.name=}")
+        # print(f"{self.name=}")
         self._last_data = new_data
         for feature_set in self._features.values():
             for feature in feature_set:
@@ -255,7 +255,7 @@ class Box:
         :param path:
         :return:
         '''
-        print(f"'Follow {data},'\n' path: {path}")
+        # print(f"'Follow {data},'\n' path: {path}")
         if data is None:
             raise RuntimeError(f"bad argument: data {data}")  # pragma: no cover
 

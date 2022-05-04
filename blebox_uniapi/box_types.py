@@ -309,6 +309,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                         "desired": "rgbw/desiredColor",
                         "last_color": "rgbw/lastOnColor",
                         "currentEffect": "rgbw/effectID",
+                        "colorMode": "rgbw/colorMode",
                     },
 
                 ]
@@ -335,6 +336,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                         "desired": "rgbw/desiredColor",
                         "last_color": "rgbw/lastOnColor",
                         "currentEffect": "rgbw/effectID",
+                        "colorMode": "rgbw/colorMode",
                     }
                 ],
                 #traceback.print_stack()
@@ -356,7 +358,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     f"/s/x/{x}"
                 )
             },
-            "lights": [["brightness", {"desired": "light/desiredColor"}]],
+            "lights": [["brightness", {"desired": "light/desiredColor", "colorMode": "rgbw/colorMode",}]],
         },
         20200229: {
             "api_path": "/api/rgbw/state",
@@ -377,7 +379,8 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "brightness",
                     {
-                        "desired": "rgbw/desiredColor"
+                        "desired": "rgbw/desiredColor",
+                        "colorMode": "rgbw/colorMode",
                     }
                 ]
             ],

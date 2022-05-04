@@ -51,7 +51,7 @@ class Light(Feature):
     COLOR_MODE_CONFIG = {
         "CT": {
             "default": "FFFFFFFF",
-            "off": "00000000",
+            "off": "0000000000",
             "brightness?": True,
             "color_temp?": True,
             "white?": False,
@@ -128,7 +128,23 @@ class Light(Feature):
 
     @property
     def brightness(self) -> Optional[str]:
-        return self._desired if self.supports_brightness else None
+        if self.raw_value("colorMode") in [6, 5]:
+            _, bgt = self.color_temp_brightness_int_from_hex(self._desired)
+            # print(f"{bgt=}")
+            return bgt
+        else:
+            if self.supports_brightness:
+                # print(f"desired:{self._desired}")
+                return self._desired
+            else:
+                return None
+        # return self._desired if self.supports_brightness else None
+
+    @property
+    def color_temp(self):
+        ct, _ = self.color_temp_brightness_int_from_hex(self._desired)
+        print(f"{ct=}\n{self}")
+        return ct
 
     def apply_brightness(self, value: int, brightness: int) -> Any:
         if brightness is None:
@@ -190,18 +206,48 @@ class Light(Feature):
         # funkcja musi zwrócić HEXa z kolorem, z nałożonym brightness
         # Brightness pobrane z encji, HA wysyła pojedyncze słowniki z ustawieniem.
         # tutaj musi byc wykorzystana maska
+        print(f"rctwb: {brightness}")
         value = value-1
         if value < 128:
-            warm = 255
-            cold = min(255, value * 2)
-        else:
-            warm = max(0, min(255, (255 - value)))
+            warm = min(255, value * 2)
             cold = 255
+        else:
+            warm = 255
+            cold = max(0, min(255, (255 - value)))
 
-        cold = "{:02x}".format(cold)
-        warm = "{:02x}".format(warm)
+        print(f"ret_col:\n{cold=}\n{warm=}\n{value=}")
+        cold = cold * brightness/255
+        warm = warm * brightness/255
 
-        return self.mask(cold+warm)
+        cold = "{:02x}".format(int(cold))
+        warm = "{:02x}".format(int(warm))
+
+        return self.mask(warm+cold)
+
+    def current_value_for_selected_channels(self, mask_lambda):
+        lambda_result = mask_lambda("xxxx")
+        first_index = lambda_result.index("x")
+        last_index = lambda_result.rindex("x")
+        # print(f"raval 2;{self.raw_value('desired')=}")
+        return self.raw_value("desired")[first_index:last_index+1]
+
+    def color_temp_brightness_int_from_hex(self, val) -> (int, int):
+        ''' Assuming that hex is 2channels, 4characters. Return values for front end'''
+        # okreslic po ktorej stronie jest przesuniete i dostosować ze wspolczynnikiem swiatla
+        # 1 rozbic na temp
+        cold = int(val[2:], 16)
+        warm = int(val[0:2], 16)
+        print(f"CTB:\n{val=}\n{cold=}\n{warm=}\n{self}")
+        if cold == warm:
+            print("cw_qe")
+            return 128, max(cold, warm)
+        elif cold > warm:
+            print("colder")
+            return int(128*(warm/cold)), max(cold, warm)
+        else:
+            print(f"warmer:{int(128*((255-cold)/255)+128)}")
+            return int(128*((255-cold)/255)+128), max(cold, warm)
+
 
     @property
     def is_on(self) -> Optional[bool]:
@@ -223,16 +269,23 @@ class Light(Feature):
                 self._white_value = None
                 self._effect = None
             return
+        if self.raw_value("colorMode") in [6, 5]: # sprawdzenie czy ct lub ct2
+            # tryb 6
+            raw = self.current_value_for_selected_channels(self.mask)
+            self._desired = self.CONFIG[self._product.type]["validator"](
+                product, alias, raw
+            )
+            print(f"{raw=}")
+            # tryb 5(single)
+        else:
+            raw = self.raw_value("desired")
+            self._desired_raw = raw
+            self._desired = self.CONFIG[self._product.type]["validator"](
+                product, alias, raw
+            )  # type: ignore
 
-        raw = self.raw_value("desired")
-
-        self._desired_raw = raw
-
-        self._desired = self.CONFIG[self._product.type]["validator"](
-            product, alias, raw
-        )  # type: ignore
-        if product.type == "wLightBox":
-            self._white_value = int(raw[6:8], 16)
+            if product.type == "wLightBox":
+                self._white_value = int(raw[6:8], 16)
 
         if raw == self._off_value:
             if product.type == "wLightBox":

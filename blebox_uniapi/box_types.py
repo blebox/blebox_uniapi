@@ -358,7 +358,16 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     f"/s/x/{x}"
                 )
             },
-            "lights": [["brightness", {"desired": "light/desiredColor", "colorMode": "rgbw/colorMode",}]],
+            "lights": [
+                [
+                    "brightness",
+                    {
+                        "desired": "light/desiredColor",
+                        "colorMode": "rgbw/colorMode",
+                        "last_color": "rgbw/lastOnColor",
+                    }
+                ]
+            ],
         },
         20200229: {
             "api_path": "/api/rgbw/state",
@@ -381,6 +390,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     {
                         "desired": "rgbw/desiredColor",
                         "colorMode": "rgbw/colorMode",
+                        "last_color": "rgbw/lastOnColor",
                     }
                 ]
             ],

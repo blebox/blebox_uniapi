@@ -51,7 +51,7 @@ class Light(Feature):
     COLOR_MODE_CONFIG = {
         "CT": {
             "default": "FFFFFFFF",
-            "off": "0000000000",
+            "off": "0000",
             "brightness?": True,
             "color_temp?": True,
             "white?": False,
@@ -211,11 +211,11 @@ class Light(Feature):
             warm = 255
             cold = max(0, min(255, (255-value) * 2))
 
-        cold = cold * round(brightness/255)
-        warm = warm * round(brightness/255)
-
-        cold = "{:02x}".format(int(cold))
-        warm = "{:02x}".format(int(warm))
+        cold = cold * brightness/255
+        warm = warm * brightness/255
+        print(f"Wartosci do hexa:\n\tin:\n\t{value=}\n\t{brightness=}\n\tout:\n\t{cold=}\n\t{warm=}")
+        cold = "{:02x}".format(int(round(cold)))
+        warm = "{:02x}".format(int(round(warm)))
 
         return self.mask(warm+cold)
 
@@ -302,10 +302,12 @@ class Light(Feature):
 
         # TODO: store as custom value permanently (exposed by API consumer)
         self._last_on_state = raw
-        self._is_on = self._desired_raw != self._off_value
+        if self.raw_value("colorMode") in [6, 5]:
+            self._is_on = self._desired != self._off_value
+            print(f"IS ON CHECK\n{self._off_value=}\n{self._desired=}\n{self._is_on=}")
+        else:
+            self._is_on = self._desired_raw != self._off_value
         self._effect = self.raw_value("currentEffect")
-        # if 'My wLightBox v3' in self.product.name:
-        #     print(f"{product.name} last data:\n{product.last_data}\n method after_update() executed")
 
     @property
     def sensible_on_value(self) -> Any:
@@ -328,7 +330,11 @@ class Light(Feature):
         await self.async_api_command("set", value)
 
     async def async_off(self) -> None:
-        await self.async_api_command("set", self._off_value)
+        if self.raw_value("colorMode") in [5, 6]:
+            await self.async_api_command("set", self.mask("0000"))
+            print(f"sent value: {self.mask('0000')}")
+        else:
+            await self.async_api_command("set", self._off_value)
 
     def config_attribute_value(self, att_name: str) -> Union[None, str, list]:
         rgbw = self.extended_state.get("rgbw", None)

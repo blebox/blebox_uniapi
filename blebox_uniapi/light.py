@@ -203,21 +203,16 @@ class Light(Feature):
         return f"{rgb_hex}{white_hex}"
 
     def return_color_temp_with_brightness(self, value, brightness: Any) -> Optional[str]:
-        # funkcja musi zwrócić HEXa z kolorem, z nałożonym brightness
-        # Brightness pobrane z encji, HA wysyła pojedyncze słowniki z ustawieniem.
-        # tutaj musi byc wykorzystana maska
-        print(f"rctwb: {brightness}")
-        value = value-1
+        ''' Method returns value which will be send to  '''
         if value < 128:
             warm = min(255, value * 2)
             cold = 255
         else:
             warm = 255
-            cold = max(0, min(255, (255 - value)))
+            cold = max(0, min(255, (255-value) * 2))
 
-        print(f"ret_col:\n{cold=}\n{warm=}\n{value=}")
-        cold = cold * brightness/255
-        warm = warm * brightness/255
+        cold = cold * round(brightness/255)
+        warm = warm * round(brightness/255)
 
         cold = "{:02x}".format(int(cold))
         warm = "{:02x}".format(int(warm))
@@ -235,18 +230,27 @@ class Light(Feature):
         ''' Assuming that hex is 2channels, 4characters. Return values for front end'''
         # okreslic po ktorej stronie jest przesuniete i dostosować ze wspolczynnikiem swiatla
         # 1 rozbic na temp
+        # 2 wyznaczyc brigtness
+        # 3 sprowadzic do wartosci tak jak przy 100% brightness
+
         cold = int(val[2:], 16)
         warm = int(val[0:2], 16)
-        print(f"CTB:\n{val=}\n{cold=}\n{warm=}\n{self}")
-        if cold == warm:
-            print("cw_qe")
-            return 128, max(cold, warm)
-        elif cold > warm:
-            print("colder")
-            return int(128*(warm/cold)), max(cold, warm)
+        #print(f"CTB:\n{val=}\n{cold=}\n{warm=}\n{self}")
+
+        if cold > warm:
+            # print("colder")
+            if warm == 0:
+                return 0, cold
+            else:
+                return round(int((128 * (warm * 255/cold)/255)), 2), cold
+        if cold < warm:
+            if cold == 0:
+                return 255, warm
+            else:
+                return round(int(255 - 128 * (cold * (255/warm)/255)), 2), warm
         else:
-            print(f"warmer:{int(128*((255-cold)/255)+128)}")
-            return int(128*((255-cold)/255)+128), max(cold, warm)
+            # print(f"warmer:{int(128*((255-cold)/255)+128)}")
+            return 128, max(cold, warm)
 
 
     @property

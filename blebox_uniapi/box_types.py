@@ -364,6 +364,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     {
                         "desired": "light/desiredColor",
                         "colorMode": "rgbw/colorMode",
+                        "currentEffect": "rgbw/effectID",
                         "last_color": "rgbw/lastOnColor",
                     }
                 ]
@@ -390,6 +391,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     {
                         "desired": "rgbw/desiredColor",
                         "colorMode": "rgbw/colorMode",
+                        "currentEffect": "rgbw/effectID",
                         "last_color": "rgbw/lastOnColor",
                     }
                 ]

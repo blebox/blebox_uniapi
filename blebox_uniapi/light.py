@@ -1,11 +1,15 @@
+import traceback
 from datetime import timedelta
 
 from .feature import Feature
 from .error import BadOnValueError
-from typing import TYPE_CHECKING, Optional, Dict, Any, Union
+from typing import TYPE_CHECKING, Optional, Dict, Any, Union, Callable
 
 if TYPE_CHECKING:
     from .box import Box
+
+
+
 
 
 class Light(Feature):
@@ -60,6 +64,18 @@ class Light(Feature):
             "validator": lambda product, alias, raw: product.expect_hex_str(
                 alias, raw, 255, 0
             ),
+        },
+        "RGBWW":{
+            "default": "FFFFFFFFFF",
+            "off": "0000000000",
+            "brightness?": True,
+            "color_temp?": False,
+            "white?": True,
+            "color?": True,
+            "to_value": lambda int_value: "{:02x}".format(int_value),
+            "validator": lambda product, alias, raw: product.expect_hex_str(
+                alias, raw, 255, 0
+            ),
         }
     }
 
@@ -75,6 +91,8 @@ class Light(Feature):
         rgbw = self.extended_state.get("rgbw", None)
         if rgbw.get('colorMode') == 6:
             config = self.COLOR_MODE_CONFIG["CT"]
+        if rgbw.get('colorMode') == 7:
+            config = self.COLOR_MODE_CONFIG["RGBWW"]
         self.CURRENT_CONF = config
         print(f"color mode config: {config}")
         self._off_value = config["off"]
@@ -88,8 +106,8 @@ class Light(Feature):
 
         object_list = list()
         BLEBOX_COLOR_MODES = {
-            1: "RGBW",
-            2: "RGB",
+            1: "RGBW", #rgb pallet with color brightness, white brightness
+            2: "RGB", #rgb pallet with color brightness
             3: "MONO",
             4: "RGBorW",
             5: "CT", # colortemp, brightness, effect
@@ -98,8 +116,8 @@ class Light(Feature):
         }
 
         ctx2 = {
-                    "1": lambda x: f"{x}------",
-                    "2": lambda x: f"----{x}--"
+                    "cct1": lambda x: f"{x}------",
+                    "cct2": lambda x: f"----{x}--"
                     }
 
         print(f"colormode dict :{BLEBOX_COLOR_MODES[extended_state['rgbw']['colorMode']]}")
@@ -217,14 +235,15 @@ class Light(Feature):
         cold = "{:02x}".format(int(round(cold)))
         warm = "{:02x}".format(int(round(warm)))
 
-        return self.mask(warm+cold)
+        return warm+cold
 
-    def current_value_for_selected_channels(self, mask_lambda):
-        lambda_result = mask_lambda("xxxx")
+    def value_for_selected_channels_from_given_val(self, value: str):
+
+        lambda_result = self.mask("xxxx")
         first_index = lambda_result.index("x")
         last_index = lambda_result.rindex("x")
         # print(f"raval 2;{self.raw_value('desired')=}")
-        return self.raw_value("desired")[first_index:last_index+1]
+        return value[first_index:last_index+1]
 
     def color_temp_brightness_int_from_hex(self, val) -> (int, int):
         ''' Assuming that hex is 2channels, 4characters. Return values for front end'''
@@ -235,7 +254,6 @@ class Light(Feature):
 
         cold = int(val[2:], 16)
         warm = int(val[0:2], 16)
-        #print(f"CTB:\n{val=}\n{cold=}\n{warm=}\n{self}")
 
         if cold > warm:
             # print("colder")
@@ -249,7 +267,6 @@ class Light(Feature):
             else:
                 return round(int(255 - 128 * (cold * (255/warm)/255)), 2), warm
         else:
-            # print(f"warmer:{int(128*((255-cold)/255)+128)}")
             return 128, max(cold, warm)
 
 
@@ -273,9 +290,11 @@ class Light(Feature):
                 self._white_value = None
                 self._effect = None
             return
+
+        # todo change to more generic, check if self.mask not none or something
         if self.raw_value("colorMode") in [6, 5]: # sprawdzenie czy ct lub ct2
             # tryb 6
-            raw = self.current_value_for_selected_channels(self.mask)
+            raw = self.value_for_selected_channels_from_given_val(self.raw_value("desired"))
             self._desired = self.CONFIG[self._product.type]["validator"](
                 product, alias, raw
             )
@@ -311,11 +330,23 @@ class Light(Feature):
 
     @property
     def sensible_on_value(self) -> Any:
+        if self.mask is not None:
+            return self.value_for_selected_channels_from_given_val(self._last_on_state)
         return self._last_on_state
 
     @property
     def rgbw_hex(self) -> Any:
         return self._desired
+
+    @classmethod
+    def rgb_hex_to_rgb_list(cls, hex_str):
+        """Return an RGB color value list from a hex color string."""
+        return [int(hex_str[i:i+2], 16) for i in range(0, len(hex_str), 2)]
+
+    @classmethod
+    def rgb_list_to_rgb_hex(cls, rgb_list):
+        print(f"{rgb_list=}")
+        return [hex(i) for i in rgb_list]
 
     async def async_on(self, value: Any) -> None:
         print(f"async on validation:\nvalue:{value}\noff_val:{self._off_value}\n{type(self._off_value)}")
@@ -326,6 +357,9 @@ class Light(Feature):
 
         if value == self._off_value:
             raise BadOnValueError(f"turn_on called with invalid value ({value})")
+
+        if self.mask is not None:
+            value = self.mask(value)
 
         await self.async_api_command("set", value)
 

@@ -236,7 +236,6 @@ class Box:
         await self._async_api(True, "GET", self._data_path)
 
     def _update_last_data(self, new_data: Optional[dict]) -> None:
-        # print(f"{self.name=}")
         self._last_data = new_data
         for feature_set in self._features.values():
             for feature in feature_set:

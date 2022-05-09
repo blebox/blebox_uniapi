@@ -3,13 +3,10 @@ from datetime import timedelta
 
 from .feature import Feature
 from .error import BadOnValueError
-from typing import TYPE_CHECKING, Optional, Dict, Any, Union, Callable
+from typing import TYPE_CHECKING, Optional, Dict, Any, Union
 
 if TYPE_CHECKING:
     from .box import Box
-
-
-
 
 
 class Light(Feature):
@@ -68,7 +65,7 @@ class Light(Feature):
         "RGBWW":{
             "default": "FFFFFFFFFF",
             "off": "0000000000",
-            "brightness?": True,
+            "brightness?": False,
             "color_temp?": False,
             "white?": True,
             "color?": True,
@@ -144,15 +141,19 @@ class Light(Feature):
         return self.CURRENT_CONF["color_temp?"]
         # return self.CONFIG[self._product.type]["color_temp?"]
 
+    # @supports_color_temp.setter()
+    # def supports_color_temp(self, val):
+    #   pass
+
     @property
     def brightness(self) -> Optional[str]:
+
         if self.raw_value("colorMode") in [6, 5]:
             _, bgt = self.color_temp_brightness_int_from_hex(self._desired)
             # print(f"{bgt=}")
             return bgt
         else:
             if self.supports_brightness:
-                # print(f"desired:{self._desired}")
                 return self._desired
             else:
                 return None
@@ -161,7 +162,6 @@ class Light(Feature):
     @property
     def color_temp(self):
         ct, _ = self.color_temp_brightness_int_from_hex(self._desired)
-        print(f"{ct=}\n{self}")
         return ct
 
     def apply_brightness(self, value: int, brightness: int) -> Any:
@@ -298,7 +298,6 @@ class Light(Feature):
             self._desired = self.CONFIG[self._product.type]["validator"](
                 product, alias, raw
             )
-            print(f"{raw=}")
             # tryb 5(single)
         else:
             raw = self.raw_value("desired")
@@ -306,10 +305,8 @@ class Light(Feature):
             self._desired = self.CONFIG[self._product.type]["validator"](
                 product, alias, raw
             )  # type: ignore
-
             if product.type == "wLightBox":
                 self._white_value = int(raw[6:8], 16)
-
         if raw == self._off_value:
             if product.type == "wLightBox":
                 raw = product.expect_rgbw(alias, self.raw_value("last_color"))
@@ -324,8 +321,10 @@ class Light(Feature):
         if self.raw_value("colorMode") in [6, 5]:
             self._is_on = self._desired != self._off_value
             print(f"IS ON CHECK\n{self._off_value=}\n{self._desired=}\n{self._is_on=}")
+        elif self.raw_value("colorMode") == 7:
+            self._is_on = (self._desired_raw != self._off_value) or self.raw_value("currentEffect") != 0
         else:
-            self._is_on = self._desired_raw != self._off_value
+            self._is_on = (self._desired_raw != self._off_value) or self.raw_value("currentEffect") != 0
         self._effect = self.raw_value("currentEffect")
 
     @property
@@ -338,6 +337,16 @@ class Light(Feature):
     def rgbw_hex(self) -> Any:
         return self._desired
 
+    @property
+    def rgbww_hex(self) -> Any:
+        if len(self._desired) < 10:
+            return None
+        else:
+            hex_str = self._desired
+            hex_str_warm_cold = hex_str[6:]
+            output_str = hex_str[0:6] + "".join([hex_str_warm_cold[i - 2:i] for i in range(len(hex_str_warm_cold), 0, -2)])
+            return output_str
+
     @classmethod
     def rgb_hex_to_rgb_list(cls, hex_str):
         """Return an RGB color value list from a hex color string."""
@@ -346,7 +355,7 @@ class Light(Feature):
     @classmethod
     def rgb_list_to_rgb_hex(cls, rgb_list):
         print(f"{rgb_list=}")
-        return [hex(i) for i in rgb_list]
+        return ["{:02x}".format(i) for i in rgb_list]
 
     async def async_on(self, value: Any) -> None:
         print(f"async on validation:\nvalue:{value}\noff_val:{self._off_value}\n{type(self._off_value)}")

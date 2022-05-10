@@ -8,6 +8,16 @@ from typing import TYPE_CHECKING, Optional, Dict, Any, Union
 if TYPE_CHECKING:
     from .box import Box
 
+BLEBOX_COLOR_MODES = {
+            1: "RGBW", #rgb pallet with color brightness, white brightness
+            2: "RGB", #rgb pallet with color brightness
+            3: "MONO",
+            4: "RGBorW", # rgbw dac w jedno entity rgbw, i obsługę
+            5: "CT", # colortemp, brightness, effect
+            6: "CTx2", # colortemp, brightness, effect two instances CTx2
+            7: "RGBWW" #RGBWCT
+        }
+
 
 class Light(Feature):
     # TODO: better defaults?
@@ -16,11 +26,11 @@ class Light(Feature):
         "wLightBox": {
             "default": "FFFFFFFF",
             "off": "00000000",
-            "brightness?": False,
+            "brightness?": True,
             "color_temp?": False,
             "white?": True,
             "color?": True,
-            "to_value": lambda int_value: int_value,
+            "to_value": lambda int_value: "{:02x}".format(int_value),
             "validator": lambda product, alias, raw: product.expect_rgbw(alias, raw),
         },
         "wLightBoxS": {
@@ -62,10 +72,22 @@ class Light(Feature):
                 alias, raw, 255, 0
             ),
         },
+        "CTx2": {
+            "default": "FFFFFFFF",
+            "off": "0000",
+            "brightness?": True,
+            "color_temp?": True,
+            "white?": False,
+            "color?": False,
+            "to_value": lambda int_value: "{:02x}".format(int_value),
+            "validator": lambda product, alias, raw: product.expect_hex_str(
+                alias, raw, 255, 0
+            ),
+        },
         "RGBWW":{
             "default": "FFFFFFFFFF",
             "off": "0000000000",
-            "brightness?": False,
+            "brightness?": True,
             "color_temp?": False,
             "white?": True,
             "color?": True,
@@ -78,18 +100,18 @@ class Light(Feature):
 
     def __init__(self, product: "Box", alias: str, methods: dict, extended_state: Optional[Dict], mask: Any) -> None:
         super().__init__(product, alias, methods)
-
+        # Todo Implement DRY
         config = self.CONFIG[product.type]
         print(f"{mask=}")
         print(f"{config=}")
         # print(f"Uniapi Light init\n{self.unique_id}")
         self.mask = mask
+        print(f"initialised lightpy: {mask}")
         self.extended_state = extended_state
         rgbw = self.extended_state.get("rgbw", None)
-        if rgbw.get('colorMode') == 6:
-            config = self.COLOR_MODE_CONFIG["CT"]
-        if rgbw.get('colorMode') == 7:
-            config = self.COLOR_MODE_CONFIG["RGBWW"]
+        self.device_colorMode = rgbw.get('colorMode')
+        if self.device_colorMode in [6,7]:
+            config = self.COLOR_MODE_CONFIG[BLEBOX_COLOR_MODES[self.device_colorMode]]
         self.CURRENT_CONF = config
         print(f"color mode config: {config}")
         self._off_value = config["off"]
@@ -99,18 +121,10 @@ class Light(Feature):
     def many_from_config(cls, product, box_type_config, extended_state) -> list["Light"]:
         # maska przekazywana w box type config dodatkowy klucza, a potem obsluzyc maskę
         # tu ma się wyjasnić ile tych instancji ma zostać zwrócone, najpierw dwa na sztywno
+        # tutaj kontrola instancji, masek, typu color mode dla frontu
         print(f"many from conf: {box_type_config}")
 
         object_list = list()
-        BLEBOX_COLOR_MODES = {
-            1: "RGBW", #rgb pallet with color brightness, white brightness
-            2: "RGB", #rgb pallet with color brightness
-            3: "MONO",
-            4: "RGBorW",
-            5: "CT", # colortemp, brightness, effect
-            6: "CTx2", # colortemp, brightness, effect two instances
-            7: "RGBWCCT"
-        }
 
         ctx2 = {
                     "cct1": lambda x: f"{x}------",
@@ -121,15 +135,19 @@ class Light(Feature):
         if BLEBOX_COLOR_MODES[extended_state['rgbw']['colorMode']] == "CTx2":
             alias, methods = box_type_config[0]
             for indicator, mask in ctx2.items():
+                print(f"{indicator=}")
                 object_list.append(cls(product, alias=alias + indicator, methods=methods, extended_state=extended_state, mask=mask)
                                    )
             return object_list
+        if BLEBOX_COLOR_MODES[extended_state['rgbw']['colorMode']] == "CT":
+            alias, methods = box_type_config[0]
+            mask = ctx2["cct1"]
+            return [cls(product, alias=alias + "cct", methods=methods, extended_state=extended_state, mask=mask)]
+        # dodac szczególny przypadek gdy color mode RGBorW(4) inna implementacja metody dla rgb i brightness
 
         return [cls(product, *args, extended_state=extended_state, mask=None) for args in box_type_config]
 
-    # @property
-    # def unique_id(self) -> str:
-    #     return self.unique_id + self.mask
+    # lepsza obsługa colorMode (wybieranie), czy zawze musi byc konifg?
 
     @property
     def supports_brightness(self) -> Any:
@@ -147,16 +165,16 @@ class Light(Feature):
 
     @property
     def brightness(self) -> Optional[str]:
-
         if self.raw_value("colorMode") in [6, 5]:
             _, bgt = self.color_temp_brightness_int_from_hex(self._desired)
-            # print(f"{bgt=}")
+            print(f"{bgt=}")
             return bgt
         else:
-            if self.supports_brightness:
-                return self._desired
-            else:
-                return None
+            return self.evaluate_brightness_from_rgb(self.rgb_hex_to_rgb_list(self.rgb_hex))
+            # if self.supports_brightness:
+            #     return self.evaluate_brightness_from_rgb(self.rgb_hex_to_rgb_list(self.rgb_hex))
+            # else:
+            #     return None
         # return self._desired if self.supports_brightness else None
 
     @property
@@ -164,10 +182,15 @@ class Light(Feature):
         ct, _ = self.color_temp_brightness_int_from_hex(self._desired)
         return ct
 
+    def evaluate_brightness_from_rgb(self, iterable) -> int:
+        "return brightness from 0 to 255 evaluated basing rgb"
+        return max(iterable)
+
+
     def apply_brightness(self, value: int, brightness: int) -> Any:
         if brightness is None:
             return value
-
+        print(f"apply brightness:\n{value=}\n{brightness=}")
         if not isinstance(brightness, int):
             raise BadOnValueError(
                 f"adjust_brightness called with bad parameter ({brightness} is {type(value)} instead of int)"
@@ -178,12 +201,16 @@ class Light(Feature):
                 f"adjust_brightness called with bad parameter ({brightness} is greater than 255)"
             )
 
-        if not self.supports_brightness:
-            return value
-
-        method = self.CONFIG[self._product.type]["to_value"]  # type: ignore
-        # ok since not implemented for rgbw
-        return method(brightness)  # type: ignore
+        anon_fun = lambda x: round(x * (brightness / 255))
+        res = list(map(anon_fun, self.rgb_hex_to_rgb_list(value)))
+        print(f"{res=}")
+        return "".join(self.rgb_list_to_rgb_hex(res))
+        # # if not self.supports_brightness:
+        # #     return value
+        #
+        # method = self.CONFIG[self._product.type]["to_value"]  # type: ignore
+        # # ok since not implemented for rgbw
+        # return method(brightness)  # type: ignore
 
     @property
     def supports_white(self) -> Any:
@@ -210,6 +237,10 @@ class Light(Feature):
         return self.CURRENT_CONF["color?"]
         # return self.CONFIG[self._product.type]["color?"]
 
+    @property
+    def color_mode(self) -> int:
+        return self.device_colorMode
+
     def apply_color(self, value: str, rgb_hex: str) -> Union[int, str]:
         if rgb_hex is None:
             return value
@@ -228,7 +259,7 @@ class Light(Feature):
         else:
             warm = 255
             cold = max(0, min(255, (255-value) * 2))
-
+        print(f"{cold=}\n{warm=}\n{brightness=}")
         cold = cold * brightness/255
         warm = warm * brightness/255
         print(f"Wartosci do hexa:\n\tin:\n\t{value=}\n\t{brightness=}\n\tout:\n\t{cold=}\n\t{warm=}")
@@ -292,7 +323,7 @@ class Light(Feature):
             return
 
         # todo change to more generic, check if self.mask not none or something
-        if self.raw_value("colorMode") in [6, 5]: # sprawdzenie czy ct lub ct2
+        if self.color_mode in [6, 5]: # sprawdzenie czy ct lub ct2
             # tryb 6
             raw = self.value_for_selected_channels_from_given_val(self.raw_value("desired"))
             self._desired = self.CONFIG[self._product.type]["validator"](
@@ -330,8 +361,13 @@ class Light(Feature):
     @property
     def sensible_on_value(self) -> Any:
         if self.mask is not None:
+            print(f"{self.mask=}")
             return self.value_for_selected_channels_from_given_val(self._last_on_state)
         return self._last_on_state
+
+    @property
+    def rgb_hex(self) -> Any:
+        return self._desired
 
     @property
     def rgbw_hex(self) -> Any:
@@ -350,10 +386,11 @@ class Light(Feature):
     @classmethod
     def rgb_hex_to_rgb_list(cls, hex_str):
         """Return an RGB color value list from a hex color string."""
+        print(f"{hex_str}")
         return [int(hex_str[i:i+2], 16) for i in range(0, len(hex_str), 2)]
 
     @classmethod
-    def rgb_list_to_rgb_hex(cls, rgb_list):
+    def rgb_list_to_rgb_hex(cls, rgb_list) -> hex:
         print(f"{rgb_list=}")
         return ["{:02x}".format(i) for i in rgb_list]
 

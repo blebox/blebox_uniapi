@@ -24,8 +24,8 @@ class Light(Feature):
     CURRENT_CONF = dict()
     CONFIG = {
         "wLightBox": {
-            "default": "FFFFFFFF",
-            "off": "00000000",
+            "default": "FFFFFFFFFF",
+            "off": "0000000000",
             "brightness?": True,
             "color_temp?": False,
             "white?": True,
@@ -107,14 +107,13 @@ class Light(Feature):
         self.extended_state = extended_state
         rgbw = self.extended_state.get("rgbw", None)
         self.device_colorMode = rgbw.get('colorMode', None)
+
         if self.device_colorMode in [6,7]:
             config = self.COLOR_MODE_CONFIG[BLEBOX_COLOR_MODES[self.device_colorMode]]
         self.CURRENT_CONF = config
-        print(f"color mode config: {config}")
-        if self.color_mode == 3:
-            self._off_value = "00"
-        else:
-            self._off_value = config["off"]
+
+        des_color = rgbw.get("desiredColor", None)
+        self._off_value = self.evaluate_off_value(config, des_color)
         self._last_on_state = self._default_on_value = config["default"]
 
     @classmethod
@@ -144,13 +143,14 @@ class Light(Feature):
                 alias, methods = box_type_config[0]
                 for indicator, mask in ctx2.items():
                     print(f"{indicator=}")
-                    object_list.append(cls(product, alias=alias +"_"+ indicator, methods=methods, extended_state=extended_state, mask=mask)
+                    object_list.append(cls(product, alias=alias + "_" + indicator, methods=methods,
+                                           extended_state=extended_state, mask=mask)
                                        )
                 return object_list
             if BLEBOX_COLOR_MODES[color_mod_integer] == "CT":
                 alias, methods = box_type_config[0]
                 mask = ctx2["cct1"]
-                return [cls(product, alias=alias +"_cct", methods=methods, extended_state=extended_state, mask=mask)]
+                return [cls(product, alias=alias + "_cct", methods=methods, extended_state=extended_state, mask=mask)]
             if BLEBOX_COLOR_MODES[color_mod_integer] == "MONO":
                 if len(desired_color) % 2 == 0:
                     alias, methods = box_type_config[0]
@@ -158,7 +158,7 @@ class Light(Feature):
                     for i in range(0,int(len(desired_color)/2)):
                         indicator, mask = mono[i]
                         object_list.append(
-                            cls(product, alias=alias +"_"+ indicator, methods=methods, extended_state=extended_state,
+                            cls(product, alias=alias + "_" + indicator, methods=methods, extended_state=extended_state,
                                 mask=mask)
                             )
                     return object_list
@@ -183,15 +183,8 @@ class Light(Feature):
             _, bgt = self.color_temp_brightness_int_from_hex(self._desired)
             print(f"{bgt=}")
             return bgt
-        # elif self.color_mode == 3:
-        #     return 255
         else:
             return self.evaluate_brightness_from_rgb(self.rgb_hex_to_rgb_list(self.rgb_hex))
-            # if self.supports_brightness:
-            #     return self.evaluate_brightness_from_rgb(self.rgb_hex_to_rgb_list(self.rgb_hex))
-            # else:
-            #     return None
-        # return self._desired if self.supports_brightness else None
 
     @property
     def color_temp(self):
@@ -221,6 +214,22 @@ class Light(Feature):
         res = list(map(anon_fun, self.rgb_hex_to_rgb_list(value)))
         print(f"{res=}")
         return "".join(self.rgb_list_to_rgb_hex(res))
+
+    def evaluate_off_value(self, config: dict, raw_hex: str) -> str:
+        '''
+        Returns hex representing off state value without mask formatting for necessary channels if mask is applied.
+        If no mask applied than returns default from config
+
+        :param config:
+        :param raw_hex:
+        :return: str
+        '''
+        '''  '''
+        print(f"{self.full_name}eofv: {self.mask=}\n {config}")
+        if self.mask:
+            return "0"*(len(raw_hex) - len(self.mask('x').replace('x', '')))
+        else:
+            return config["off"]
 
     @property
     def supports_white(self) -> Any:
@@ -279,14 +288,13 @@ class Light(Feature):
         return warm+cold
 
     def value_for_selected_channels_from_given_val(self, value: str):
-        print(f"{self.mask=}")
         if self.color_mode in [5,6]:
             lambda_result = self.mask("xxxx")
         elif self.color_mode == 3:
             lambda_result = self.mask("xx")
         first_index = lambda_result.index("x")
         last_index = lambda_result.rindex("x")
-        # print(f"raval 2;{self.raw_value('desired')=}")
+        print(f"vfscfgv: {value[first_index:last_index+1]}\n{value}")
         return value[first_index:last_index+1]
 
     def color_temp_brightness_int_from_hex(self, val) -> (int, int):
@@ -330,35 +338,46 @@ class Light(Feature):
         product = self._product
 
         if product.last_data is None:
-            self._desired_raw = None
-            self._desired = None
-            self._is_on = None
-            if product.type == "wLightBox":
-                self._white_value = None
-                self._effect = None
+            self._desired_raw = None     # wartsc oczekiwana nie przetworzona
+            self._desired = None         # wartosc oczekiwana
+            self._is_on = None           # bool czy urzadzenie jest wlaczone
+            if self.mask is None:
+                self._white_value = None # wartosc kanalu bialego
+                self._effect = None      # wartos pola effect
             return
 
-        # todo change to more generic, check if self.mask not none or something
-        if self.color_mode in [6, 5, 3]: # sprawdzenie czy ct lub ct2
+        self._effect = self.raw_value("currentEffect")
+
+        # todo ustalenie wartosci raw
+        if self.mask is not None: # sprawdzenie czy ct lub ct2
             # tryb 6
             raw = self.value_for_selected_channels_from_given_val(self.raw_value("desired"))
             self._desired = self.CONFIG[self._product.type]["validator"](
                 product, alias, raw
             )
             # tryb 5(single)
-            print(f"{self._desired=}")
+            print(f"{self._off_value=}")
         else:
             raw = self.raw_value("desired")
             self._desired_raw = raw
             self._desired = self.CONFIG[self._product.type]["validator"](
                 product, alias, raw
             )  # type: ignore
-            if product.type == "wLightBox":
+            if self.color_mode in [1, 4]:
                 self._white_value = int(raw[6:8], 16)
+
+        #reguła jeżeli po ustaweieniu wartość jest wartoscia OFF:
+        # jezeli wartosc raw jest wartoscia off
         if raw == self._off_value:
             if product.type == "wLightBox":
                 raw = product.expect_rgbw(alias, self.raw_value("last_color"))
+                print(f"raw if wLightBox from last on: {raw}")
+                if self.mask is not None:
+                    raw = self.value_for_selected_channels_from_given_val(raw)
+                if raw == self._off_value:
+                    raw = self.value_for_selected_channels_from_given_val("ffffffffff")
             else:
+                print(f"{self._default_on_value}")
                 raw = self._default_on_value
 
         if raw in (self._off_value, None):
@@ -366,27 +385,25 @@ class Light(Feature):
 
         # TODO: store as custom value permanently (exposed by API consumer)
         self._last_on_state = raw
-        if self.raw_value("colorMode") in [6, 5, 3]:
+        if self.mask is not None:
             self._is_on = self._desired != self._off_value
             print(f"IS ON CHECK\n{self._off_value=}\n{self._desired=}\n{self._is_on=}")
         elif self.raw_value("colorMode") == 7:
-            self._is_on = (self._desired_raw != self._off_value) or self.raw_value("currentEffect") != 0
+            self._is_on = (self._desired != self._off_value) or self._effect != 0
         else:
-            print(f"{self._desired_raw=}")
-            print(f"{self._off_value=}")
-            print(self.raw_value("currentEffect") != 0)
-            self._is_on = (self._desired_raw != self._off_value) or self.raw_value("currentEffect") != 0
-        print(f"{self.full_name} is {self._is_on}.")
-        self._effect = self.raw_value("currentEffect")
+            self._is_on = (self._desired != self._off_value) or self._effect != 0
+        print(f"{self.full_name} is on: {self._is_on}.\nlast on val: {self._last_on_state}\n{self._off_value}\n{self._desired}")
+
+        # print(f"-------------\n{product.type=}\n{product.name}\nAFTER_UPDATE set:\n{self._desired_raw=}\n{self._desired=}\n{self._is_on=}\n{self._white_value=}\n{self._effect=}\n{self._last_on_state=}\n-------------")
 
     @property
     def sensible_on_value(self) -> Any:
         if self.mask is not None:
-            print(f"{self.value_for_selected_channels_from_given_val(self._last_on_state)}")
-            if int(self.value_for_selected_channels_from_given_val(self._last_on_state), 16) == 0:
-                if self.color_mode == 3:
+            print(f"{self._last_on_state=}")
+            if self.color_mode == 3:
+                if int(self._last_on_state, 16) == 0:
                     return "ff"
-            return self.value_for_selected_channels_from_given_val(self._last_on_state)
+            # return self.value_for_selected_channels_from_given_val(self._last_on_state)
         return self._last_on_state
 
     @property

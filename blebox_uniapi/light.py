@@ -1,7 +1,7 @@
 import traceback
 from datetime import timedelta
 
-from enum import Enum
+from enum import Enum, IntEnum
 from .feature import Feature
 from .error import BadOnValueError
 from typing import TYPE_CHECKING, Optional, Dict, Any, Union
@@ -20,8 +20,14 @@ BLEBOX_COLOR_MODES = {
         }
 
 
-class BleboxColorMode(Enum):
-    pass
+class BleboxColorMode(IntEnum):
+        RGBW = 1
+        RGB = 2
+        MONO = 3
+        RGBorW = 4
+        CT = 5
+        CTx2 = 6
+        RGBWW = 7
 
 
 class Light(Feature):
@@ -103,22 +109,35 @@ class Light(Feature):
         }
     }
 
-    def __init__(self, product: "Box", alias: str, methods: dict, extended_state: Optional[Dict], mask: Any) -> None:
+    def __init__(self, product: "Box", alias: str, methods: dict, extended_state: Optional[Dict], mask: Any,
+                 desired_color, color_mode, effect_list, current_effect) -> None:
         super().__init__(product, alias, methods)
         # Todo Implement DRY
         config = self.CONFIG[product.type]
-        # print(f"Uniapi Light init\n{self.unique_id}")
         self.mask = mask
-        self.extended_state = extended_state
-        rgbw = self.extended_state.get("rgbw", None)
-        self.device_colorMode = rgbw.get('colorMode', None)
+        #---------------- dodanie do initu
+        self.desired_color = desired_color
+        self._color_mode = color_mode
+        self._effect_list = effect_list
+        if self._effect_list is not None:
+            self._effect = effect_list.get(str(current_effect), None)
 
-        if self.device_colorMode in [6,7]:
-            config = self.COLOR_MODE_CONFIG[BLEBOX_COLOR_MODES[self.device_colorMode]]
+        # okreslenie color_mode istotne, jezeli nie ma extended state
+        # init powinien byc prosty i nie powinien zbednie wyliczac, powinien odstac przekazane parammetry juz gotowe
+        # , nie powinno byc tu w ogole extended state
+
+        if extended_state not in [None, {}]:
+            self.extended_state = extended_state
+            rgbw = self.extended_state.get("rgbw", None)
+            self.device_colorMode = color_mode
+            if self.device_colorMode in [6,7]:
+                config = self.COLOR_MODE_CONFIG[BLEBOX_COLOR_MODES[self.device_colorMode]]
+        else:
+            if product.type == 'dimmerBox':
+                self.device_colorMode = BleboxColorMode.MONO.value
         self.CURRENT_CONF = config
 
-        des_color = rgbw.get("desiredColor", None)
-        self._off_value = self.evaluate_off_value(config, des_color)
+        self._off_value = self.evaluate_off_value(config, desired_color)
         self._last_on_state = self._default_on_value = config["default"]
 
     @classmethod
@@ -126,16 +145,27 @@ class Light(Feature):
         # maska przekazywana w box type config dodatkowy klucza, a potem obsluzyc maskę
         # tu ma się wyjasnić ile tych instancji ma zostać zwrócone, najpierw dwa na sztywno
         # tutaj kontrola instancji, masek, typu color mode dla frontu
+        # tutaj extended state powuinien wyciagac wszystkie informacje
 
-        if isinstance(extended_state, dict) and extended_state != {}:
-            color_mod_integer = extended_state.get('rgbw', {}).get('colorMode')
-            desired_color = extended_state.get('rgbw', {}).get('desiredColor')
+        #desired_color, color_mode, effect_list, current_effect
+
+        if isinstance(extended_state, dict) and extended_state != None:
+            desired_color = extended_state.get('rgbw', {}).get('desiredColor', None)
+            color_mode = extended_state.get('rgbw', {}).get('colorMode', None)
+            current_effect = extended_state.get('rgbw', {}).get('effectID', None)
+            effect_list = extended_state.get('rgbw', {}).get('effectsNames', None)
+        else:
+            desired_color = None
+            color_mode = None
+            current_effect = None
+            effect_list = None
+
         object_list = list()
 
         ctx2 = {
-                    "cct1": lambda x: f"{x}------",
-                    "cct2": lambda x: f"----{x}--"
-                    }
+            "cct1": lambda x: f"{x}------",
+            "cct2": lambda x: f"----{x}--"
+        }
         mono = {
             "mono1": lambda x: f"{x}------",
             "mono2": lambda x: f"--{x}----",
@@ -143,18 +173,21 @@ class Light(Feature):
             "mono4": lambda x: f"------{x}",
         }
 
-
-        if extended_state != {}:
-            if BLEBOX_COLOR_MODES[color_mod_integer] == "RGBW":
+        if extended_state is not None:
+            if BLEBOX_COLOR_MODES[color_mode] == "RGBW":
                 alias, methods = box_type_config[0]
                 return [
-                    cls(product, alias=alias + "_RGBW", methods=methods, extended_state=extended_state, mask=None)]
-            if BLEBOX_COLOR_MODES[color_mod_integer] == "RGB":
+                    cls(product, alias=alias + "_RGBW", methods=methods, extended_state=extended_state, mask=None,
+                        desired_color=desired_color, color_mode=color_mode, current_effect=current_effect,
+                        effect_list=effect_list)]
+            if BLEBOX_COLOR_MODES[color_mode] == "RGB":
                 alias, methods = box_type_config[0]
                 return [
-                    cls(product, alias=alias + "_RGB", methods=methods, extended_state=extended_state, mask=None)]
+                    cls(product, alias=alias + "_RGB", methods=methods, extended_state=extended_state, mask=None,
+                        desired_color=desired_color, color_mode=color_mode, current_effect=current_effect,
+                        effect_list=effect_list)]
 
-            if BLEBOX_COLOR_MODES[color_mod_integer] == "MONO":
+            if BLEBOX_COLOR_MODES[color_mode] == "MONO":
                 if len(desired_color) % 2 == 0:
                     alias, methods = box_type_config[0]
                     mono = list(mono.items())
@@ -162,37 +195,45 @@ class Light(Feature):
                         indicator, mask = mono[i]
                         object_list.append(
                             cls(product, alias=alias + "_" + indicator, methods=methods, extended_state=extended_state,
-                                mask=mask)
+                                mask=mask, desired_color=desired_color, color_mode=color_mode, current_effect=current_effect,
+                                effect_list=effect_list)
                         )
                     return object_list
 
-            if BLEBOX_COLOR_MODES[color_mod_integer] == "RGBorW":
+            if BLEBOX_COLOR_MODES[color_mode] == "RGBorW":
                 alias, methods = box_type_config[0]
                 return [
-                    cls(product, alias=alias + "_RGBorW", methods=methods, extended_state=extended_state, mask=None)]
+                    cls(product, alias=alias + "_RGBorW", methods=methods, extended_state=extended_state, mask=None,
+                        desired_color=desired_color, color_mode=color_mode, current_effect=current_effect,
+                        effect_list=effect_list)]
 
-            if BLEBOX_COLOR_MODES[color_mod_integer] == "CT":
+            if BLEBOX_COLOR_MODES[color_mode] == "CT":
                 alias, methods = box_type_config[0]
                 mask = ctx2["cct1"]
-                return [cls(product, alias=alias + "_cct", methods=methods, extended_state=extended_state, mask=mask)]
+                return [cls(product, alias=alias + "_cct", methods=methods, extended_state=extended_state, mask=mask,
+                        desired_color=desired_color, color_mode=color_mode, current_effect=current_effect,
+                        effect_list=effect_list)]
 
-            if BLEBOX_COLOR_MODES[color_mod_integer] == "CTx2":
+            if BLEBOX_COLOR_MODES[color_mode] == "CTx2":
                 alias, methods = box_type_config[0]
                 for indicator, mask in ctx2.items():
-                    object_list.append(cls(product, alias=alias + "_" + indicator, methods=methods,
-                                           extended_state=extended_state, mask=mask)
+                    object_list.append(
+                        cls(product, alias=alias + "_" + indicator, methods=methods, extended_state=extended_state,
+                            mask=mask, desired_color=desired_color, color_mode=color_mode, current_effect=current_effect
+                            , effect_list=effect_list)
                                        )
                 return object_list
 
-            if BLEBOX_COLOR_MODES[color_mod_integer] == "RGBWW":
+            if BLEBOX_COLOR_MODES[color_mode] == "RGBWW":
                 alias, methods = box_type_config[0]
                 return [
-                    cls(product, alias=alias + "_RGBCCT", methods=methods, extended_state=extended_state, mask=None)]
+                    cls(product, alias=alias + "_RGBCCT", methods=methods, extended_state=extended_state, mask=None,
+                        desired_color=desired_color, color_mode=color_mode, current_effect=current_effect,
+                        effect_list=effect_list)]
 
-
-        # dodac szczególny przypadek gdy color mode RGBorW(4) wstawic nowa klase
-
-        return [cls(product, *args, extended_state=extended_state, mask=None) for args in box_type_config]
+        return [cls(product, *args, extended_state=extended_state, mask=None, desired_color=desired_color,
+                    color_mode=color_mode, current_effect=current_effect, effect_list=effect_list)
+                for args in box_type_config]
 
     # lepsza obsługa colorMode (wybieranie), czy zawze musi byc konifg?
 
@@ -206,13 +247,22 @@ class Light(Feature):
 
     @property
     def brightness(self) -> Optional[str]:
+        print(f"{self.product.name}\nbr:{type(self._desired)}={self._desired}")
         if self.color_mode in [6, 5]:
             _, bgt = self.color_temp_brightness_int_from_hex(self._desired)
             print(f"{bgt=}")
             return bgt
         else:
+
             return self.evaluate_brightness_from_rgb(self.rgb_hex_to_rgb_list(self.rgb_hex))
 
+    @property
+    def effect_list(self):
+        if isinstance(self._effect_list, dict):
+            print((list(self._effect_list.values())))
+            return list(self._effect_list.values())
+        else:
+            return []
     @property
     def color_temp(self):
         ct, _ = self.color_temp_brightness_int_from_hex(self._desired)
@@ -285,7 +335,7 @@ class Light(Feature):
 
     @property
     def color_mode(self) -> int:
-        return self.device_colorMode
+        return self._color_mode
 
     def apply_color(self, value: str, rgb_hex: str) -> Union[int, str]:
         if rgb_hex is None:
@@ -356,8 +406,9 @@ class Light(Feature):
 
     @property
     def effect(self) -> Optional[str]:
+        if isinstance(self._effect_list, dict):
+            return self._effect_list.get(str(self._effect))
         return self._effect
-
     def after_update(self) -> None:
         # requires refactor in context when mask is applied
         # do I know here what is device mod?
@@ -366,25 +417,24 @@ class Light(Feature):
         product = self._product
 
         if product.last_data is None:
-            self._desired_raw = None     # wartsc oczekiwana nie przetworzona
-            self._desired = None         # wartosc oczekiwana
-            self._is_on = None           # bool czy urzadzenie jest wlaczone
-            self._effect = None  # wartos pola effect
+            self._desired_raw = None        # wartsc oczekiwana nie przetworzona
+            self._desired = None            # wartosc oczekiwana
+            self._is_on = None              # bool czy urzadzenie jest wlaczone
+            self._effect = None             # wartos pola effect
             if self.mask is None:
-                self._white_value = None # wartosc kanalu bialego
+                self._white_value = None    # wartosc kanalu bialego
             return
 
         self._effect = self.raw_value("currentEffect")
-
         # todo ustalenie wartosci docelowej
         raw = self._return_desired_value(alias, product)
 
         # reguła jeżeli po ustaweieniu wartość jest wartoscia OFF:
         # jezeli wartosc raw jest wartoscia off
+
         if raw == self._off_value:
-            if product.type == "wLightBox":
+            if product.type == "wLightBox": # jezeli urzadzenie typu wLightBox ma wyciagnac last_color
                 raw = product.expect_rgbw(alias, self.raw_value("last_color"))
-                print(f"raw if wLightBox from last on: {raw}")
                 if self.mask is not None:
                     raw = self.value_for_selected_channels_from_given_val(raw)
                 if raw == self._off_value:
@@ -399,13 +449,15 @@ class Light(Feature):
         # TODO: store as custom value permanently (exposed by API consumer)
         self._last_on_state = raw
         if self.mask is not None:
-            self._is_on = self._desired != self._off_value
-            print(f"IS ON CHECK\n{self._off_value=}\n{self._desired=}\n{self._is_on=}")
+            self._is_on = self._desired != self._off_value or self._effect != 0
+            print(f"IS ON CHECK\n{self._off_value=}\n{self._desired=}\n{self._is_on=}\n{self._effect=}")
         elif self.raw_value("colorMode") == 7:
             self._is_on = (self._desired != self._off_value) or self._effect != 0
         else:
             self._is_on = (self._desired != self._off_value) or self._effect != 0
         print(f"{self.full_name} is on: {self._is_on}.\nlast on val: {self._last_on_state}\n{self._off_value}\n{self._desired}")
+
+
 
     def _return_desired_value(self, alias, product) -> str:
         '''
@@ -496,6 +548,8 @@ class Light(Feature):
             await self.async_api_command("set", self._off_value)
 
     def config_attribute_value(self, att_name: str) -> Union[None, str, list]:
+        if self.extended_state is None:
+            return None
         rgbw = self.extended_state.get("rgbw", None)
         if att_name == "_attr_effect_list":
             return [_.upper() for _ in list(rgbw['effectsNames'].values())]

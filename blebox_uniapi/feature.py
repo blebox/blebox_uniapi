@@ -48,7 +48,10 @@ class Feature:
 
         methods = self._methods
         # print(f"last data: {product.last_data}\nmethods:{methods}")
-        return product.follow(product.last_data, methods[name])
+        if methods.get(name, None) is not None:
+            return product.follow(product.last_data, methods[name])
+        return None
 
     async def async_api_command(self, *args: Any, **kwargs: Any) -> None:
+
         await self._product.async_api_command(*args, **kwargs)

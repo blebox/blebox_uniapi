@@ -48,7 +48,6 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     "airSensor": {
         20180403: {
             "api_path": "/api/air/state",
-            "extended_state_path": "",  # brak endpointu w api tej wersji
             "air_qualities": [
                 [
                     "0.air",
@@ -68,7 +67,6 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     "dimmerBox": {
         20170829: {
             "api_path": "/api/dimmer/state",
-            "extended_state_path": "",
             "api": {
                 "set": lambda x: (
                     "POST",
@@ -90,7 +88,6 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     "gateBox": {
         default_api_level: {
             "api_path": "/api/gate/state",
-            "extended_state_path": "",
             "api": {
                 "primary": lambda x=None: ("GET", "/s/p", None),
                 "secondary": lambda x=None: ("GET", "/s/s", None),

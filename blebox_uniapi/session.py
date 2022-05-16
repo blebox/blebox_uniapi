@@ -47,9 +47,7 @@ class ApiHost:
     ) -> Optional[dict]:
         # TODO: check timeout
         client_timeout = self._timeout
-
         url = self.api_path(path)
-
         try:
             if data is not None:
                 response = await async_method(url, timeout=client_timeout, data=data)

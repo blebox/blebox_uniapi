@@ -157,14 +157,15 @@ class Box:
             data = await api_host.async_api_get(path)
 
         info = data.get("device", data)  # type: ignore
+        extended_state = None
 
         config = cls._match_device_config(info)
-        print(f"conf: {config}")
-        if config["extended_state_path"] is not None:
+        print(f"conf: {config}\n{info}")
+        if config.get("extended_state_path", None) is not None:
             try:
                 extended_state = await api_host.async_api_get(config["extended_state_path"])
             except (HttpError, KeyError):
-                extended_state = {}
+                extended_state = None
 
         return cls(api_host, info, config, extended_state)
 
@@ -244,6 +245,7 @@ class Box:
     async def async_api_command(self, command: str, value: Any = None) -> None:
         method, *args = self._api[command](value)
         self._last_real_update = None  # force update
+        print(f"{method=}\n{args=}")
         return await self._async_api(False, method, *args)
 
     def follow(self, data: dict, path: str) -> Any:
@@ -342,7 +344,7 @@ class Box:
         return self.check_hex_str(raw_value, field, maximum, minimum)
 
     def expect_rgbw(self, field: str, raw_value: int) -> int:
-        return self.check_rgbw(raw_value, field)
+            return self.check_rgbw(raw_value, field)
 
     def check_int_range(
         self, value: int, field: str, max_value: int, min_value: int

@@ -41,7 +41,7 @@ class Light(Feature):
             "color_temp?": False,
             "white?": True,
             "color?": True,
-            "to_value": lambda int_value: "{:02x}".format(int_value),
+            "to_value": lambda int_value: f"{int_value:02x}",
             "validator": lambda product, alias, raw: product.expect_rgbw(alias, raw),
         },
         "wLightBoxS": {
@@ -51,7 +51,7 @@ class Light(Feature):
             "color_temp?": False,
             "white?": False,
             "color?": False,
-            "to_value": lambda int_value: "{:02x}".format(int_value),
+            "to_value": lambda int_value: f"{int_value:02x}",
             "validator": lambda product, alias, raw: product.expect_hex_str(
                 alias, raw, 255, 0
             ),
@@ -78,7 +78,7 @@ class Light(Feature):
             "color_temp?": True,
             "white?": False,
             "color?": False,
-            "to_value": lambda int_value: "{:02x}".format(int_value),
+            "to_value": lambda int_value: f"{int_value:02x}",
             "validator": lambda product, alias, raw: product.expect_hex_str(
                 alias, raw, 255, 0
             ),
@@ -90,7 +90,7 @@ class Light(Feature):
             "color_temp?": True,
             "white?": False,
             "color?": False,
-            "to_value": lambda int_value: "{:02x}".format(int_value),
+            "to_value": lambda int_value: f"{int_value:02x}",
             "validator": lambda product, alias, raw: product.expect_hex_str(
                 alias, raw, 255, 0
             ),
@@ -102,7 +102,7 @@ class Light(Feature):
             "color_temp?": False,
             "white?": True,
             "color?": True,
-            "to_value": lambda int_value: "{:02x}".format(int_value),
+            "to_value": lambda int_value: f"{int_value:02x}",
             "validator": lambda product, alias, raw: product.expect_hex_str(
                 alias, raw, 255, 0
             ),
@@ -174,20 +174,22 @@ class Light(Feature):
         }
 
         if extended_state is not None:
-            if BLEBOX_COLOR_MODES[color_mode] == "RGBW":
+            if BleboxColorMode(color_mode).name == "RGBW":
                 alias, methods = box_type_config[0]
                 return [
-                    cls(product, alias=alias + "_RGBW", methods=methods, extended_state=extended_state, mask=None,
-                        desired_color=desired_color, color_mode=color_mode, current_effect=current_effect,
-                        effect_list=effect_list)]
-            if BLEBOX_COLOR_MODES[color_mode] == "RGB":
-                alias, methods = box_type_config[0]
-                return [
-                    cls(product, alias=alias + "_RGB", methods=methods, extended_state=extended_state, mask=None,
-                        desired_color=desired_color, color_mode=color_mode, current_effect=current_effect,
-                        effect_list=effect_list)]
+                    cls(product, alias=alias + "_RGBW", methods=methods, extended_state=extended_state,
+                        mask=lambda x: f"{x}--", desired_color=desired_color, color_mode=color_mode,
+                        current_effect=current_effect, effect_list=effect_list)]
 
-            if BLEBOX_COLOR_MODES[color_mode] == "MONO":
+            if BleboxColorMode(color_mode).name == "RGB":
+                alias, methods = box_type_config[0]
+                print("RGB shit created")
+                return [
+                    cls(product, alias=alias + "_RGB", methods=methods, extended_state=extended_state,
+                        mask=lambda x: f"{x}----", desired_color=desired_color, color_mode=color_mode,
+                        current_effect=current_effect, effect_list=effect_list)]
+
+            if BleboxColorMode(color_mode).name == "MONO":
                 if len(desired_color) % 2 == 0:
                     alias, methods = box_type_config[0]
                     mono = list(mono.items())
@@ -200,21 +202,21 @@ class Light(Feature):
                         )
                     return object_list
 
-            if BLEBOX_COLOR_MODES[color_mode] == "RGBorW":
+            if BleboxColorMode(color_mode).name == "RGBorW":
                 alias, methods = box_type_config[0]
                 return [
                     cls(product, alias=alias + "_RGBorW", methods=methods, extended_state=extended_state, mask=None,
                         desired_color=desired_color, color_mode=color_mode, current_effect=current_effect,
                         effect_list=effect_list)]
 
-            if BLEBOX_COLOR_MODES[color_mode] == "CT":
+            if BleboxColorMode(color_mode).name == "CT":
                 alias, methods = box_type_config[0]
                 mask = ctx2["cct1"]
                 return [cls(product, alias=alias + "_cct", methods=methods, extended_state=extended_state, mask=mask,
                         desired_color=desired_color, color_mode=color_mode, current_effect=current_effect,
                         effect_list=effect_list)]
 
-            if BLEBOX_COLOR_MODES[color_mode] == "CTx2":
+            if BleboxColorMode(color_mode).name == "CTx2":
                 alias, methods = box_type_config[0]
                 for indicator, mask in ctx2.items():
                     object_list.append(
@@ -224,18 +226,20 @@ class Light(Feature):
                                        )
                 return object_list
 
-            if BLEBOX_COLOR_MODES[color_mode] == "RGBWW":
+            if BleboxColorMode(color_mode).name == "RGBWW":
                 alias, methods = box_type_config[0]
                 return [
                     cls(product, alias=alias + "_RGBCCT", methods=methods, extended_state=extended_state, mask=None,
                         desired_color=desired_color, color_mode=color_mode, current_effect=current_effect,
                         effect_list=effect_list)]
 
+        if "Brightness" in box_type_config[0][1].get('desired'):
+            color_mode = BleboxColorMode.MONO
+        print(f"MFC2: {color_mode=}")
         return [cls(product, *args, extended_state=extended_state, mask=None, desired_color=desired_color,
                     color_mode=color_mode, current_effect=current_effect, effect_list=effect_list)
                 for args in box_type_config]
 
-    # lepsza obsługa colorMode (wybieranie), czy zawze musi byc konifg?
 
     @property
     def supports_brightness(self) -> Any:
@@ -247,19 +251,19 @@ class Light(Feature):
 
     @property
     def brightness(self) -> Optional[str]:
+        # jezeli obsluguje tylko brightness to self._deir
         print(f"{self.product.name}\nbr:{type(self._desired)}={self._desired}")
         if self.color_mode in [6, 5]:
             _, bgt = self.color_temp_brightness_int_from_hex(self._desired)
             print(f"{bgt=}")
             return bgt
         else:
-
+            print(self.rgb_hex)
             return self.evaluate_brightness_from_rgb(self.rgb_hex_to_rgb_list(self.rgb_hex))
 
     @property
     def effect_list(self):
         if isinstance(self._effect_list, dict):
-            print((list(self._effect_list.values())))
             return list(self._effect_list.values())
         else:
             return []
@@ -274,6 +278,8 @@ class Light(Feature):
 
 
     def apply_brightness(self, value: int, brightness: int) -> Any:
+        if self.product.type == 'dimmerBox':
+            return brightness
         if brightness is None:
             return value
         print(f"apply brightness:\n{value=}\n{brightness=}")
@@ -286,9 +292,8 @@ class Light(Feature):
             raise BadOnValueError(
                 f"adjust_brightness called with bad parameter ({brightness} is greater than 255)"
             )
-
-        anon_fun = lambda x: round(x * (brightness / 255))
-        res = list(map(anon_fun, self.rgb_hex_to_rgb_list(value)))
+        #anon_fun = lambda x: round(x * (brightness / 255))
+        res = list(map(lambda x: round(x * (brightness / 255)), self.rgb_hex_to_rgb_list(value)))
         print(f"{res=}")
         return "".join(self.rgb_list_to_rgb_hex(res))
 
@@ -305,8 +310,10 @@ class Light(Feature):
         print(f"{self.full_name}eofv: {self.mask=}\n {config}")
         if self.mask:
             return "0"*(len(raw_hex) - len(self.mask('x').replace('x', '')))
-        else:
-            return config["off"]
+        elif raw_hex is not None:
+            if len(raw_hex) < len(config['off']):
+                return config["off"][:len(raw_hex)]
+        return config["off"]
 
     @property
     def supports_white(self) -> Any:
@@ -325,7 +332,7 @@ class Light(Feature):
             return value
 
         rgbhex = value[0:6]
-        white_raw = "{:02x}".format(white)
+        white_raw = f"{white:02x}"
         return f"{rgbhex}{white_raw}"
 
     @property
@@ -360,16 +367,18 @@ class Light(Feature):
         cold = cold * brightness/255
         warm = warm * brightness/255
         print(f"Wartosci do hexa:\n\tin:\n\t{value=}\n\t{brightness=}\n\tout:\n\t{cold=}\n\t{warm=}")
-        cold = "{:02x}".format(int(round(cold)))
-        warm = "{:02x}".format(int(round(warm)))
+        cold = f"{int(round(cold)):02x}"
+        warm = f"{int(round(warm)):02x}"
 
         return warm+cold
 
     def value_for_selected_channels_from_given_val(self, value: str):
-        if self.color_mode in [5,6]:
+        if self.color_mode in [BleboxColorMode.CT, BleboxColorMode.CTx2]:
             lambda_result = self.mask("xxxx")
-        elif self.color_mode == 3:
+        elif self.color_mode == BleboxColorMode.MONO:
             lambda_result = self.mask("xx")
+        elif self.color_mode == BleboxColorMode.RGB:
+            lambda_result = self.mask("xxxxxx")
         first_index = lambda_result.index("x")
         last_index = lambda_result.rindex("x")
         print(f"vfscfgv: {value[first_index:last_index+1]}\n{value}")
@@ -399,7 +408,6 @@ class Light(Feature):
         else:
             return 128, max(cold, warm)
 
-
     @property
     def is_on(self) -> Optional[bool]:
         return self._is_on
@@ -409,6 +417,7 @@ class Light(Feature):
         if isinstance(self._effect_list, dict):
             return self._effect_list.get(str(self._effect))
         return self._effect
+
     def after_update(self) -> None:
         # requires refactor in context when mask is applied
         # do I know here what is device mod?
@@ -457,11 +466,9 @@ class Light(Feature):
             self._is_on = (self._desired != self._off_value) or self._effect != 0
         print(f"{self.full_name} is on: {self._is_on}.\nlast on val: {self._last_on_state}\n{self._off_value}\n{self._desired}")
 
-
-
     def _return_desired_value(self, alias, product) -> str:
         '''
-        Method returns value representing desired device state.
+        Return value representing desired device state.
         :param alias:
         :param product:
         :return desired value including mask:
@@ -485,18 +492,26 @@ class Light(Feature):
 
     @property
     def sensible_on_value(self) -> Any:
+        print(f"sen on al: {self.mask=}, {self._off_value=}")
         if self.mask is not None:
             print(f"{self._last_on_state=}")
-            if self.color_mode == 3:
+            if self.color_mode == BleboxColorMode.MONO:
                 if int(self._last_on_state, 16) == 0:
                     return "ff"
-            # return self.value_for_selected_channels_from_given_val(self._last_on_state)
+            if self.color_mode == BleboxColorMode.RGB:
+                print("CMRGBB")
+                if int(self.value_for_selected_channels_from_given_val(self._last_on_state), 16) == 0:
+                    return self.mask("ffffff")
         return self._last_on_state
 
     @property
     def rgb_hex(self) -> Any:
-        return self._desired
-
+        '''Return hex str representing rgb'''
+        # print(f"rgb hex checl:{self._desired}")
+        if isinstance(self._desired, int):
+            return f"{self._desired:02x}"
+        else:
+            return self._desired
     @property
     def rgbw_hex(self) -> Any:
         return self._desired
@@ -512,21 +527,22 @@ class Light(Feature):
             return output_str
 
     @classmethod
-    def rgb_hex_to_rgb_list(cls, hex_str):
+    def rgb_hex_to_rgb_list(cls, hex_str) -> list[int]:
         """Return an RGB color value list from a hex color string."""
-        print(f"{hex_str}")
-        return [int(hex_str[i:i+2], 16) for i in range(0, len(hex_str), 2)]
+        if hex_str is not None:
+            return [int(hex_str[i:i+2], 16) for i in range(0, len(hex_str), 2)]
+        return []
 
     @classmethod
     def rgb_list_to_rgb_hex(cls, rgb_list) -> hex:
-        print(f"{rgb_list=}")
-        return ["{:02x}".format(i) for i in rgb_list]
+        return [f"{i:02x}" for i in rgb_list]
 
     async def async_on(self, value: Any) -> None:
-        print(f"async on validation:\nvalue:{value}\noff_val:{self._off_value}\n{type(self._off_value)}")
+        print(f"async on:{value=}\n{self._off_value=}")
         if not isinstance(value, type(self._off_value)):
             raise BadOnValueError(
-                f"turn_on called with bad parameter ({value} is {type(value)}, compared to {self._off_value} which is {type(self._off_value)})"
+                f"turn_on called with bad parameter ({value} is {type(value)}, compared to {self._off_value} which is "
+                f"{type(self._off_value)})"
             )
 
         if value == self._off_value:
@@ -540,10 +556,8 @@ class Light(Feature):
     async def async_off(self) -> None:
         if self.raw_value("colorMode") in [5, 6]:
             await self.async_api_command("set", self.mask("0000"))
-            print(f"sent value: {self.mask('0000')}")
         elif self.raw_value("colorMode") == 3:
             await self.async_api_command("set", self.mask("00"))
-            print(f"sent value: {self.mask('00')}")
         else:
             await self.async_api_command("set", self._off_value)
 

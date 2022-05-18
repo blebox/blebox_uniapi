@@ -82,7 +82,24 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     }
                 ]
             ],
-        }
+        },
+        # 20200518: {
+        #     "api_path": "/state",
+        #     "api": {
+        #         "set": lambda x: (
+        #             "GET",
+        #             f"/s/{x}"
+        #         )
+        #     },
+        #     "lights": [
+        #         [
+        #             "brightness",
+        #             {
+        #                 "desired": "dimmer/desiredBrightness"
+        #             }
+        #         ]
+        #     ],
+        # }
     },
     # gateBox
     "gateBox": {
@@ -296,7 +313,8 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 ),
                 "effect": lambda x: (
                     "GET",
-                    f"/s/x/{x}"
+                    f"/s/x/{x}",
+                    None
                 )
             },
             "lights": [

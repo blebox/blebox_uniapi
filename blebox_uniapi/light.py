@@ -134,10 +134,11 @@ class Light(Feature):
                 config = self.COLOR_MODE_CONFIG[BLEBOX_COLOR_MODES[self.device_colorMode]]
         else:
             if product.type == 'dimmerBox':
-                self.device_colorMode = BleboxColorMode.MONO.value
+                self.device_colorMode = BleboxColorMode.MONO
         self.CURRENT_CONF = config
 
         self._off_value = self.evaluate_off_value(config, desired_color)
+        print(f"INIT:{self._off_value=}")
         self._last_on_state = self._default_on_value = config["default"]
 
     @classmethod
@@ -186,7 +187,7 @@ class Light(Feature):
                 print("RGB shit created")
                 return [
                     cls(product, alias=alias + "_RGB", methods=methods, extended_state=extended_state,
-                        mask=lambda x: f"{x}----", desired_color=desired_color, color_mode=color_mode,
+                        mask=None, desired_color=desired_color, color_mode=color_mode,  # mask = lambda x: f"{x}----"
                         current_effect=current_effect, effect_list=effect_list)]
 
             if BleboxColorMode(color_mode).name == "MONO":
@@ -293,9 +294,9 @@ class Light(Feature):
                 f"adjust_brightness called with bad parameter ({brightness} is greater than 255)"
             )
         #anon_fun = lambda x: round(x * (brightness / 255))
-        res = list(map(lambda x: round(x * (brightness / 255)), self.rgb_hex_to_rgb_list(value)))
-        print(f"{res=}")
-        return "".join(self.rgb_list_to_rgb_hex(res))
+        res = list(map(lambda x: round(x * (brightness / 255)), value))
+        return res
+        # return "".join(self.rgb_list_to_rgb_hex(res))
 
     def evaluate_off_value(self, config: dict, raw_hex: str) -> str:
         '''
@@ -306,7 +307,6 @@ class Light(Feature):
         :param raw_hex:
         :return: str
         '''
-        '''  '''
         print(f"{self.full_name}eofv: {self.mask=}\n {config}")
         if self.mask:
             return "0"*(len(raw_hex) - len(self.mask('x').replace('x', '')))
@@ -408,6 +408,12 @@ class Light(Feature):
         else:
             return 128, max(cold, warm)
 
+    def normalise_elements_of_rgb(self, elements):
+        max_val = max(elements)
+        if 0 > max_val > 255:
+            raise BadOnValueError(f"Max value in normalisation was outside range {max_val}.")
+        return list(map(lambda x: x * 255 / max_val, elements))
+
     @property
     def is_on(self) -> Optional[bool]:
         return self._is_on
@@ -457,14 +463,18 @@ class Light(Feature):
 
         # TODO: store as custom value permanently (exposed by API consumer)
         self._last_on_state = raw
+
+        self._set_is_on()
+        # print(f"{self.full_name} is on: {self._is_on}.\nlast on val: {self._last_on_state}\n{self._off_value}\n{self._desired}")
+
+
+    def _set_is_on(self):
         if self.mask is not None:
-            self._is_on = self._desired != self._off_value or self._effect != 0
-            print(f"IS ON CHECK\n{self._off_value=}\n{self._desired=}\n{self._is_on=}\n{self._effect=}")
+            self._is_on = (self._desired != self._off_value) or (self._effect != 0 and self._effect is not None)
         elif self.raw_value("colorMode") == 7:
-            self._is_on = (self._desired != self._off_value) or self._effect != 0
+            self._is_on = (self._desired != self._off_value) or (self._effect != 0 and self._effect is not None)
         else:
-            self._is_on = (self._desired != self._off_value) or self._effect != 0
-        print(f"{self.full_name} is on: {self._is_on}.\nlast on val: {self._last_on_state}\n{self._off_value}\n{self._desired}")
+            self._is_on = (self._desired != self._off_value) or (self._effect != 0 and self._effect is not None)
 
     def _return_desired_value(self, alias, product) -> str:
         '''
@@ -492,17 +502,31 @@ class Light(Feature):
 
     @property
     def sensible_on_value(self) -> Any:
+        '''Return sensible on value in hass format'''
         print(f"sen on al: {self.mask=}, {self._off_value=}")
+        # jai kolormode taki return
         if self.mask is not None:
-            print(f"{self._last_on_state=}")
-            if self.color_mode == BleboxColorMode.MONO:
-                if int(self._last_on_state, 16) == 0:
-                    return "ff"
+            if int(self.value_for_selected_channels_from_given_val(self._last_on_state), 16) == 0:
+                if self.color_mode in (BleboxColorMode.RGBW, BleboxColorMode.RGBorW):
+                    return 255, 255, 255, 255
+                if self.color_mode == BleboxColorMode.RGB:
+                    return 255, 255, 255
+                if self.color_mode == BleboxColorMode.MONO:
+                    return 255
+                if self.color_mode in (BleboxColorMode.CT, BleboxColorMode.CTx2):
+                    return 255, 255
+                if self.color_mode == BleboxColorMode.RGBWW:
+                    return 255, 255, 255, 255, 255
+            else:
+                rgb_hex = self.value_for_selected_channels_from_given_val(self._last_on_state)
+                return self.rgb_hex_to_rgb_list(rgb_hex)
+        else:
             if self.color_mode == BleboxColorMode.RGB:
-                print("CMRGBB")
-                if int(self.value_for_selected_channels_from_given_val(self._last_on_state), 16) == 0:
-                    return self.mask("ffffff")
-        return self._last_on_state
+                return self.rgb_hex_to_rgb_list(self._last_on_state[:6])
+            elif self.color_mode == BleboxColorMode.MONO:
+                return self._last_on_state
+            else:
+                return self.rgb_hex_to_rgb_list(self._last_on_state)
 
     @property
     def rgb_hex(self) -> Any:
@@ -534,11 +558,13 @@ class Light(Feature):
         return []
 
     @classmethod
-    def rgb_list_to_rgb_hex(cls, rgb_list) -> hex:
+    def rgb_list_to_rgb_hex_list(cls, rgb_list) -> hex:
         return [f"{i:02x}" for i in rgb_list]
 
     async def async_on(self, value: Any) -> None:
-        print(f"async on:{value=}\n{self._off_value=}")
+        print(f"async on:{value=}\n")
+        value = "".join(self.rgb_list_to_rgb_hex_list(value))
+        print(f"list to hex\n{value=}\n{self._off_value=}")
         if not isinstance(value, type(self._off_value)):
             raise BadOnValueError(
                 f"turn_on called with bad parameter ({value} is {type(value)}, compared to {self._off_value} which is "
@@ -556,7 +582,7 @@ class Light(Feature):
     async def async_off(self) -> None:
         if self.raw_value("colorMode") in [5, 6]:
             await self.async_api_command("set", self.mask("0000"))
-        elif self.raw_value("colorMode") == 3:
+        elif self.raw_value("colorMode") == 3 and self.product.type != "dimmerBox":
             await self.async_api_command("set", self.mask("00"))
         else:
             await self.async_api_command("set", self._off_value)

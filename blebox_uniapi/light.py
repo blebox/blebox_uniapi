@@ -4,7 +4,7 @@ from datetime import timedelta
 from enum import Enum, IntEnum
 from .feature import Feature
 from .error import BadOnValueError
-from typing import TYPE_CHECKING, Optional, Dict, Any, Union
+from typing import TYPE_CHECKING, Optional, Dict, Any, Union, Iterable
 
 if TYPE_CHECKING:
     from .box import Box
@@ -252,12 +252,14 @@ class Light(Feature):
 
     @property
     def brightness(self) -> Optional[str]:
-        # jezeli obsluguje tylko brightness to self._deir
-        print(f"{self.product.name}\nbr:{type(self._desired)}={self._desired}")
+        # # jezeli obsluguje tylko brightness to self._deir
+        # print(f"{self.product.name}\nbr:{type(self._desired)}={self._desired}")
         if self.color_mode in [6, 5]:
             _, bgt = self.color_temp_brightness_int_from_hex(self._desired)
             print(f"{bgt=}")
             return bgt
+        elif self.color_mode == BleboxColorMode.RGB:
+            return 255
         else:
             print(self.rgb_hex)
             return self.evaluate_brightness_from_rgb(self.rgb_hex_to_rgb_list(self.rgb_hex))
@@ -275,14 +277,16 @@ class Light(Feature):
 
     def evaluate_brightness_from_rgb(self, iterable) -> int:
         "return brightness from 0 to 255 evaluated basing rgb"
-        return max(iterable)
+        return int(max(iterable))
 
 
     def apply_brightness(self, value: int, brightness: int) -> Any:
-        if self.product.type == 'dimmerBox':
-            return brightness
+        '''Return list of values with applied brightness.'''
+        print(f"uniapi cm: {self.color_mode}")
+        if self.product.type == 'dimmerBox' or self.color_mode == BleboxColorMode.MONO:
+            return [brightness]
         if brightness is None:
-            return value
+            return [value]
         print(f"apply brightness:\n{value=}\n{brightness=}")
         if not isinstance(brightness, int):
             raise BadOnValueError(
@@ -379,6 +383,9 @@ class Light(Feature):
             lambda_result = self.mask("xx")
         elif self.color_mode == BleboxColorMode.RGB:
             lambda_result = self.mask("xxxxxx")
+        elif self.color_mode == BleboxColorMode.RGBW:
+            lambda_result = self.mask("xxxxxxxx")
+        print(f"vfs CM:{self.color_mode}")
         first_index = lambda_result.index("x")
         last_index = lambda_result.rindex("x")
         print(f"vfscfgv: {value[first_index:last_index+1]}\n{value}")
@@ -412,7 +419,7 @@ class Light(Feature):
         max_val = max(elements)
         if 0 > max_val > 255:
             raise BadOnValueError(f"Max value in normalisation was outside range {max_val}.")
-        return list(map(lambda x: x * 255 / max_val, elements))
+        return list(map(lambda x: round(x * 255 / max_val), elements))
 
     @property
     def is_on(self) -> Optional[bool]:
@@ -439,16 +446,22 @@ class Light(Feature):
             if self.mask is None:
                 self._white_value = None    # wartosc kanalu bialego
             return
-
+        print(product.last_data)
         self._effect = self.raw_value("currentEffect")
-        # todo ustalenie wartosci docelowej
+
         raw = self._return_desired_value(alias, product)
 
         # reguła jeżeli po ustaweieniu wartość jest wartoscia OFF:
-        # jezeli wartosc raw jest wartoscia off
+        # jezeli wartosc raw jest wartoscia off to nie aktualizwac ?
 
+        self._set_last_on_value(alias, product, raw)
+
+        self._set_is_on()
+        # print(f"{self.full_name} is on: {self._is_on}.\nlast on val: {self._last_on_state}\n{self._off_value}\n{self._desired}")
+
+    def _set_last_on_value(self, alias, product, raw):
         if raw == self._off_value:
-            if product.type == "wLightBox": # jezeli urzadzenie typu wLightBox ma wyciagnac last_color
+            if product.type == "wLightBox":  # jezeli urzadzenie typu wLightBox ma wyciagnac last_color
                 raw = product.expect_rgbw(alias, self.raw_value("last_color"))
                 if self.mask is not None:
                     raw = self.value_for_selected_channels_from_given_val(raw)
@@ -457,16 +470,10 @@ class Light(Feature):
             else:
                 print(f"{self._default_on_value}")
                 raw = self._default_on_value
-
         if raw in (self._off_value, None):
             raise BadOnValueError(raw)
-
         # TODO: store as custom value permanently (exposed by API consumer)
         self._last_on_state = raw
-
-        self._set_is_on()
-        # print(f"{self.full_name} is on: {self._is_on}.\nlast on val: {self._last_on_state}\n{self._off_value}\n{self._desired}")
-
 
     def _set_is_on(self):
         if self.mask is not None:
@@ -478,11 +485,12 @@ class Light(Feature):
 
     def _return_desired_value(self, alias, product) -> str:
         '''
-        Return value representing desired device state.
+        Return value representing desired device state, set desired fields
         :param alias:
         :param product:
         :return desired value including mask:
         '''
+        # zrefaktoryzować żeby wywoływać _return_desired_value bez parametrów i nie zwracac
         response_desired_val = self.raw_value("desired")
         if self.mask is not None:
             raw = self.value_for_selected_channels_from_given_val(response_desired_val)
@@ -498,15 +506,16 @@ class Light(Feature):
             )  # type: ignore
             if self.color_mode in [1, 4]:  # wpowadzic stale, ENUM wprowadzic wymienic z int na te enu,
                 self._white_value = int(raw[6:8], 16)
+        print(f"DESIRED VALUE of {product.name}: {self._desired=}\n{self._desired_raw=}")
         return raw
 
     @property
     def sensible_on_value(self) -> Any:
-        '''Return sensible on value in hass format'''
+        ''' Return sensible on value in hass format. '''
         print(f"sen on al: {self.mask=}, {self._off_value=}")
-        # jai kolormode taki return
         if self.mask is not None:
-            if int(self.value_for_selected_channels_from_given_val(self._last_on_state), 16) == 0:
+            print(f"SOV: last on:{self._last_on_state} \n :{self.value_for_selected_channels_from_given_val(self._last_on_state)}")
+            if int(self._last_on_state, 16) == 0:
                 if self.color_mode in (BleboxColorMode.RGBW, BleboxColorMode.RGBorW):
                     return 255, 255, 255, 255
                 if self.color_mode == BleboxColorMode.RGB:
@@ -519,14 +528,16 @@ class Light(Feature):
                     return 255, 255, 255, 255, 255
             else:
                 rgb_hex = self.value_for_selected_channels_from_given_val(self._last_on_state)
-                return self.rgb_hex_to_rgb_list(rgb_hex)
+                if self.color_mode == BleboxColorMode.MONO:
+                    return self.rgb_hex_to_rgb_list(self._last_on_state)
+                return self.normalise_elements_of_rgb(self.rgb_hex_to_rgb_list(self._last_on_state))
         else:
             if self.color_mode == BleboxColorMode.RGB:
-                return self.rgb_hex_to_rgb_list(self._last_on_state[:6])
+                return self.normalise_elements_of_rgb(self.rgb_hex_to_rgb_list(self._last_on_state[:6]))
             elif self.color_mode == BleboxColorMode.MONO:
                 return self._last_on_state
             else:
-                return self.rgb_hex_to_rgb_list(self._last_on_state)
+                return self.normalise_elements_of_rgb(self.rgb_hex_to_rgb_list(self._last_on_state))
 
     @property
     def rgb_hex(self) -> Any:
@@ -563,7 +574,11 @@ class Light(Feature):
 
     async def async_on(self, value: Any) -> None:
         print(f"async on:{value=}\n")
-        value = "".join(self.rgb_list_to_rgb_hex_list(value))
+        if isinstance(value, Iterable):
+            print(f"Value {value}, of type {type(value)} is iterable.")
+            if self.color_mode == BleboxColorMode.RGBWW:
+                value.insert(3, value.pop())
+            value = "".join(self.rgb_list_to_rgb_hex_list(value))
         print(f"list to hex\n{value=}\n{self._off_value=}")
         if not isinstance(value, type(self._off_value)):
             raise BadOnValueError(

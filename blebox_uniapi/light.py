@@ -258,8 +258,8 @@ class Light(Feature):
             _, bgt = self.color_temp_brightness_int_from_hex(self._desired)
             print(f"{bgt=}")
             return bgt
-        elif self.color_mode == BleboxColorMode.RGB:
-            return 255
+        # elif self.color_mode == BleboxColorMode.RGB:
+        #     return 255
         else:
             print(self.rgb_hex)
             return self.evaluate_brightness_from_rgb(self.rgb_hex_to_rgb_list(self.rgb_hex))
@@ -578,7 +578,12 @@ class Light(Feature):
             print(f"Value {value}, of type {type(value)} is iterable.")
             if self.color_mode == BleboxColorMode.RGBWW:
                 value.insert(3, value.pop())
+            # if self.color_mode == BleboxColorMode.RGB:
+            #
+            #     bgt = self.evaluate_brightness_from_rgb(self.rgb_hex_to_rgb_list(self.rgb_hex))
+            #     value = self.apply_brightness(value, bgt)
             value = "".join(self.rgb_list_to_rgb_hex_list(value))
+            print(f"\nValue is: {value}")
         print(f"list to hex\n{value=}\n{self._off_value=}")
         if not isinstance(value, type(self._off_value)):
             raise BadOnValueError(

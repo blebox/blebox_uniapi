@@ -231,14 +231,15 @@ class Light(Feature):
                     cls(product, alias=alias + "_RGBCCT", methods=methods, extended_state=extended_state, mask=None,
                         desired_color=desired_color, color_mode=color_mode, current_effect=current_effect,
                         effect_list=effect_list)]
-
-        if isinstance(box_type_config, dict):
+        print(f"{box_type_config=}")
+        if len(box_type_config) > 0:
             if "Brightness" in box_type_config[0][1].get('desired'):
                 color_mode = BleboxColorMode.MONO
             return [cls(product, *args, extended_state=extended_state, mask=None, desired_color=desired_color,
                         color_mode=color_mode, current_effect=current_effect, effect_list=effect_list)
                     for args in box_type_config]
-        return []
+        else:
+            return []
 
     @property
     def supports_brightness(self) -> Any:

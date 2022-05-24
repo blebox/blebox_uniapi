@@ -138,7 +138,6 @@ class Light(Feature):
         self.CURRENT_CONF = config
 
         self._off_value = self.evaluate_off_value(config, desired_color)
-        print(f"INIT:{self._off_value=}")
         self._last_on_state = self._default_on_value = config["default"]
 
     @classmethod
@@ -174,7 +173,7 @@ class Light(Feature):
             "mono4": lambda x: f"------{x}",
         }
 
-        if extended_state is not None:
+        if extended_state is not None and color_mode is not None:
             if BleboxColorMode(color_mode).name == "RGBW":
                 alias, methods = box_type_config[0]
                 return [
@@ -184,7 +183,6 @@ class Light(Feature):
 
             if BleboxColorMode(color_mode).name == "RGB":
                 alias, methods = box_type_config[0]
-                print("RGB shit created")
                 return [
                     cls(product, alias=alias + "_RGB", methods=methods, extended_state=extended_state,
                         mask=None, desired_color=desired_color, color_mode=color_mode,  # mask = lambda x: f"{x}----"
@@ -234,13 +232,13 @@ class Light(Feature):
                         desired_color=desired_color, color_mode=color_mode, current_effect=current_effect,
                         effect_list=effect_list)]
 
-        if "Brightness" in box_type_config[0][1].get('desired'):
-            color_mode = BleboxColorMode.MONO
-        print(f"MFC2: {color_mode=}")
-        return [cls(product, *args, extended_state=extended_state, mask=None, desired_color=desired_color,
-                    color_mode=color_mode, current_effect=current_effect, effect_list=effect_list)
-                for args in box_type_config]
-
+        if isinstance(box_type_config, dict):
+            if "Brightness" in box_type_config[0][1].get('desired'):
+                color_mode = BleboxColorMode.MONO
+            return [cls(product, *args, extended_state=extended_state, mask=None, desired_color=desired_color,
+                        color_mode=color_mode, current_effect=current_effect, effect_list=effect_list)
+                    for args in box_type_config]
+        return []
 
     @property
     def supports_brightness(self) -> Any:
@@ -252,16 +250,12 @@ class Light(Feature):
 
     @property
     def brightness(self) -> Optional[str]:
-        # # jezeli obsluguje tylko brightness to self._deir
-        # print(f"{self.product.name}\nbr:{type(self._desired)}={self._desired}")
         if self.color_mode in [6, 5]:
             _, bgt = self.color_temp_brightness_int_from_hex(self._desired)
-            print(f"{bgt=}")
             return bgt
         # elif self.color_mode == BleboxColorMode.RGB:
         #     return 255
         else:
-            print(self.rgb_hex)
             return self.evaluate_brightness_from_rgb(self.rgb_hex_to_rgb_list(self.rgb_hex))
 
     @property
@@ -282,12 +276,10 @@ class Light(Feature):
 
     def apply_brightness(self, value: int, brightness: int) -> Any:
         '''Return list of values with applied brightness.'''
-        print(f"uniapi cm: {self.color_mode}")
         if self.product.type == 'dimmerBox' or self.color_mode == BleboxColorMode.MONO:
             return [brightness]
         if brightness is None:
             return [value]
-        print(f"apply brightness:\n{value=}\n{brightness=}")
         if not isinstance(brightness, int):
             raise BadOnValueError(
                 f"adjust_brightness called with bad parameter ({brightness} is {type(value)} instead of int)"
@@ -311,7 +303,6 @@ class Light(Feature):
         :param raw_hex:
         :return: str
         '''
-        print(f"{self.full_name}eofv: {self.mask=}\n {config}")
         if self.mask:
             return "0"*(len(raw_hex) - len(self.mask('x').replace('x', '')))
         elif raw_hex is not None:
@@ -367,10 +358,8 @@ class Light(Feature):
         else:
             warm = 255
             cold = max(0, min(255, (255-value) * 2))
-        print(f"{cold=}\n{warm=}\n{brightness=}")
         cold = cold * brightness/255
         warm = warm * brightness/255
-        print(f"Wartosci do hexa:\n\tin:\n\t{value=}\n\t{brightness=}\n\tout:\n\t{cold=}\n\t{warm=}")
         cold = f"{int(round(cold)):02x}"
         warm = f"{int(round(warm)):02x}"
 
@@ -385,10 +374,8 @@ class Light(Feature):
             lambda_result = self.mask("xxxxxx")
         elif self.color_mode == BleboxColorMode.RGBW:
             lambda_result = self.mask("xxxxxxxx")
-        print(f"vfs CM:{self.color_mode}")
         first_index = lambda_result.index("x")
         last_index = lambda_result.rindex("x")
-        print(f"vfscfgv: {value[first_index:last_index+1]}\n{value}")
         return value[first_index:last_index+1]
 
     def color_temp_brightness_int_from_hex(self, val) -> (int, int):
@@ -402,7 +389,6 @@ class Light(Feature):
         warm = int(val[0:2], 16)
 
         if cold > warm:
-            # print("colder")
             if warm == 0:
                 return 0, cold
             else:
@@ -446,7 +432,6 @@ class Light(Feature):
             if self.mask is None:
                 self._white_value = None    # wartosc kanalu bialego
             return
-        print(product.last_data)
         self._effect = self.raw_value("currentEffect")
 
         raw = self._return_desired_value(alias, product)
@@ -457,7 +442,6 @@ class Light(Feature):
         self._set_last_on_value(alias, product, raw)
 
         self._set_is_on()
-        # print(f"{self.full_name} is on: {self._is_on}.\nlast on val: {self._last_on_state}\n{self._off_value}\n{self._desired}")
 
     def _set_last_on_value(self, alias, product, raw):
         if raw == self._off_value:
@@ -468,7 +452,6 @@ class Light(Feature):
                 if raw == self._off_value:
                     raw = self.value_for_selected_channels_from_given_val("ffffffffff")
             else:
-                print(f"{self._default_on_value}")
                 raw = self._default_on_value
         if raw in (self._off_value, None):
             raise BadOnValueError(raw)
@@ -497,7 +480,6 @@ class Light(Feature):
             self._desired = self.CONFIG[self._product.type]["validator"](
                 product, alias, raw
             )
-            print(f"{self._off_value=}")
         else:
             raw = response_desired_val
             self._desired_raw = raw
@@ -506,15 +488,12 @@ class Light(Feature):
             )  # type: ignore
             if self.color_mode in [1, 4]:  # wpowadzic stale, ENUM wprowadzic wymienic z int na te enu,
                 self._white_value = int(raw[6:8], 16)
-        print(f"DESIRED VALUE of {product.name}: {self._desired=}\n{self._desired_raw=}")
         return raw
 
     @property
     def sensible_on_value(self) -> Any:
         ''' Return sensible on value in hass format. '''
-        print(f"sen on al: {self.mask=}, {self._off_value=}")
         if self.mask is not None:
-            print(f"SOV: last on:{self._last_on_state} \n :{self.value_for_selected_channels_from_given_val(self._last_on_state)}")
             if int(self._last_on_state, 16) == 0:
                 if self.color_mode in (BleboxColorMode.RGBW, BleboxColorMode.RGBorW):
                     return 255, 255, 255, 255
@@ -542,7 +521,6 @@ class Light(Feature):
     @property
     def rgb_hex(self) -> Any:
         '''Return hex str representing rgb'''
-        # print(f"rgb hex checl:{self._desired}")
         if isinstance(self._desired, int):
             return f"{self._desired:02x}"
         else:
@@ -573,18 +551,11 @@ class Light(Feature):
         return [f"{i:02x}" for i in rgb_list]
 
     async def async_on(self, value: Any) -> None:
-        print(f"async on:{value=}\n")
         if isinstance(value, Iterable):
-            print(f"Value {value}, of type {type(value)} is iterable.")
             if self.color_mode == BleboxColorMode.RGBWW:
                 value.insert(3, value.pop())
-            # if self.color_mode == BleboxColorMode.RGB:
-            #
-            #     bgt = self.evaluate_brightness_from_rgb(self.rgb_hex_to_rgb_list(self.rgb_hex))
-            #     value = self.apply_brightness(value, bgt)
             value = "".join(self.rgb_list_to_rgb_hex_list(value))
-            print(f"\nValue is: {value}")
-        print(f"list to hex\n{value=}\n{self._off_value=}")
+
         if not isinstance(value, type(self._off_value)):
             raise BadOnValueError(
                 f"turn_on called with bad parameter ({value} is {type(value)}, compared to {self._off_value} which is "

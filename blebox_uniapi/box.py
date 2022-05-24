@@ -29,7 +29,6 @@ from .error import (
     HttpError,
 )
 
-import pdb
 
 DEFAULT_PORT = 80
 

@@ -1,7 +1,7 @@
 import traceback
 from datetime import timedelta
 
-from enum import Enum, IntEnum
+from enum import IntEnum
 from .feature import Feature
 from .error import BadOnValueError
 from typing import TYPE_CHECKING, Optional, Dict, Any, Union, Iterable
@@ -147,9 +147,7 @@ class Light(Feature):
         # tutaj kontrola instancji, masek, typu color mode dla frontu
         # tutaj extended state powuinien wyciagac wszystkie informacje
 
-        #desired_color, color_mode, effect_list, current_effect
-
-        if isinstance(extended_state, dict) and extended_state != None:
+        if isinstance(extended_state, dict) and extended_state is not None:
             desired_color = extended_state.get('rgbw', {}).get('desiredColor', None)
             color_mode = extended_state.get('rgbw', {}).get('colorMode', None)
             current_effect = extended_state.get('rgbw', {}).get('effectID', None)
@@ -231,7 +229,7 @@ class Light(Feature):
                     cls(product, alias=alias + "_RGBCCT", methods=methods, extended_state=extended_state, mask=None,
                         desired_color=desired_color, color_mode=color_mode, current_effect=current_effect,
                         effect_list=effect_list)]
-        print(f"{box_type_config=}")
+
         if len(box_type_config) > 0:
             if "Brightness" in box_type_config[0][1].get('desired'):
                 color_mode = BleboxColorMode.MONO

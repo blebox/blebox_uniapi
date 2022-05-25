@@ -12,9 +12,6 @@ class Feature:
         self._product = product
         self._alias = alias
         self._methods = methods
-        print(f"alias: {self._alias} {type(self._alias)}")
-        print(f"product: {self._product} {type(self._product)}")
-        print(f"_methods: {self._methods} {type(self._methods)}")
 
     @property
     def unique_id(self) -> str:
@@ -38,9 +35,7 @@ class Feature:
 
     # TODO: (cleanup) move to product/box ?
     def raw_value(self, name: str) -> Any:
-        #sprawdza czy payload w zmiennej last_data dostępny
         product = self._product
-        # print(f"name raw val: {name}")
         # TODO: better exception?
         if product.last_data is None:
             # TODO: coverage

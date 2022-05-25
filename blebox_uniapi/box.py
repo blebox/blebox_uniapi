@@ -9,6 +9,7 @@ from typing import Optional, Any, Dict, Union
 
 from .air_quality import AirQuality
 from .box_types import default_api_level, get_conf, get_conf_set
+from .button import Button
 from .climate import Climate
 from .cover import Cover
 from .light import Light
@@ -34,7 +35,6 @@ DEFAULT_PORT = 80
 
 
 class Box:
-    # TODO: pass IP? (For better error messages).
     def __init__(
         self,
         api_session: ApiHost,
@@ -113,13 +113,11 @@ class Box:
 
         self._api = config.get("api", {})
         # todo get extended_state as param for init
-
         self._features = self.create_features(config, info, extended_state)
 
         self._config = config
 
         self._update_last_data(None)
-        print("Box instance created")
 
     def create_features(self, config: dict, info: dict, extended_state: Optional[dict]) -> dict:
         features = {}
@@ -130,20 +128,23 @@ class Box:
             "lights": Light,
             "climates": Climate,
             "switches": Switch,
+            "buttons": Button,
         }.items():
-            # print(f"field create: {field}")
             try:
                 if field == "lights":
-                    features[field] = klass.many_from_config(self, box_type_config=config.get(field, []), extended_state=extended_state)
+                    features[field] = klass.many_from_config(self, box_type_config=config.get(field, []),
+                                                             extended_state=extended_state)
+                elif field == "buttons":
+                    features[field] = klass.many_from_config(self, box_type_config=config.get(field, []),
+                                                             extended_state=extended_state)
                 else:
                     features[field] = [
                         klass(self, *args, extended_state) for args in config.get(field, [])  # todo taks 2
                     ]
-                # print(f"features {features}")
+
             # TODO: fix constructors instead
             except KeyError as ex:
                 raise UnsupportedBoxResponse(info, f"Failed to initialize: {ex}")
-
         return features
 
     @classmethod
@@ -159,7 +160,6 @@ class Box:
         extended_state = None
 
         config = cls._match_device_config(info)
-        print(f"conf: {config}\n{info}")
         if config.get("extended_state_path", None) is not None:
             try:
                 extended_state = await api_host.async_api_get(config["extended_state_path"])
@@ -244,7 +244,6 @@ class Box:
     async def async_api_command(self, command: str, value: Any = None) -> None:
         method, *args = self._api[command](value)
         self._last_real_update = None  # force update
-        print(f"{method=}\n{args=}")
         return await self._async_api(False, method, *args)
 
     def follow(self, data: dict, path: str) -> Any:
@@ -255,7 +254,6 @@ class Box:
         :param path:
         :return:
         '''
-        # print(f"'Follow {data},'\n' path: {path}")
         if data is None:
             raise RuntimeError(f"bad argument: data {data}")  # pragma: no cover
 

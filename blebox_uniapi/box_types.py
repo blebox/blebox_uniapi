@@ -37,7 +37,6 @@ def get_latest_api_level(product_type: str) -> Union[dict, int]:
     conf_set = get_conf_set(product_type)
     if conf_set:
         return sorted(conf_set, reverse=True)[0]
-
     return 0
 
 
@@ -45,6 +44,23 @@ def get_latest_api_level(product_type: str) -> Union[dict, int]:
 
 BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     # airSensor
+    "tvLiftBox": {
+        20200518: {
+            "api_path": "/api/device/state",
+            "extended_state_path": "/state/extended",
+            "api": {
+                "set": lambda command: (
+                    "GET",
+                    f"/s/c/{command}"
+                )
+            },
+            "buttons":
+                [
+                    "tvLift",
+                    {"lift": ""}
+                ]
+        }
+    },
     "airSensor": {
         20180403: {
             "api_path": "/api/air/state",
@@ -354,7 +370,6 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                         "colorMode": "rgbw/colorMode",
                     }
                 ],
-                #traceback.print_stack()
             ],
         },
     },

@@ -35,18 +35,24 @@ DEFAULT_PORT = 80
 
 
 class Box:
+    _name: str
+    _data_path: str
+    _last_real_update: Optional[float]
+    api_session: ApiHost
+    info: dict
+    config: dict
+    extended_state: Optional[Dict[Any, Any]]
+
     def __init__(
         self,
-        api_session: ApiHost,
-        info: dict,
-        config: dict,
-        extended_state: Optional[Dict[Any, Any]],
+        api_session,
+        info,
+        config,
+        extended_state,
     ) -> None:
-        self._last_real_update: Optional[float] = None
+        self._last_real_update = None
         self._sem = asyncio.BoundedSemaphore()
         self._session = api_session
-        self._name: str
-        self._data_path: str
 
         address = f"{api_session.host}:{api_session.port}"
 
@@ -112,7 +118,7 @@ class Box:
         self._model = config.get("model", type)
 
         self._api = config.get("api", {})
-        # todo get extended_state as param for init
+
         self._features = self.create_features(config, info, extended_state)
 
         self._config = config
@@ -130,21 +136,11 @@ class Box:
             "switches": Switch,
             "buttons": Button,
         }.items():
-            try:
-                if field == "lights":
-                    features[field] = klass.many_from_config(self, box_type_config=config.get(field, []),
-                                                             extended_state=extended_state)
-                elif field == "buttons":
-                    features[field] = klass.many_from_config(self, box_type_config=config.get(field, []),
-                                                             extended_state=extended_state)
-                else:
-                    features[field] = [
-                        klass(self, *args, extended_state) for args in config.get(field, [])  # todo taks 2
-                    ]
+            if box_type_config := config.get(field):
+                print(f"{box_type_config=}\n{extended_state=}\n{field=}")
+                features[field] = klass.many_from_config(self, box_type_config=box_type_config,
+                                                         extended_state=extended_state)
 
-            # TODO: fix constructors instead
-            except KeyError as ex:
-                raise UnsupportedBoxResponse(info, f"Failed to initialize: {ex}")
         return features
 
     @classmethod
@@ -160,9 +156,9 @@ class Box:
         extended_state = None
 
         config = cls._match_device_config(info)
-        if config.get("extended_state_path", None) is not None:
+        if extended_state_path := config.get("extended_state_path"):
             try:
-                extended_state = await api_host.async_api_get(config["extended_state_path"])
+                extended_state = await api_host.async_api_get(extended_state_path)
             except (HttpError, KeyError):
                 extended_state = None
 
@@ -171,22 +167,22 @@ class Box:
     @classmethod
     def _match_device_config(cls, info: dict) -> dict:
         try:
-            type = info["type"]
+            device_type = info["type"]
         except KeyError as ex:
             raise UnsupportedBoxResponse(info, f"Device info has no type key") from ex
         try:
             product = info["product"]
         except KeyError:
-            product = type
-        if type == "wLightBox" and product == "wLightBoxS":
-            type = "wLightBoxS"
+            product = device_type
+        if device_type == "wLightBox" and product == "wLightBoxS":
+            device_type = "wLightBoxS"
         level = int(info.get("apiLevel", default_api_level))
-        config_set = get_conf_set(type)
+        config_set = get_conf_set(device_type)
         if not config_set:
-            raise UnsupportedBoxResponse(f"{type} is not a supported type")
+            raise UnsupportedBoxResponse(f"{device_type} is not a supported type")
         config = get_conf(level, config_set)
         if not config:
-            raise UnsupportedBoxVersion(f"{type} has unsupported version ({level}).")
+            raise UnsupportedBoxVersion(f"{device_type} has unsupported version ({level}).")
 
         return config
 
@@ -198,6 +194,7 @@ class Box:
     def last_data(self) -> Optional[Dict[Any, Any]]:
         return self._last_data
 
+    #Used in full_name, track down and refactor.
     @property
     def type(self) -> str:
         return self._type
@@ -230,8 +227,6 @@ class Box:
     def model(self) -> Any:
         return self._model
 
-    # TODO: report timestamp of last measurement (if possible)
-
     async def async_update_data(self) -> None:
         await self._async_api(True, "GET", self._data_path)
 
@@ -248,7 +243,7 @@ class Box:
 
     def follow(self, data: dict, path: str) -> Any:
         '''
-        Funkcja ma za zadanie zwrócić  wartość z payloadu ze zwrotki json. jak Api extended
+        Return payloadu from device response json.
         :param self:
         :param data:
         :param path:
@@ -330,18 +325,14 @@ class Box:
                 )
         return current_tree
 
-    def expect_int(
-        self, field: str, raw_value: int, maximum: int = -1, minimum: int = 0
-    ) -> int:
+    def expect_int(self, field: str, raw_value: int, maximum: int = -1, minimum: int = 0) -> int:
         return self.check_int(raw_value, field, maximum, minimum)
 
-    def expect_hex_str(
-        self, field: str, raw_value: int, maximum: int = -1, minimum: int = 0
-    ) -> int:
+    def expect_hex_str(self, field: str, raw_value: int, maximum: int = -1, minimum: int = 0) -> int:
         return self.check_hex_str(raw_value, field, maximum, minimum)
 
     def expect_rgbw(self, field: str, raw_value: int) -> int:
-            return self.check_rgbw(raw_value, field)
+        return self.check_rgbw(raw_value, field)
 
     def check_int_range(
         self, value: int, field: str, max_value: int, min_value: int
@@ -381,8 +372,6 @@ class Box:
         if not isinstance(value, str):
             raise BadFieldNotAString(self.name, field, value)
 
-        # value can have different length depending on LED color mode
-        # mono mode will be 1 byte, and RGBWW will be 5 bytes
         if len(value) > 10 or len(value) % 2 != 0:
             raise BadFieldNotRGBW(self.name, field, value)
         return value

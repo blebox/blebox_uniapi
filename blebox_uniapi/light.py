@@ -10,13 +10,13 @@ if TYPE_CHECKING:
     from .box import Box
 
 BLEBOX_COLOR_MODES = {
-            1: "RGBW", #rgb pallet with color brightness, white brightness
-            2: "RGB", #rgb pallet with color brightness
+            1: "RGBW",    # RGB color-space with color brightness, white brightness
+            2: "RGB",     # RGB color-space with color brightness
             3: "MONO",
-            4: "RGBorW", # rgbw dac w jedno entity rgbw, i obsługę
-            5: "CT",     # colortemp, brightness, effect
-            6: "CTx2",   # colortemp, brightness, effect two instances CTx2
-            7: "RGBWW"   # RGBWCT
+            4: "RGBorW",  # RGBW entity, where white color is prioritised
+            5: "CT",      # color-temperature, brightness, effect
+            6: "CTx2",    # color-temperature, brightness, effect, two instances
+            7: "RGBWW"    # RGB with two color-temperature sliders(warm, cold)
         }
 
 
@@ -554,7 +554,8 @@ class Light(Feature):
             if self.color_mode == BleboxColorMode.RGBWW:
                 value.insert(3, value.pop())
             value = "".join(self.rgb_list_to_rgb_hex_list(value))
-
+        if self.product.type == "dimmerBox":
+            value = int(value, 16)
         if not isinstance(value, type(self._off_value)):
             raise BadOnValueError(
                 f"turn_on called with bad parameter ({value} is {type(value)}, compared to {self._off_value} which is "

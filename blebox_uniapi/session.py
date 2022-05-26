@@ -13,7 +13,6 @@ DEFAULT_TIMEOUT = aiohttp.ClientTimeout(total=None, sock_connect=5, sock_read=5)
 DEFAULT_PORT = 80
 
 LOGGER = logging.getLogger(__name__)
-Alias = LOGGER
 
 
 class ApiHost:

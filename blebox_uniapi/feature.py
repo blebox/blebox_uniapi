@@ -1,3 +1,5 @@
+import traceback
+
 from .error import DeviceStateNotAvailable
 from typing import Any, TYPE_CHECKING, Optional
 
@@ -12,6 +14,11 @@ class Feature:
         self._product = product
         self._alias = alias
         self._methods = methods
+    @classmethod
+    def many_from_config(cls, product, box_type_config, extended_state) -> list["Feature"]:
+        # note: by default single config entry yields single feature instance but certain feature
+        # domains (e.g. lights) may handle this differently depending on their `extended_state`
+        return [cls(product, *args) for args in box_type_config]
 
     @property
     def unique_id(self) -> str:
@@ -42,9 +49,8 @@ class Feature:
             raise DeviceStateNotAvailable  # pragma: no cover
 
         methods = self._methods
-        # print(f"last data: {product.last_data}\nmethods:{methods}")
-        if methods.get(name, None) is not None:
-            return product.follow(product.last_data, methods[name])
+        if method := methods.get(name):
+            return product.follow(product.last_data, method)
         return None
 
     async def async_api_command(self, *args: Any, **kwargs: Any) -> None:

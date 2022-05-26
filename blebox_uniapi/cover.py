@@ -129,7 +129,6 @@ class Cover(Feature):
         methods: dict,
         dev_class: str,
         subclass: Type[GateT],
-        extended_state: Optional[Dict]
     ) -> None:
 
         self._device_class = dev_class

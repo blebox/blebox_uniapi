@@ -1,5 +1,5 @@
 from .feature import Feature
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
     from .box import Box

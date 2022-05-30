@@ -1,6 +1,6 @@
 from .error import MisconfiguredDevice
 from .feature import Feature
-from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar, Dict
+from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar
 
 if TYPE_CHECKING:
     from .box import Box

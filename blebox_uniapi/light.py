@@ -1,5 +1,3 @@
-import traceback
-from datetime import timedelta
 
 from enum import IntEnum
 from .feature import Feature

@@ -1,5 +1,3 @@
-import traceback
-
 from .cover import Gate, GateBox, GateBoxB, Shutter
 from typing import Union, Any
 

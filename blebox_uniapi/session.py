@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
-import traceback
-from datetime import timedelta
-from typing import Any, Optional, Dict, Union
+from typing import Any, Optional, Union
 
 import aiohttp
 import asyncio
@@ -12,7 +9,7 @@ from . import error
 DEFAULT_TIMEOUT = aiohttp.ClientTimeout(total=None, sock_connect=5, sock_read=5)
 DEFAULT_PORT = 80
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class ApiHost:
@@ -23,7 +20,7 @@ class ApiHost:
         timeout: int,
         session: Any,
         loop: Any,
-        logger: logging.Logger = LOGGER,
+        logger: logging.Logger = logger,
     ):
         self._host = host
         self._port = port

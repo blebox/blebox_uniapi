@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 from __future__ import annotations
 
 import re
 import asyncio
 import time
-import traceback
-from typing import Optional, Any, Dict, Union
+
+from typing import Optional, Any, Dict
 
 from .air_quality import AirQuality
 from .box_types import default_api_level, get_conf, get_conf_set

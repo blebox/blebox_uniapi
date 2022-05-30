@@ -1,6 +1,6 @@
 from .feature import Feature
 from .error import BadOnValueError
-from typing import TYPE_CHECKING, Optional, Dict, Any, Union, Iterable
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .box import Box

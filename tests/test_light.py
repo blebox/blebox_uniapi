@@ -613,7 +613,7 @@ class TestWLightBox(DefaultBoxTest):
     {
       "rgbw": {
         "colorMode": 1,
-        "effectId": 2,
+        "effectID": 2,
         "desiredColor": "fa00203A",
         "currentColor": "ff00302F",
         "lastOnColor": "f1e2d3e4",

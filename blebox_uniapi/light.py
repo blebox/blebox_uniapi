@@ -2,7 +2,7 @@
 from enum import IntEnum
 from .feature import Feature
 from .error import BadOnValueError
-from typing import TYPE_CHECKING, Optional, Dict, Any, Union, Iterable
+from typing import TYPE_CHECKING, Optional, Dict, Any, Union, Iterable, Sequence
 
 if TYPE_CHECKING:
     from .box import Box
@@ -246,14 +246,14 @@ class Light(Feature):
         return self.CURRENT_CONF["color_temp?"]
 
     @property
-    def brightness(self) -> Optional[str]:
+    def brightness(self) -> Optional[int]:
         if self.color_mode in [6, 5]:
             _, bgt = self.color_temp_brightness_int_from_hex(self._desired)
             return bgt
-        # elif self.color_mode == BleboxColorMode.RGB:
-        #     return 255
+        elif self.color_mode is not None and (rgb_list := self.rgb_hex_to_rgb_list(self.rgb_hex)):
+            return self.evaluate_brightness_from_rgb(rgb_list)
         else:
-            return self.evaluate_brightness_from_rgb(self.rgb_hex_to_rgb_list(self.rgb_hex))
+            return None
 
     @property
     def effect_list(self):
@@ -266,7 +266,7 @@ class Light(Feature):
         ct, _ = self.color_temp_brightness_int_from_hex(self._desired)
         return ct
 
-    def evaluate_brightness_from_rgb(self, iterable) -> int:
+    def evaluate_brightness_from_rgb(self, iterable: Sequence[int]) -> int:
         "return brightness from 0 to 255 evaluated basing rgb"
         return int(max(iterable))
 

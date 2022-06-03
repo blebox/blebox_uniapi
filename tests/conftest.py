@@ -125,7 +125,8 @@ def json_post_expect(mock, url, **kwargs):
         def __call__(self, url, **kwargs):
             # TODO: timeout
             params = kwargs.get("data")
-            # print(HTTP_MOCKS)
+            print("HTTP_MOCKS:\n",HTTP_MOCKS)
+            print(f"{kwargs=}")
             # TODO: better checking of params (content vs raw json)
             data = HTTP_MOCKS[self._key][url][params]
             response = _json.dumps(data).encode("utf-8")
@@ -182,7 +183,7 @@ class DefaultBoxTest:
 
     async def allow_post(self, code, aioclient_mock, api_path, post_data, response):
         """Stub a HTTP GET request."""
-
+        print("allow_post", post_data)
         json_post_expect(
             aioclient_mock,
             f"http://{self.IP}:80/{api_path[1:]}",

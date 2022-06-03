@@ -528,7 +528,8 @@ class Light(Feature):
             elif self.color_mode == BleboxColorMode.MONO:
                 return self._last_on_state
             else:
-                return self.normalise_elements_of_rgb(self.rgb_hex_to_rgb_list(self._last_on_state))
+                print("Normalisation happen:", self.product.name)
+                return (self.rgb_hex_to_rgb_list(self._last_on_state))
 
     @property
     def rgb_hex(self) -> Any:

@@ -59,6 +59,7 @@ class Box:
         location = f"Device at {address}"
 
         # NOTE: get ID first for better error messages
+        print("BoxInfo:",info)
         try:
             unique_id = info["id"]
         except KeyError as ex:
@@ -66,6 +67,7 @@ class Box:
         location = f"Device:{unique_id} at {address}"
 
         try:
+            print("Box:", info["type"])
             type = info["type"]
         except KeyError as ex:
             raise UnsupportedBoxResponse(info, f"{location} has no type") from ex

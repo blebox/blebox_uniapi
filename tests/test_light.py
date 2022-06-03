@@ -494,7 +494,8 @@ class TestWLightBoxS(DefaultBoxTest):
                 "desiredColor": "ab",
                 "currentColor": "cd",
                 "fadeSpeed": 255,
-                "effectID": 0
+                "effectID": 0,
+                "colorMode": 3
             }
         }
     """
@@ -569,13 +570,13 @@ class TestWLightBoxS(DefaultBoxTest):
 
     async def allow_set_brightness(self, code, aioclient_mock, value, response):
         """Set up mock for HTTP POST simulating color change."""
-
-        raw = "{:02X}".format(value)
+        print("allow_set_brightness", response)
+        raw = "{:02x}".format(value)
         await self.allow_post(
             code,
             aioclient_mock,
             "/api/rgbw/set",
-            json.dumps({"light": {"desiredColor": raw}}),
+            json.dumps({"rgbw": {"desiredColor": raw+"------"}}), # simulating mask for color mod 3
             response,
         )
 
@@ -773,9 +774,9 @@ class TestWLightBox(DefaultBoxTest):
 
         assert entity.name == "My light 1 (wLightBox#color_RGBorW)"
         assert entity.unique_id == "BleBox-wLightBox-1afe34e750b8-color_RGBorW"
-
+        # In current state of master branch white_value is not property of BleBoxLightEntity, fake test... dissapointing
         # assert entity.supported_features & SUPPORT_WHITE_VALUE
-        assert entity.white_value is None
+        # assert entity.white_value is None
 
         # assert entity.supported_features & SUPPORT_COLOR
         # assert entity.hs_color is None
@@ -798,13 +799,14 @@ class TestWLightBox(DefaultBoxTest):
         """Test light updating."""
 
         entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
-        # assert entity.brightness == 123
+        assert entity.brightness == 250
         # assert entity.hs_color == (352.32, 100.0)
-        assert entity.white_value == 0x3A
+        # assert entity.white_value == 0x3A
         assert entity.is_on is True  # state already available
 
     async def allow_set_color(self, code, aioclient_mock, value, response):
         """Set up mock for HTTP POST simulating color change."""
+        print("allow_set_color", response)
         await self.allow_post(
             code,
             aioclient_mock,
@@ -812,80 +814,80 @@ class TestWLightBox(DefaultBoxTest):
             '{"rgbw":{"desiredColor": "' + str(value) + '"}}',
             response,
         )
+    # irrational test, ATTR_WHITE_VALUE not implemented in HA... -.-"
+    # async def test_on_via_just_whiteness(self, aioclient_mock):
+    #     """Test light on."""
+    #     entity = await self.updated(aioclient_mock, self.STATE_OFF)
+    #     assert entity.is_on is False
+    #
+    #     async def action():
+    #         await entity.async_turn_on(**{ATTR_WHITE_VALUE: 0xC7})
+    #
+    #     await self.allow_set_color(
+    #         action, aioclient_mock, "f1e2d3e4", self.STATE_ON_AFTER_WHITE # passed to mock normalised value, is this test v
+    #     )
+    #
+    #     assert entity.is_on is True
+    #     # assert entity.white_value == 0xC7
+    #     # assert entity.hs_color == color_RGB_to_hs(0xF1, 0xE2, 0xD3)
+    #
+    # async def test_on_via_reset_whiteness(self, aioclient_mock):
+    #     """Test light on."""
+    #     entity = await self.updated(aioclient_mock, self.STATE_OFF)
+    #     assert entity.is_on is False
+    #
+    #     async def action():
+    #         await entity.async_turn_on(**{ATTR_WHITE_VALUE: 0x0})
+    #
+    #     await self.allow_set_color(
+    #         action, aioclient_mock, "f1e2d300", self.STATE_ON_AFTER_RESET_WHITE
+    #     )
+    #
+    #     assert entity.is_on is True
+    #     # assert entity.white_value == 0x0
+    #     # assert entity.hs_color == color_RGB_to_hs(0xF1, 0xE2, 0xD3)
 
-    async def test_on_via_just_whiteness(self, aioclient_mock):
-        """Test light on."""
-        entity = await self.updated(aioclient_mock, self.STATE_OFF)
-        assert entity.is_on is False
+    # async def test_on_via_just_hsl_color_with_last(self, aioclient_mock):
+    #     """Test light on."""
+    #
+    #     # last color: "f1e2d3e4"
+    #
+    #     entity = await self.updated(aioclient_mock, self.STATE_OFF)
+    #     assert entity.is_on is False
+    #
+    #     input_rgb = (0xFF, 0xA1, 0xB2)
+    #     hs_color = color_RGB_to_hs(*input_rgb)
+    #
+    #     async def action():
+    #         await entity.async_turn_on(**{ATTR_HS_COLOR: hs_color})
+    #
+    #     response = self.STATE_AFTER_SOME_COLOR_SET
+    #     await self.allow_set_color(action, aioclient_mock, "ffa0b1e4", response)
+    #
+    #     # TODO: second part of test not needed
+    #     assert entity.is_on is True
+    #     assert entity.hs_color == color_RGB_to_hs(*input_rgb)
+    #     # assert entity.white_value == 0xE4
 
-        async def action():
-            await entity.async_turn_on(**{ATTR_WHITE_VALUE: 0xC7})
-
-        await self.allow_set_color(
-            action, aioclient_mock, "f1e2d3c7", self.STATE_ON_AFTER_WHITE
-        )
-
-        assert entity.is_on is True
-        assert entity.white_value == 0xC7
-        assert entity.hs_color == color_RGB_to_hs(0xF1, 0xE2, 0xD3)
-
-    async def test_on_via_reset_whiteness(self, aioclient_mock):
-        """Test light on."""
-        entity = await self.updated(aioclient_mock, self.STATE_OFF)
-        assert entity.is_on is False
-
-        async def action():
-            await entity.async_turn_on(**{ATTR_WHITE_VALUE: 0x0})
-
-        await self.allow_set_color(
-            action, aioclient_mock, "f1e2d300", self.STATE_ON_AFTER_RESET_WHITE
-        )
-
-        assert entity.is_on is True
-        assert entity.white_value == 0x0
-        assert entity.hs_color == color_RGB_to_hs(0xF1, 0xE2, 0xD3)
-
-    async def test_on_via_just_hsl_color_with_last(self, aioclient_mock):
-        """Test light on."""
-
-        # last color: "f1e2d3e4"
-
-        entity = await self.updated(aioclient_mock, self.STATE_OFF)
-        assert entity.is_on is False
-
-        input_rgb = (0xFF, 0xA1, 0xB2)
-        hs_color = color_RGB_to_hs(*input_rgb)
-
-        async def action():
-            await entity.async_turn_on(**{ATTR_HS_COLOR: hs_color})
-
-        response = self.STATE_AFTER_SOME_COLOR_SET
-        await self.allow_set_color(action, aioclient_mock, "ffa0b1e4", response)
-
-        # TODO: second part of test not needed
-        assert entity.is_on is True
-        assert entity.hs_color == color_RGB_to_hs(*input_rgb)
-        assert entity.white_value == 0xE4
-
-    async def test_on_via_just_hsl_color_with_no_white(self, aioclient_mock):
-        """Test light on."""
-
-        entity = await self.updated(aioclient_mock, self.STATE_OFF_NOLAST_WHITE)
-        assert entity.is_on is False
-
-        input_rgb = (0xFF, 0xA1, 0xB2)
-        hs_color = color_RGB_to_hs(*input_rgb)
-
-        async def action():
-            await entity.async_turn_on(**{ATTR_HS_COLOR: hs_color})
-
-        response = self.STATE_ON_ONLY_SOME_COLOR
-        await self.allow_set_color(action, aioclient_mock, "ffa0b100", response)
-
-        # TODO: second part of test not needed
-        assert entity.is_on is True
-        assert entity.hs_color == color_RGB_to_hs(*input_rgb)
-        assert entity.white_value == 0x0
+    # async def test_on_via_just_hsl_color_with_no_white(self, aioclient_mock):
+    #     """Test light on."""
+    #
+    #     entity = await self.updated(aioclient_mock, self.STATE_OFF_NOLAST_WHITE)
+    #     assert entity.is_on is False
+    #
+    #     input_rgb = (0xFF, 0xA1, 0xB2)
+    #     hs_color = color_RGB_to_hs(*input_rgb)
+    #
+    #     async def action():
+    #         await entity.async_turn_on(**{ATTR_HS_COLOR: hs_color})
+    #
+    #     response = self.STATE_ON_ONLY_SOME_COLOR
+    #     await self.allow_set_color(action, aioclient_mock, "ffa0b100", response)
+    #
+    #     # TODO: second part of test not needed
+    #     assert entity.is_on is True
+    #     assert entity.hs_color == color_RGB_to_hs(*input_rgb)
+    #     # assert entity.white_value == 0x0
 
     async def test_on_to_last_color(self, aioclient_mock):
         """Test light on."""
@@ -900,8 +902,8 @@ class TestWLightBox(DefaultBoxTest):
         )
 
         assert entity.is_on is True
-        assert entity.white_value == 0xE4
-        assert entity.hs_color == color_RGB_to_hs(0xF1, 0xE2, 0xD3)
+        # assert entity.white_value == 0xE4
+        assert entity.rgbw_color == tuple([int(i, 16) for i in ["f1","e2","d3","e4"]])
 
     async def test_off(self, aioclient_mock):
         """Test light off."""
@@ -914,7 +916,7 @@ class TestWLightBox(DefaultBoxTest):
         await self.allow_set_color(action, aioclient_mock, "00000000", self.STATE_OFF)
 
         assert entity.is_on is False
-        assert entity.white_value == 0x00
+        # assert entity.white_value == 0x00
 
     async def test_ancient_response(self, aioclient_mock):
         """Test e.g. unsupported, ancient device status structure."""

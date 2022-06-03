@@ -15,9 +15,31 @@ import pytest
 ATTR_BRIGHTNESS = "brightness"
 ATTR_HS_COLOR = "ATTR_HS_COLOR"
 ATTR_WHITE_VALUE = "ATTR_WHITE_VALUE"
+ATTR_RGB_COLOR = "rgb_color"
+ATTR_RGBW_COLOR = "rgbw_color"
+ATTR_EFFECT = "effect"
+ATTR_COLOR_TEMP = "colot_temp"
+ATTR_RGBWW_COLOR = "rgbww_color"
 SUPPORT_BRIGHTNESS = 1
 SUPPORT_COLOR = 2
 SUPPORT_WHITE_VALUE = 4
+COLOR_MODE_BRIGHTNESS = "brightness"
+COLOR_MODE_COLOR_TEMP = "color_temp"
+COLOR_MODE_ONOFF = "onoff"
+COLOR_MODE_RGB = "rgb"
+COLOR_MODE_RGBW = "rgbw"
+COLOR_MODE_RGBWW = "rgbww"
+
+COLOR_MODE_MAP = {
+    1: COLOR_MODE_RGBW,
+    2: COLOR_MODE_RGB,
+    3: COLOR_MODE_BRIGHTNESS,
+    4: COLOR_MODE_RGBW,
+    # RGB and Brightness 2 and 3 implementation difference, if W hex is not null only this or RGB + Brightness separated with mask
+    5: COLOR_MODE_COLOR_TEMP,
+    6: COLOR_MODE_COLOR_TEMP,  # two instances
+    7: COLOR_MODE_RGBWW,
+}
 
 # NOTE: copied from Home Assistant color util module
 
@@ -71,61 +93,105 @@ class BleBoxLightEntity(CommonEntity):
     """Representation of BleBox lights."""
 
     @property
-    def supported_features(self):
-        """Return supported features."""
-        white = SUPPORT_WHITE_VALUE if self._feature.supports_white else 0
-        color = SUPPORT_COLOR if self._feature.supports_color else 0
-        brightness = SUPPORT_BRIGHTNESS if self._feature.supports_brightness else 0
-        return white | color | brightness
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return if light is on."""
         return self._feature.is_on
 
     @property
     def brightness(self):
-        """Return the name."""
+        """Return the brightness."""
         return self._feature.brightness
 
     @property
-    def white_value(self):
-        """Return the white value."""
-        return self._feature.white_value
+    def color_temp(self):
+        """Return color temperature."""
+        return self._feature.color_temp
 
     @property
-    def hs_color(self):
-        """Return the hue and saturation."""
-        rgbw_hex = self._feature.rgbw_hex
-        if rgbw_hex is None:
-            return None
+    def color_mode(self):
+        """Return the color mode. Set values to _attr_ibutes if needed."""
+        color_mode_tmp = COLOR_MODE_MAP.get(self._feature.color_mode, COLOR_MODE_ONOFF)
+        if color_mode_tmp == COLOR_MODE_COLOR_TEMP:
+            self._attr_min_mireds = 1
+            self._attr_max_mireds = 255
 
-        r, g, b, x = rgb_hex_to_rgb_list(rgbw_hex)
-        return color_RGB_to_hs(r, g, b)
+        return color_mode_tmp
+
+    @property
+    def effect_list(self):
+        """Return the list of supported effects."""
+        return self._feature.effect_list
+
+    @property
+    def effect(self):
+        """Return the current effect."""
+        return self._feature.effect
+
+    @property
+    def rgb_color(self):
+        """Return value for rgb."""
+        if (rgb_hex := self._feature.rgb_hex) is None:
+            return None
+        return tuple(
+            self._feature.normalise_elements_of_rgb(
+                self._feature.rgb_hex_to_rgb_list(rgb_hex)[0:3]
+            )
+        )
+
+    @property
+    def rgbw_color(self):
+        """Return the hue and saturation."""
+        if (rgbw_hex := self._feature.rgbw_hex) is None:
+            return None
+        return tuple(self._feature.rgb_hex_to_rgb_list(rgbw_hex)[0:4])
+
+    @property
+    def rgbww_color(self):
+        """Return value for rgbww."""
+        if (rgbww_hex := self._feature.rgbww_hex) is None:
+            return None
+        return tuple(self._feature.rgb_hex_to_rgb_list(rgbww_hex))
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
-
-        white = kwargs.get(ATTR_WHITE_VALUE, None)
-        hs_color = kwargs.get(ATTR_HS_COLOR, None)
-        brightness = kwargs.get(ATTR_BRIGHTNESS, None)
-
+        print("async_turn_on:", kwargs)
+        rgbw = kwargs.get(ATTR_RGBW_COLOR)
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        effect = kwargs.get(ATTR_EFFECT)
+        color_temp = kwargs.get(ATTR_COLOR_TEMP)
+        rgbww = kwargs.get(ATTR_RGBWW_COLOR)
         feature = self._feature
         value = feature.sensible_on_value
+        rgb = kwargs.get(ATTR_RGB_COLOR)
+
+        if rgbw is not None:
+            value = list(rgbw)
+        if color_temp is not None:
+            value = feature.return_color_temp_with_brightness(
+                int(color_temp), self.brightness
+            )
+
+        if rgbww is not None:
+            value = list(rgbww)
+
+        if rgb is not None:
+            if self.color_mode == COLOR_MODE_RGB and brightness is None:
+                brightness = self.brightness
+            value = list(rgb)
 
         if brightness is not None:
-            value = feature.apply_brightness(value, brightness)
+            if self.color_mode == ATTR_COLOR_TEMP:
+                value = feature.return_color_temp_with_brightness(
+                    self.color_temp, brightness
+                )
+            else:
+                value = feature.apply_brightness(value, brightness)
 
-        if white is not None:
-            value = feature.apply_white(value, white)
-
-        # TODO: set via RGB
-        if hs_color is not None:
-            raw_rgb = color_rgb_to_hex(*color_hs_to_RGB(*hs_color))
-            value = feature.apply_color(value, raw_rgb)
-
-        # TODO: test for BadOnValueError case
-        await self._feature.async_on(value)
+        if effect is not None:
+            effect_value = self.effect_list.index(effect)
+            await self._feature.async_api_command("effect", effect_value)
+        else:
+            await self._feature.async_on(value)
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
@@ -237,7 +303,7 @@ class TestDimmer(DefaultBoxTest):
         """
 
     STATE_OFF = jmerge(STATE_DEFAULT, patch_state(0, 0))
-    STATE_ON_DEFAULT = jmerge(STATE_DEFAULT, patch_state(238, 254))
+    STATE_ON_DEFAULT = jmerge(STATE_DEFAULT, patch_state(238, 255))
     STATE_ON_BRIGHT = jmerge(STATE_DEFAULT, patch_state(201, 202))
 
     async def test_init(self, aioclient_mock):
@@ -248,7 +314,7 @@ class TestDimmer(DefaultBoxTest):
         assert entity.name == "My dimmer (dimmerBox#brightness)"
         assert entity.unique_id == "BleBox-dimmerBox-1afe34e750b8-brightness"
 
-        assert entity.supported_features & SUPPORT_BRIGHTNESS
+        # assert entity.supported_features & SUPPORT_BRIGHTNESS
         assert entity.brightness is None
 
         assert entity.is_on is None
@@ -285,6 +351,7 @@ class TestDimmer(DefaultBoxTest):
         entity = await self.updated(aioclient_mock, self.STATE_OFF)
         assert entity.is_on is False
 
+
         async def turn_on():
             await entity.async_turn_on()
 
@@ -294,7 +361,7 @@ class TestDimmer(DefaultBoxTest):
 
         assert entity.is_on is True
         # TODO: is max brightness a good default?
-        assert entity.brightness == 254
+        assert entity.brightness == 255
 
     async def test_on_with_brightness(self, aioclient_mock):
         """Test light on with a brightness value."""
@@ -331,18 +398,20 @@ class TestWLightBoxS(DefaultBoxTest):
     DEVCLASS = "lights"
     ENTITY_CLASS = BleBoxLightEntity
 
-    DEV_INFO_PATH = "api/light/state"
+    DEVICE_EXTENDED_INFO_PATH = "/api/rgbw/extended/state"
+    DEV_INFO_PATH = "api/rgbw/state"
     DEVICE_INFO = json.loads(
         """
     {
         "device": {
             "deviceName": "My wLightBoxS",
-            "type": "wLightBoxS",
+            "type": "wLightBox",
+            "product":"wLightBoxS",
             "fv": "0.924",
             "hv": "0.1",
             "universe": 0,
             "id": "1afe34e750b8",
-            "apiLevel": 20180718,
+            "apiLevel": 20200229,
             "ip": "192.168.9.13",
             "availableFv": null
         }
@@ -362,6 +431,20 @@ class TestWLightBoxS(DefaultBoxTest):
             "id": "ce50e32d2707",
             "ip": "192.168.1.25",
             "availableFv": None,
+        }
+    }
+
+    DEVICE_EXTENDED_INFO ={
+        "rgbw": {
+            "desiredColor": "f5",
+            "currentColor": "f5",
+            "lastOnColor": "f5",
+            "durationsMs": {"colorFade":1000,"effectFade":1000,"effectStep":1000},
+            "effectID": 0,
+            "colorMode": 3,
+            "favColors":
+                {"0":"ff","1":"00","2":"c0","3":"40","4":"00"},
+            "effectsNames":{"0":"NONE","1":"FADE","2":"Stroboskop","3":"BELL"}
         }
     }
 
@@ -394,10 +477,11 @@ class TestWLightBoxS(DefaultBoxTest):
             "apSSID": "wLightBoxS-ap",
             "apPasswd": ""
         },
-        "light": {
+        "rgbw": {
             "desiredColor": "e3",
             "currentColor": "df",
-            "fadeSpeed": 255
+            "fadeSpeed": 255,
+            "effectID": 0
         }
     }
     """
@@ -406,10 +490,11 @@ class TestWLightBoxS(DefaultBoxTest):
     STATE_ON = json.loads(
         """
         {
-            "light": {
+            "rgbw": {
                 "desiredColor": "ab",
                 "currentColor": "cd",
-                "fadeSpeed": 255
+                "fadeSpeed": 255,
+                "effectID": 0
             }
         }
     """
@@ -418,10 +503,11 @@ class TestWLightBoxS(DefaultBoxTest):
     STATE_FULL_ON = json.loads(
         """
         {
-            "light": {
+            "rgbw": {
                 "desiredColor": "ff",
                 "currentColor": "ce",
-                "fadeSpeed": 255
+                "fadeSpeed": 255,
+                "effectID": 0
             }
         }
     """
@@ -430,10 +516,11 @@ class TestWLightBoxS(DefaultBoxTest):
     STATE_OFF = json.loads(
         """
         {
-            "light": {
+            "rgbw": {
                 "desiredColor": "00",
                 "currentColor": "00",
-                "fadeSpeed": 255
+                "fadeSpeed": 255,
+                "effectID": 0
             }
         }
     """
@@ -446,10 +533,10 @@ class TestWLightBoxS(DefaultBoxTest):
         await self.allow_get_info(aioclient_mock)
         entity = (await self.async_entities(aioclient_mock))[0]
 
-        assert entity.name == "My wLightBoxS (wLightBoxS#brightness)"
-        assert entity.unique_id == "BleBox-wLightBoxS-1afe34e750b8-brightness"
-
-        assert entity.supported_features & SUPPORT_BRIGHTNESS
+        assert entity.name == "My wLightBoxS (wLightBoxS#brightness_mono1)"
+        assert entity.unique_id == "BleBox-wLightBoxS-1afe34e750b8-brightness_mono1"
+        print(entity.color_mode)
+        # assert entity.color_mode & SUPPORT_BRIGHTNESS this assertion needs to be refactored, after extended state will be mockable
         assert entity.brightness is None
 
         assert entity.is_on is None
@@ -476,7 +563,7 @@ class TestWLightBoxS(DefaultBoxTest):
         """Test light updating."""
 
         entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
-
+        print("TU:", entity.color_mode)
         assert entity.brightness == 0xAB
         assert entity.is_on is True
 
@@ -487,7 +574,7 @@ class TestWLightBoxS(DefaultBoxTest):
         await self.allow_post(
             code,
             aioclient_mock,
-            "/api/light/set",
+            "/api/rgbw/set",
             json.dumps({"light": {"desiredColor": raw}}),
             response,
         )
@@ -495,6 +582,7 @@ class TestWLightBoxS(DefaultBoxTest):
     async def test_on(self, aioclient_mock):
         """Test light on."""
         entity = await self.updated(aioclient_mock, self.STATE_OFF)
+        print("Ent: ", entity)
         assert entity.is_on is False
 
         async def turn_on():
@@ -549,6 +637,7 @@ class TestWLightBox(DefaultBoxTest):
     DEVCLASS = "lights"
     ENTITY_CLASS = BleBoxLightEntity
 
+    DEVICE_EXTENDED_INFO_PATH = "/api/rgbw/extended/state"
     # TODO: rename everywhere (STATE_PATH)
     DEV_INFO_PATH = "api/rgbw/state"
 
@@ -566,7 +655,23 @@ class TestWLightBox(DefaultBoxTest):
     }
     """
     )
-
+    DEVICE_EXTENDED_INFO = {
+        "rgbw": {
+            "colorMode": 4,
+            "effectID": 0,
+            "desiredColor": "fa00203A",
+            "currentColor": "ff00302F",
+            "lastOnColor": "f1e2d3e4",
+            "durationsMs": {
+                "colorFade": 1000,
+                "effectFade": 1500,
+                "effectStep": 2000
+            },
+            "favColors":
+                {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
+            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"}
+        }
+    }
     def patch_version(apiLevel):
         """Generate a patch for a JSON state fixture."""
         return f"""
@@ -612,8 +717,8 @@ class TestWLightBox(DefaultBoxTest):
         """
     {
       "rgbw": {
-        "colorMode": 1,
-        "effectID": 2,
+        "colorMode": 4,
+        "effectID": 0,
         "desiredColor": "fa00203A",
         "currentColor": "ff00302F",
         "lastOnColor": "f1e2d3e4",
@@ -626,6 +731,8 @@ class TestWLightBox(DefaultBoxTest):
     }
     """
     )
+
+
 
     def patch_state(current, desired=None, last=None):
         """Generate a patch for a JSON state fixture."""
@@ -664,15 +771,15 @@ class TestWLightBox(DefaultBoxTest):
         await self.allow_get_info(aioclient_mock)
         entity = (await self.async_entities(aioclient_mock))[0]
 
-        assert entity.name == "My light 1 (wLightBox#color)"
-        assert entity.unique_id == "BleBox-wLightBox-1afe34e750b8-color"
+        assert entity.name == "My light 1 (wLightBox#color_RGBorW)"
+        assert entity.unique_id == "BleBox-wLightBox-1afe34e750b8-color_RGBorW"
 
-        assert entity.supported_features & SUPPORT_WHITE_VALUE
+        # assert entity.supported_features & SUPPORT_WHITE_VALUE
         assert entity.white_value is None
 
-        assert entity.supported_features & SUPPORT_COLOR
-        assert entity.hs_color is None
-        assert entity.white_value is None
+        # assert entity.supported_features & SUPPORT_COLOR
+        # assert entity.hs_color is None
+        # assert entity.white_value is None
 
         # assert entity.supported_features & SUPPORT_BRIGHTNESS
         # assert entity.brightness == 123
@@ -692,7 +799,7 @@ class TestWLightBox(DefaultBoxTest):
 
         entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
         # assert entity.brightness == 123
-        assert entity.hs_color == (352.32, 100.0)
+        # assert entity.hs_color == (352.32, 100.0)
         assert entity.white_value == 0x3A
         assert entity.is_on is True  # state already available
 
@@ -807,7 +914,6 @@ class TestWLightBox(DefaultBoxTest):
         await self.allow_set_color(action, aioclient_mock, "00000000", self.STATE_OFF)
 
         assert entity.is_on is False
-        assert entity.hs_color == (0, 0)
         assert entity.white_value == 0x00
 
     async def test_ancient_response(self, aioclient_mock):

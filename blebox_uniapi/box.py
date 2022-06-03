@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 import asyncio
 import time
+import traceback
 
 from typing import Optional, Any, Dict
 
@@ -125,6 +126,7 @@ class Box:
         self._update_last_data(None)
 
     def create_features(self, config: dict, info: dict, extended_state: Optional[dict]) -> dict:
+
         features = {}
         for field, klass in {
             "air_qualities": AirQuality,
@@ -155,6 +157,7 @@ class Box:
         extended_state = None
 
         config = cls._match_device_config(info)
+        print("async_from_host: ", config, "\n", info)
         if extended_state_path := config.get("extended_state_path"):
             try:
                 extended_state = await api_host.async_api_get(extended_state_path)
@@ -177,6 +180,7 @@ class Box:
             device_type = "wLightBoxS"
         level = int(info.get("apiLevel", default_api_level))
         config_set = get_conf_set(device_type)
+        print("_match_device_config: ", device_type,"\n", config_set)
         if not config_set:
             raise UnsupportedBoxResponse(f"{device_type} is not a supported type")
         config = get_conf(level, config_set)
@@ -227,10 +231,12 @@ class Box:
         return self._model
 
     async def async_update_data(self) -> None:
+        print("async_update_data", True, "GET", self._data_path)
         await self._async_api(True, "GET", self._data_path)
 
     def _update_last_data(self, new_data: Optional[dict]) -> None:
         self._last_data = new_data
+        print("_update_last_data", new_data)
         for feature_set in self._features.values():
             for feature in feature_set:
                 feature.after_update()
@@ -341,7 +347,7 @@ class Box:
                 raise BadFieldExceedsMax(self.name, field, value, max_value)
             if value < min_value:
                 raise BadFieldLessThanMin(self.name, field, value, min_value)
-
+        print("check_int_range", value)
         return value
 
     def check_int(self, value: int, field: str, max_value: int, min_value: int) -> int:
@@ -362,7 +368,8 @@ class Box:
         if not isinstance(value, str):
             raise BadFieldNotAString(self.name, field, value)
 
-        return self.check_int_range(int(value, 16), field, max_value, min_value)
+        if self.check_int_range(int(value, 16), field, max_value, min_value) is not None:
+            return value
 
     def check_rgbw(self, value: int, field: str) -> int:
         if value is None:
@@ -397,7 +404,7 @@ class Box:
             if is_update:
                 if self._has_recent_data():
                     return
-
+            print("_async_api", self._has_recent_data())
             if method == "GET":
                 response = await self._session.async_api_get(path)
             else:

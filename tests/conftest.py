@@ -85,6 +85,7 @@ HTTP_MOCKS = {}
 def json_get_expect(mock, url, **kwargs):
     json = kwargs["json"]
 
+    # print("json_get_expect", mock, url, "\nend:json_get_expect")
     if mock not in HTTP_MOCKS:
         HTTP_MOCKS[mock] = {}
     HTTP_MOCKS[mock][url] = json
@@ -94,7 +95,7 @@ def json_get_expect(mock, url, **kwargs):
             self._key = key
 
         def __call__(self, url, **kwargs):
-            # TODO: check kwargs?
+            # print("HTTP_MOCK: ",HTTP_MOCKS)
             data = HTTP_MOCKS[self._key][url]
             response = _json.dumps(data).encode("utf-8")
             status = 200
@@ -109,7 +110,7 @@ def json_post_expect(mock, url, **kwargs):
 
     # TODO: check
     # headers = kwargs.get("headers")
-
+    # print("json_post_expect", mock, url, json, "\nend:json_post_expect")
     if mock not in HTTP_MOCKS:
         HTTP_MOCKS[mock] = {}
     if url not in HTTP_MOCKS[mock]:
@@ -124,7 +125,7 @@ def json_post_expect(mock, url, **kwargs):
         def __call__(self, url, **kwargs):
             # TODO: timeout
             params = kwargs.get("data")
-
+            # print(HTTP_MOCKS)
             # TODO: better checking of params (content vs raw json)
             data = HTTP_MOCKS[self._key][url][params]
             response = _json.dumps(data).encode("utf-8")
@@ -160,9 +161,15 @@ class DefaultBoxTest:
         json_get_expect(
             aioclient_mock, f"http://{self.IP}:80/api/device/state", json=data
         )
+        if hasattr(self, "DEVICE_EXTENDED_INFO"):
+            data = self.DEVICE_EXTENDED_INFO if info is None else info
+            json_get_expect(
+                aioclient_mock, f"http://{self.IP}:80{self.DEVICE_EXTENDED_INFO_PATH}", json=data
+            )
 
     def allow_get_state(self, aioclient_mock, data):
         """Stub a HTTP GET request for the product-specific state."""
+        # print("allow_get_state", self.IP, self.DEV_INFO_PATH, data)
         json_get_expect(
             aioclient_mock, f"http://{self.IP}:80/{self.DEV_INFO_PATH}", json=data
         )

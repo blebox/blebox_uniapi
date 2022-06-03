@@ -1,4 +1,4 @@
-
+import traceback
 from enum import IntEnum
 from .feature import Feature
 from .error import BadOnValueError
@@ -33,8 +33,8 @@ class Light(Feature):
     CURRENT_CONF = dict()
     CONFIG = {
         "wLightBox": {
-            "default": "FFFFFFFFFF",
-            "off": "0000000000",
+            "default": "FFFFFFFF",
+            "off": "00000000",
             "brightness?": True,
             "color_temp?": False,
             "white?": True,
@@ -273,38 +273,46 @@ class Light(Feature):
 
     def apply_brightness(self, value: int, brightness: int) -> Any:
         '''Return list of values with applied brightness.'''
-        if self.product.type == 'dimmerBox' or self.color_mode == BleboxColorMode.MONO:
-            return [brightness]
-        if brightness is None:
-            return [value]
+        print(f"apply_brightness:\n{value}{type(value)}\n{brightness}{type(brightness)}")
         if not isinstance(brightness, int):
             raise BadOnValueError(
-                f"adjust_brightness called with bad parameter ({brightness} is {type(value)} instead of int)"
+                f"adjust_brightness called with bad parameter ({brightness} is {type(brightness)} instead of int)"
             )
 
         if brightness > 255:
             raise BadOnValueError(
                 f"adjust_brightness called with bad parameter ({brightness} is greater than 255)"
             )
-        #anon_fun = lambda x: round(x * (brightness / 255))
+
+        if self.product.type == 'dimmerBox' or self.color_mode == BleboxColorMode.MONO:
+            return [brightness]
+        if brightness is None:
+            return [value]
+
         res = list(map(lambda x: round(x * (brightness / 255)), value))
         return res
-        # return "".join(self.rgb_list_to_rgb_hex(res))
 
     def evaluate_off_value(self, config: dict, raw_hex: str) -> str:
         '''
-        Returns hex representing off state value without mask formatting for necessary channels if mask is applied.
-        If no mask applied than returns default from config
+        Return hex representing off state value without mask formatting for necessary channels if mask is applied.
+        If no mask applied than return default from config
 
         :param config:
         :param raw_hex:
         :return: str
         '''
+        print("evaluate_off_value", config, raw_hex)
         if self.mask:
-            return "0"*(len(raw_hex) - len(self.mask('x').replace('x', '')))
+            print("eov:mask")
+            if len(raw_hex) < len(self.mask('x').replace('x', '')):
+                return "0"*len(raw_hex)
+            else:
+                return "0"*(len(raw_hex) - len(self.mask('x').replace('x', '')))
         elif raw_hex is not None:
+            print("eov:raw_hex")
             if len(raw_hex) < len(config['off']):
                 return config["off"][:len(raw_hex)]
+        print("eov:config")
         return config["off"]
 
     @property
@@ -400,8 +408,11 @@ class Light(Feature):
 
     def normalise_elements_of_rgb(self, elements):
         max_val = max(elements)
+        print("normalise_elements_of_rgb", max_val, elements)
         if 0 > max_val > 255:
             raise BadOnValueError(f"Max value in normalisation was outside range {max_val}.")
+        elif max_val == 0:
+            return [255] * len(elements)
         return list(map(lambda x: round(x * 255 / max_val), elements))
 
     @property
@@ -417,11 +428,12 @@ class Light(Feature):
     def after_update(self) -> None:
         # requires refactor in context when mask is applied
         # do I know here what is device mod?
-
+        print("Aktualizacja wartości:")
         alias = self._alias
         product = self._product
 
         if product.last_data is None:
+            print("Last data nie dostepne.")
             self._desired_raw = None        # wartsc oczekiwana nie przetworzona
             self._desired = None            # wartosc oczekiwana
             self._is_on = None              # bool czy urzadzenie jest wlaczone
@@ -456,12 +468,8 @@ class Light(Feature):
         self._last_on_state = raw
 
     def _set_is_on(self):
-        if self.mask is not None:
-            self._is_on = (self._desired != self._off_value) or (self._effect != 0 and self._effect is not None)
-        elif self.raw_value("colorMode") == 7:
-            self._is_on = (self._desired != self._off_value) or (self._effect != 0 and self._effect is not None)
-        else:
-            self._is_on = (self._desired != self._off_value) or (self._effect != 0 and self._effect is not None)
+        print(f"_set_is_on: {self._off_value=}, {self._desired=}, {type(self._effect)=}, {self.color_mode=}")
+        self._is_on = (self._off_value != self._desired) or (self._effect != 0 and self._effect is not None)
 
     def _return_desired_value(self, alias, product) -> str:
         '''
@@ -472,19 +480,26 @@ class Light(Feature):
         '''
         # zrefaktoryzować żeby wywoływać _return_desired_value bez parametrów i nie zwracac
         response_desired_val = self.raw_value("desired")
+        print("Sprawdź desired")
         if self.mask is not None:
+            print("mask")
             raw = self.value_for_selected_channels_from_given_val(response_desired_val)
             self._desired = self.CONFIG[self._product.type]["validator"](
                 product, alias, raw
             )
+            if self.color_mode in [1, 4]:
+                self._white_value = int(raw[6:8], 16)
+            print(f"_return_desired_value:<<With mask:{self._desired=}, {response_desired_val=}, {raw=}, {self._product.type=}, {alias=}")
         else:
+            print("bezmask")
             raw = response_desired_val
             self._desired_raw = raw
             self._desired = self.CONFIG[self._product.type]["validator"](
                 product, alias, raw
             )  # type: ignore
-            if self.color_mode in [1, 4]:  # wpowadzic stale, ENUM wprowadzic wymienic z int na te enu,
+            if self.color_mode in [1, 4]:
                 self._white_value = int(raw[6:8], 16)
+            print("_return_desired_value:No mask", raw, self._desired_raw,self._desired,  self._product.type, self.product.last_data)
         return raw
 
     @property
@@ -548,12 +563,14 @@ class Light(Feature):
         return [f"{i:02x}" for i in rgb_list]
 
     async def async_on(self, value: Any) -> None:
+        print("async_on: ", type(value), value)
         if isinstance(value, Iterable):
             if self.color_mode == BleboxColorMode.RGBWW:
                 value.insert(3, value.pop())
             value = "".join(self.rgb_list_to_rgb_hex_list(value))
         if self.product.type == "dimmerBox":
-            value = int(value, 16)
+            if not isinstance(value, int):
+                value = int(value, 16)
         if not isinstance(value, type(self._off_value)):
             raise BadOnValueError(
                 f"turn_on called with bad parameter ({value} is {type(value)}, compared to {self._off_value} which is "
@@ -565,7 +582,7 @@ class Light(Feature):
 
         if self.mask is not None:
             value = self.mask(value)
-
+        print("async_on; ", value)
         await self.async_api_command("set", value)
 
     async def async_off(self) -> None:

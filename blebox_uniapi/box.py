@@ -139,11 +139,14 @@ class Box:
             "switches": Switch,
             "buttons": Button,
         }.items():
-            if box_type_config := config.get(field):
-                print(f"{box_type_config=}\n{extended_state=}\n{field=}")
-                features[field] = klass.many_from_config(self, box_type_config=box_type_config,
-                                                         extended_state=extended_state)
-
+            try:
+                if box_type_config := config.get(field):
+                    features[field] = klass.many_from_config(self, box_type_config=box_type_config,
+                                                             extended_state=extended_state)
+            except KeyError as ex:
+                raise UnsupportedBoxResponse(
+                    f" Failed to initialize:", info
+                )
         return features
 
     @classmethod

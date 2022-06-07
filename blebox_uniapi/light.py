@@ -35,8 +35,8 @@ class Light(Feature):
         "wLightBox": {
             "default": "FFFFFFFF",
             "off": "00000000",
-            "brightness?": True,
-            "color_temp?": False,
+            # "brightness?": True,
+            # "color_temp?": False,
             "white?": True,
             "color?": True,
             "to_value": lambda int_value: f"{int_value:02x}",
@@ -45,8 +45,8 @@ class Light(Feature):
         "wLightBoxS": {
             "default": "FF",
             "off": "00",
-            "brightness?": True,
-            "color_temp?": False,
+            # "brightness?": True,
+            # "color_temp?": False,
             "white?": False,
             "color?": False,
             "to_value": lambda int_value: f"{int_value:02x}",
@@ -57,8 +57,8 @@ class Light(Feature):
         "dimmerBox": {
             "default": 0xFF,
             "off": 0x0,
-            "brightness?": True,
-            "color_temp?": False,
+            # "brightness?": True,
+            # "color_temp?": False,
             "white?": False,
             "color?": False,
             "to_value": lambda int_value: int_value,
@@ -72,8 +72,8 @@ class Light(Feature):
         "CT": {
             "default": "FFFFFFFF",
             "off": "0000",
-            "brightness?": True,
-            "color_temp?": True,
+            # "brightness?": True,
+            # "color_temp?": True,
             "white?": False,
             "color?": False,
             "to_value": lambda int_value: f"{int_value:02x}",
@@ -84,8 +84,8 @@ class Light(Feature):
         "CTx2": {
             "default": "FFFFFFFF",
             "off": "0000",
-            "brightness?": True,
-            "color_temp?": True,
+            # "brightness?": True,
+            # "color_temp?": True,
             "white?": False,
             "color?": False,
             "to_value": lambda int_value: f"{int_value:02x}",
@@ -96,8 +96,8 @@ class Light(Feature):
         "RGBWW":{
             "default": "FFFFFFFFFF",
             "off": "0000000000",
-            "brightness?": True,
-            "color_temp?": False,
+            # "brightness?": True,
+            # "color_temp?": False,
             "white?": True,
             "color?": True,
             "to_value": lambda int_value: f"{int_value:02x}",
@@ -237,13 +237,13 @@ class Light(Feature):
         else:
             return []
 
-    @property
-    def supports_brightness(self) -> Any:
-        return self.CURRENT_CONF["brightness?"]
+    # @property
+    # def supports_brightness(self) -> Any:
+    #     return self.CURRENT_CONF["brightness?"]
 
-    @property
-    def supports_color_temp(self) -> Any:
-        return self.CURRENT_CONF["color_temp?"]
+    # @property
+    # def supports_color_temp(self) -> Any:
+    #     return self.CURRENT_CONF["color_temp?"]
 
     @property
     def brightness(self) -> Optional[int]:

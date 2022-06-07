@@ -673,6 +673,128 @@ class TestWLightBox(DefaultBoxTest):
             "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"}
         }
     }
+    DEVICE_EXTENDED_INFO_COLORMODE_1 = {
+        "rgbw": {
+            "colorMode": 1,
+            "effectID": 0,
+            "desiredColor": "fa00203A",
+            "currentColor": "ff00302F",
+            "lastOnColor": "f1e2d3e4",
+            "durationsMs": {
+                "colorFade": 1000,
+                "effectFade": 1500,
+                "effectStep": 2000
+            },
+            "favColors":
+                {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
+            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"}
+        }
+    }
+    DEVICE_EXTENDED_INFO_COLORMODE_2 = {
+        "rgbw": {
+            "colorMode": 2,
+            "effectID": 0,
+            "desiredColor": "fa00203A",
+            "currentColor": "ff00302F",
+            "lastOnColor": "f1e2d3e4",
+            "durationsMs": {
+                "colorFade": 1000,
+                "effectFade": 1500,
+                "effectStep": 2000
+            },
+            "favColors":
+                {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
+            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"}
+        }
+    }
+    DEVICE_EXTENDED_INFO_COLORMODE_3 = {
+        "rgbw": {
+            "colorMode": 3,
+            "effectID": 0,
+            "desiredColor": "fa00203A",
+            "currentColor": "ff00302F",
+            "lastOnColor": "f1e2d3e4",
+            "durationsMs": {
+                "colorFade": 1000,
+                "effectFade": 1500,
+                "effectStep": 2000
+            },
+            "favColors":
+                {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
+            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"}
+        }
+    }
+    DEVICE_EXTENDED_INFO_COLORMODE_4 = {
+        "rgbw": {
+            "colorMode": 4,
+            "effectID": 0,
+            "desiredColor": "fa00203A",
+            "currentColor": "ff00302F",
+            "lastOnColor": "f1e2d3e4",
+            "durationsMs": {
+                "colorFade": 1000,
+                "effectFade": 1500,
+                "effectStep": 2000
+            },
+            "favColors":
+                {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
+            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"}
+        }
+    }
+    DEVICE_EXTENDED_INFO_COLORMODE_5 = {
+        "rgbw": {
+            "colorMode": 5,
+            "effectID": 0,
+            "desiredColor": "fa00203A",
+            "currentColor": "ff00302F",
+            "lastOnColor": "f1e2d3e4",
+            "durationsMs": {
+                "colorFade": 1000,
+                "effectFade": 1500,
+                "effectStep": 2000
+            },
+            "favColors":
+                {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
+            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"}
+        }
+    }
+
+    DEVICE_EXTENDED_INFO_COLORMODE_6 = {
+        "rgbw": {
+            "colorMode": 6,
+            "effectID": 0,
+            "desiredColor": "fa00203A",
+            "currentColor": "ff00302F",
+            "lastOnColor": "f1e2d3e4",
+            "durationsMs": {
+                "colorFade": 1000,
+                "effectFade": 1500,
+                "effectStep": 2000
+            },
+            "favColors":
+                {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
+            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"}
+        }
+    }
+    DEVICE_EXTENDED_INFO_COLORMODE_7 = {
+        "rgbw": {
+            "colorMode": 7,
+            "effectID": 0,
+            "desiredColor": "fa00203A",
+            "currentColor": "ff00302F",
+            "lastOnColor": "f1e2d3e4",
+            "durationsMs": {
+                "colorFade": 1000,
+                "effectFade": 1500,
+                "effectStep": 2000
+            },
+            "favColors":
+                {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
+            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"}
+        }
+    }
+
+
     def patch_version(apiLevel):
         """Generate a patch for a JSON state fixture."""
         return f"""
@@ -938,3 +1060,89 @@ class TestWLightBox(DefaultBoxTest):
         await self.allow_get_info(aioclient_mock, DEVICE_INFO_ANCIENT_STRUCTURE)
         with pytest.raises(UnsupportedBoxVersion):
             await self.async_entities(aioclient_mock)
+
+    '''
+        1. ustawic setup mocka do inicjalizacji obiektu
+        2. dostep do encji
+        3. asercje
+    '''
+
+    async def test_colormode_5_brightness(self, aioclient_mock):
+        self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_5
+        await self.allow_get_info(aioclient_mock)
+        self.STATE_DEFAULT["colorMode"] = 5
+        entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
+
+        assert "_cct" in entity.name
+        assert entity.brightness == 250
+
+    async def test_colormode_6_brightness(self, aioclient_mock):
+        self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_6
+        await self.allow_get_info(aioclient_mock)
+        self.STATE_DEFAULT["colorMode"] = 6
+        entity = await self.updated(aioclient_mock, self.STATE_DEFAULT, 1)
+
+        assert "_cct2" in entity.name
+        assert entity.brightness
+
+    async def test_many_from_config_check_empty(self, aioclient_mock):
+        pass
+    async def test_effect_list_return_list(self, aioclient_mock):
+        self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_5
+        await self.allow_get_info(aioclient_mock)
+        self.STATE_DEFAULT["colorMode"] = 5
+        entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
+
+        assert entity.effect_list
+
+    async def test_color_temp_for_colomode_6(self, aioclient_mock):
+        self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_6
+        await self.allow_get_info(aioclient_mock)
+        self.STATE_DEFAULT["colorMode"] = 6
+        entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
+
+        assert "_cct1" in entity.name
+        assert entity.color_temp
+
+    async def test_color_temp_for_colomode_7(self, aioclient_mock):
+        self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_7
+        await self.allow_get_info(aioclient_mock)
+        self.STATE_DEFAULT["colorMode"] = 7
+        entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
+
+        assert "_RGBCCT" in entity.name
+        assert entity.color_temp
+        assert entity.brightness
+
+    async def test_normalise_element(self, aioclient_mock):
+        pass
+
+    async def test_set_last_pn_value_while_raw_none_or_off(self, aioclient_mock):
+        pass
+
+    async def test_config_attribute_value_attr_effect(self, aioclient_mock):
+        pass
+
+    async def test_config_attribute_value_attr_effect_list(self, aioclient_mock):
+        pass
+
+    async def test_sensible_on_value_for_color_mode_1(self, aioclient_mock):
+        pass
+
+    async def test_sensible_on_value_for_color_mode_2(self, aioclient_mock):
+        pass
+
+    async def test_sensible_on_value_for_color_mode_3(self, aioclient_mock):
+        pass
+
+    async def test_sensible_on_value_for_color_mode_4(self, aioclient_mock):
+        pass
+
+    async def test_sensible_on_value_for_color_mode_5(self, aioclient_mock):
+        pass
+
+    async def test_sensible_on_value_for_color_mode_6(self, aioclient_mock):
+        pass
+
+    async def test_sensible_on_value_for_color_mode_7(self, aioclient_mock):
+        pass

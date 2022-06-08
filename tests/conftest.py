@@ -182,7 +182,7 @@ class DefaultBoxTest:
         )
 
     async def allow_post(self, code, aioclient_mock, api_path, post_data, response):
-        """Stub a HTTP GET request."""
+        """Stub a HTTP POST request."""
         print("allow_post", post_data)
         json_post_expect(
             aioclient_mock,

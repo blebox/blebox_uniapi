@@ -18,7 +18,7 @@ ATTR_WHITE_VALUE = "ATTR_WHITE_VALUE"
 ATTR_RGB_COLOR = "rgb_color"
 ATTR_RGBW_COLOR = "rgbw_color"
 ATTR_EFFECT = "effect"
-ATTR_COLOR_TEMP = "colot_temp"
+ATTR_COLOR_TEMP = "color_temp"
 ATTR_RGBWW_COLOR = "rgbww_color"
 SUPPORT_BRIGHTNESS = 1
 SUPPORT_COLOR = 2
@@ -677,9 +677,9 @@ class TestWLightBox(DefaultBoxTest):
         "rgbw": {
             "colorMode": 1,
             "effectID": 0,
-            "desiredColor": "fa00203A",
-            "currentColor": "ff00302F",
-            "lastOnColor": "f1e2d3e4",
+            "desiredColor": "fa",
+            "currentColor": "ff",
+            "lastOnColor": "ff",
             "durationsMs": {
                 "colorFade": 1000,
                 "effectFade": 1500,
@@ -780,9 +780,9 @@ class TestWLightBox(DefaultBoxTest):
         "rgbw": {
             "colorMode": 7,
             "effectID": 0,
-            "desiredColor": "fa00203A",
-            "currentColor": "ff00302F",
-            "lastOnColor": "f1e2d3e4",
+            "desiredColor": "e2fffffeff",
+            "currentColor": "e2fffffeff",
+            "lastOnColor": "e2fffffeff",
             "durationsMs": {
                 "colorFade": 1000,
                 "effectFade": 1500,
@@ -888,7 +888,6 @@ class TestWLightBox(DefaultBoxTest):
     STATE_ON_ONLY_SOME_COLOR = jmerge(STATE_DEFAULT, patch_state("ffa1b200"))
     STATE_ON_LAST = jmerge(STATE_DEFAULT, patch_state("01020304", "f1e2d3e4"))
     STATE_AFTER_SOME_COLOR_SET = jmerge(STATE_DEFAULT, patch_state("ffa1b2e4"))
-
     async def test_init(self, aioclient_mock):
         """Test cover default state."""
         await self.allow_get_info(aioclient_mock)
@@ -936,80 +935,6 @@ class TestWLightBox(DefaultBoxTest):
             '{"rgbw":{"desiredColor": "' + str(value) + '"}}',
             response,
         )
-    # irrational test, ATTR_WHITE_VALUE not implemented in HA... -.-"
-    # async def test_on_via_just_whiteness(self, aioclient_mock):
-    #     """Test light on."""
-    #     entity = await self.updated(aioclient_mock, self.STATE_OFF)
-    #     assert entity.is_on is False
-    #
-    #     async def action():
-    #         await entity.async_turn_on(**{ATTR_WHITE_VALUE: 0xC7})
-    #
-    #     await self.allow_set_color(
-    #         action, aioclient_mock, "f1e2d3e4", self.STATE_ON_AFTER_WHITE # passed to mock normalised value, is this test v
-    #     )
-    #
-    #     assert entity.is_on is True
-    #     # assert entity.white_value == 0xC7
-    #     # assert entity.hs_color == color_RGB_to_hs(0xF1, 0xE2, 0xD3)
-    #
-    # async def test_on_via_reset_whiteness(self, aioclient_mock):
-    #     """Test light on."""
-    #     entity = await self.updated(aioclient_mock, self.STATE_OFF)
-    #     assert entity.is_on is False
-    #
-    #     async def action():
-    #         await entity.async_turn_on(**{ATTR_WHITE_VALUE: 0x0})
-    #
-    #     await self.allow_set_color(
-    #         action, aioclient_mock, "f1e2d300", self.STATE_ON_AFTER_RESET_WHITE
-    #     )
-    #
-    #     assert entity.is_on is True
-    #     # assert entity.white_value == 0x0
-    #     # assert entity.hs_color == color_RGB_to_hs(0xF1, 0xE2, 0xD3)
-
-    # async def test_on_via_just_hsl_color_with_last(self, aioclient_mock):
-    #     """Test light on."""
-    #
-    #     # last color: "f1e2d3e4"
-    #
-    #     entity = await self.updated(aioclient_mock, self.STATE_OFF)
-    #     assert entity.is_on is False
-    #
-    #     input_rgb = (0xFF, 0xA1, 0xB2)
-    #     hs_color = color_RGB_to_hs(*input_rgb)
-    #
-    #     async def action():
-    #         await entity.async_turn_on(**{ATTR_HS_COLOR: hs_color})
-    #
-    #     response = self.STATE_AFTER_SOME_COLOR_SET
-    #     await self.allow_set_color(action, aioclient_mock, "ffa0b1e4", response)
-    #
-    #     # TODO: second part of test not needed
-    #     assert entity.is_on is True
-    #     assert entity.hs_color == color_RGB_to_hs(*input_rgb)
-    #     # assert entity.white_value == 0xE4
-
-    # async def test_on_via_just_hsl_color_with_no_white(self, aioclient_mock):
-    #     """Test light on."""
-    #
-    #     entity = await self.updated(aioclient_mock, self.STATE_OFF_NOLAST_WHITE)
-    #     assert entity.is_on is False
-    #
-    #     input_rgb = (0xFF, 0xA1, 0xB2)
-    #     hs_color = color_RGB_to_hs(*input_rgb)
-    #
-    #     async def action():
-    #         await entity.async_turn_on(**{ATTR_HS_COLOR: hs_color})
-    #
-    #     response = self.STATE_ON_ONLY_SOME_COLOR
-    #     await self.allow_set_color(action, aioclient_mock, "ffa0b100", response)
-    #
-    #     # TODO: second part of test not needed
-    #     assert entity.is_on is True
-    #     assert entity.hs_color == color_RGB_to_hs(*input_rgb)
-    #     # assert entity.white_value == 0x0
 
     async def test_on_to_last_color(self, aioclient_mock):
         """Test light on."""
@@ -1104,7 +1029,7 @@ class TestWLightBox(DefaultBoxTest):
         assert "_cct1" in entity.name
         assert entity.color_temp
 
-    async def test_color_temp_for_colomode_7(self, aioclient_mock):
+    async def test_color_temp_for_colomode_rgbww(self, aioclient_mock):
         self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_7
         await self.allow_get_info(aioclient_mock)
         self.STATE_DEFAULT["colorMode"] = 7
@@ -1114,8 +1039,61 @@ class TestWLightBox(DefaultBoxTest):
         assert entity.color_temp
         assert entity.brightness
 
-    async def test_normalise_element(self, aioclient_mock):
-        pass
+    async def test_normalise_element_colormode_rgb(self, aioclient_mock):
+        #testing sensible on value which is used only while async_turn_on executed
+
+        self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_2
+        self.DEVICE_EXTENDED_INFO = jmerge(
+            self.DEVICE_EXTENDED_INFO, self.patch_state("fafafa", "fafafa")
+        )
+        self.STATE_DEFAULT["rgbw"]["colorMode"] = 2
+
+        self.STATE_DEFAULT = jmerge(
+            self.STATE_DEFAULT, self.patch_state("fafafa", "fafafa")
+        )
+
+        await self.allow_get_info(aioclient_mock)
+        print("INTEST:\n", self.DEVICE_EXTENDED_INFO, "\nEntity:\n")
+        entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
+
+        async def turn_on():
+            await entity.async_turn_on(rgb_color= (255, 0, 140))
+        self.STATE_ON = jmerge(
+            self.STATE_ON, self.patch_state("fafafa", "fafafa")
+        )
+        await self.allow_set_color(
+            turn_on, aioclient_mock, "fa0089", self.STATE_ON
+        )
+
+        assert max(entity.rgbw_color) == 250
+
+    async def test_normalise_when_max_is_zero_rgb(self, aioclient_mock):
+        #testing sensible on value which is used only while async_turn_on executed
+
+        self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_2
+        self.DEVICE_EXTENDED_INFO = jmerge(
+            self.DEVICE_EXTENDED_INFO, self.patch_state("030303", "030303")
+        )
+        self.STATE_DEFAULT["rgbw"]["colorMode"] = 2
+
+        self.STATE_DEFAULT = jmerge(
+            self.STATE_DEFAULT, self.patch_state("030303", "030303")
+        )
+
+        await self.allow_get_info(aioclient_mock)
+        print("INTEST:\n", self.DEVICE_EXTENDED_INFO, "\nEntity:\n")
+        entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
+
+        async def turn_on():
+            await entity.async_turn_on(rgb_color=(255, 10, 255))
+        self.STATE_ON = jmerge(
+            self.STATE_ON, self.patch_state("000000", "000000")
+        )
+        await self.allow_set_color(
+            turn_on, aioclient_mock, "030003", self.STATE_ON
+        )
+
+        assert max(entity.rgb_color) == 255
 
     async def test_set_last_pn_value_while_raw_none_or_off(self, aioclient_mock):
         pass
@@ -1127,7 +1105,32 @@ class TestWLightBox(DefaultBoxTest):
         pass
 
     async def test_sensible_on_value_for_color_mode_1(self, aioclient_mock):
-        pass
+
+        self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_1
+        self.DEVICE_EXTENDED_INFO = jmerge(
+            self.DEVICE_EXTENDED_INFO, self.patch_state("00000000", "00000000")
+        )
+        self.STATE_DEFAULT["rgbw"]["colorMode"] = 1
+
+        self.STATE_DEFAULT = jmerge(
+            self.STATE_DEFAULT, self.patch_state("00000000", "00000000")
+        )
+
+        await self.allow_get_info(aioclient_mock)
+        print("INTEST:\n", self.DEVICE_EXTENDED_INFO, "\nEntity:\n")
+        entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
+
+        async def turn_on():
+            await entity.async_turn_on()
+
+        self.STATE_ON = jmerge(
+            self.STATE_ON, self.patch_state("ffffffff", "ffffffff")
+        )
+        await self.allow_set_color(
+            turn_on, aioclient_mock, "ffffffff--", self.STATE_ON
+        )
+
+        assert entity.rgbw_color == (255, 255, 255, 255)
 
     async def test_sensible_on_value_for_color_mode_2(self, aioclient_mock):
         pass
@@ -1139,7 +1142,79 @@ class TestWLightBox(DefaultBoxTest):
         pass
 
     async def test_sensible_on_value_for_color_mode_5(self, aioclient_mock):
-        pass
+        self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_5
+        self.DEVICE_EXTENDED_INFO = jmerge(
+            self.DEVICE_EXTENDED_INFO, self.patch_state("00000000", "00000000")
+        )
+        self.STATE_DEFAULT["rgbw"]["colorMode"] = 5
+
+        self.STATE_DEFAULT = jmerge(
+            self.STATE_DEFAULT, self.patch_state("00000000", "00000000")
+        )
+
+        await self.allow_get_info(aioclient_mock)
+        self.STATE_DEFAULT["colorMode"] = 5
+        entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
+
+        print("INTEST:\n", entity.name, "\nEntity:\n")
+
+        async def turn_on():
+            await entity.async_turn_on()
+
+        self.STATE_ON = jmerge(
+            self.STATE_ON, self.patch_state("ffffffff", "ffffffff")
+        )
+        await self.allow_set_color(
+            turn_on, aioclient_mock, "ffff------", self.STATE_ON
+        )
+
+        assert entity.color_temp == 128
+
+    async def test_turn_on_color_temp_full_warm_for_color_mode_5(self, aioclient_mock):
+        self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_5
+        self.STATE_DEFAULT["rgbw"]["colorMode"] = 5
+
+        await self.allow_get_info(aioclient_mock)
+        self.STATE_DEFAULT["colorMode"] = 5
+        entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
+
+        print("INTEST:\n", entity.name, "\nEntity:\n")
+
+        async def turn_on():
+            await entity.async_turn_on(color_temp=1)
+
+        self.STATE_ON = jmerge(
+            self.STATE_ON, self.patch_state("02ffffff", "02ffffff")
+        )
+
+        await self.allow_set_color(
+            turn_on, aioclient_mock, "02fa------", self.STATE_ON
+        )
+
+        assert entity.color_temp == 1
+
+    async def test_turn_on_color_temp_full_cold_for_color_mode_5(self, aioclient_mock):
+        self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_5
+        self.STATE_DEFAULT["rgbw"]["colorMode"] = 5
+
+        await self.allow_get_info(aioclient_mock)
+        self.STATE_DEFAULT["colorMode"] = 5
+        entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
+
+        print("INTEST:\n", entity.name, "\nEntity:\n")
+
+        async def turn_on():
+            await entity.async_turn_on(color_temp=255)
+
+        self.STATE_ON = jmerge(
+            self.STATE_ON, self.patch_state("fa00ffff", "fa02ffff")
+        )
+
+        await self.allow_set_color(
+            turn_on, aioclient_mock, "fa00------", self.STATE_ON
+        )
+
+        assert entity.color_temp == 255
 
     async def test_sensible_on_value_for_color_mode_6(self, aioclient_mock):
         pass

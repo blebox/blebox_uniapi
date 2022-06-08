@@ -35,8 +35,6 @@ class Light(Feature):
         "wLightBox": {
             "default": "FFFFFFFF",
             "off": "00000000",
-            # "brightness?": True,
-            # "color_temp?": False,
             "white?": True,
             "color?": True,
             "to_value": lambda int_value: f"{int_value:02x}",
@@ -45,8 +43,6 @@ class Light(Feature):
         "wLightBoxS": {
             "default": "FF",
             "off": "00",
-            # "brightness?": True,
-            # "color_temp?": False,
             "white?": False,
             "color?": False,
             "to_value": lambda int_value: f"{int_value:02x}",
@@ -57,8 +53,6 @@ class Light(Feature):
         "dimmerBox": {
             "default": 0xFF,
             "off": 0x0,
-            # "brightness?": True,
-            # "color_temp?": False,
             "white?": False,
             "color?": False,
             "to_value": lambda int_value: int_value,
@@ -72,8 +66,6 @@ class Light(Feature):
         "CT": {
             "default": "FFFFFFFF",
             "off": "0000",
-            # "brightness?": True,
-            # "color_temp?": True,
             "white?": False,
             "color?": False,
             "to_value": lambda int_value: f"{int_value:02x}",
@@ -84,8 +76,6 @@ class Light(Feature):
         "CTx2": {
             "default": "FFFFFFFF",
             "off": "0000",
-            # "brightness?": True,
-            # "color_temp?": True,
             "white?": False,
             "color?": False,
             "to_value": lambda int_value: f"{int_value:02x}",
@@ -96,8 +86,6 @@ class Light(Feature):
         "RGBWW":{
             "default": "FFFFFFFFFF",
             "off": "0000000000",
-            # "brightness?": True,
-            # "color_temp?": False,
             "white?": True,
             "color?": True,
             "to_value": lambda int_value: f"{int_value:02x}",
@@ -368,7 +356,7 @@ class Light(Feature):
         cold = f"{int(round(cold)):02x}"
         warm = f"{int(round(warm)):02x}"
 
-        return warm+cold
+        return self.rgb_hex_to_rgb_list(warm+cold)
 
     def value_for_selected_channels_from_given_val(self, value: str):
         if self.color_mode in [BleboxColorMode.CT, BleboxColorMode.CTx2]:
@@ -377,11 +365,12 @@ class Light(Feature):
             lambda_result = self.mask("xx")
         elif self.color_mode == BleboxColorMode.RGB:
             lambda_result = self.mask("xxxxxx")
-        elif self.color_mode == BleboxColorMode.RGBW:
+        elif self.color_mode == BleboxColorMode.RGBW or self.color_mode == BleboxColorMode.RGBorW:
             lambda_result = self.mask("xxxxxxxx")
         first_index = lambda_result.index("x")
         last_index = lambda_result.rindex("x")
         return value[first_index:last_index+1]
+
 
     def color_temp_brightness_int_from_hex(self, val) -> (int, int):
         ''' Assuming that hex is 2channels, 4characters. Return values for front end'''
@@ -459,7 +448,7 @@ class Light(Feature):
                 if self.mask is not None:
                     raw = self.value_for_selected_channels_from_given_val(raw)
                 if raw == self._off_value:
-                    raw = self.value_for_selected_channels_from_given_val("ffffffffff")
+                    raw = "ffffffffff"
             else:
                 raw = self._default_on_value
         if raw in (self._off_value, None):
@@ -523,12 +512,12 @@ class Light(Feature):
                     return self.rgb_hex_to_rgb_list(self._last_on_state)
                 return self.normalise_elements_of_rgb(self.rgb_hex_to_rgb_list(self._last_on_state))
         else:
+
             if self.color_mode == BleboxColorMode.RGB:
                 return self.normalise_elements_of_rgb(self.rgb_hex_to_rgb_list(self._last_on_state[:6]))
             elif self.color_mode == BleboxColorMode.MONO:
                 return self._last_on_state
             else:
-                print("Normalisation happen:", self.product.name)
                 return (self.rgb_hex_to_rgb_list(self._last_on_state))
 
     @property

@@ -274,7 +274,7 @@ class Light(Feature):
 
         if self.product.type == 'dimmerBox' or self.color_mode == BleboxColorMode.MONO:
             return [brightness]
-        if brightness is None:
+        if brightness is 0:
             return [value]
 
         res = list(map(lambda x: round(x * (brightness / 255)), value))
@@ -582,14 +582,14 @@ class Light(Feature):
             await self.async_api_command("set", self.mask("00"))
         else:
             await self.async_api_command("set", self._off_value)
-
-    def config_attribute_value(self, att_name: str) -> Union[None, str, list]:
-        if self.extended_state is None:
-            return None
-        rgbw = self.extended_state.get("rgbw", None)
-        if att_name == "_attr_effect_list":
-            return [_.upper() for _ in list(rgbw['effectsNames'].values())]
-
-        if att_name == "_attr_effect":
-            effectid = str(rgbw.get("effectID", None))
-            return rgbw.get("effectsNames")[effectid]
+    # Redundant as provided during entity initialisation, not sure if should be used in
+    # def config_attribute_value(self, att_name: str) -> Union[None, str, list]:
+    #     if self.extended_state is None:
+    #         return None
+    #     rgbw = self.extended_state.get("rgbw", None)
+    #     if att_name == "_attr_effect_list":
+    #         return [_.upper() for _ in list(rgbw['effectsNames'].values())]
+    #
+    #     if att_name == "_attr_effect":
+    #         effectid = str(rgbw.get("effectID", None))
+    #         return rgbw.get("effectsNames")[effectid]

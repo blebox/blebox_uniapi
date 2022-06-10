@@ -34,6 +34,10 @@ def aioclient_mock():
         yield mocked_session.return_value
 
 
+@pytest.fixture
+def mock_light_feature():
+    patch("self.product.type", 'dimmerBox')
+
 def array_merge(config, path, base, nxt):
     """Replace an array element with the merge result of elements."""
     if len(nxt):

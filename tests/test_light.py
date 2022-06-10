@@ -5,7 +5,7 @@ from .conftest import CommonEntity, DefaultBoxTest, future_date, jmerge
 
 from blebox_uniapi.box_types import get_latest_api_level
 from blebox_uniapi.error import BadOnValueError, UnsupportedBoxVersion
-
+from blebox_uniapi.light import Light
 # TODO: remove
 import colorsys
 
@@ -780,13 +780,13 @@ class TestWLightBox(DefaultBoxTest):
         "rgbw": {
             "colorMode": 7,
             "effectID": 0,
-            "desiredColor": "e2fffffeff",
-            "currentColor": "e2fffffeff",
-            "lastOnColor": "e2fffffeff",
+            "desiredColor": "fcfffcff00",
+            "currentColor": "fcfffcff00",
+            "lastOnColor": "fcfffcff00",
             "durationsMs": {
                 "colorFade": 1000,
-                "effectFade": 1500,
-                "effectStep": 2000
+                "effectFade": 1000,
+                "effectStep": 1000
             },
             "favColors":
                 {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
@@ -1201,8 +1201,6 @@ class TestWLightBox(DefaultBoxTest):
         self.STATE_DEFAULT["colorMode"] = 5
         entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
 
-        print("INTEST:\n", entity.name, "\nEntity:\n")
-
         async def turn_on():
             await entity.async_turn_on(color_temp=255)
 
@@ -1217,7 +1215,52 @@ class TestWLightBox(DefaultBoxTest):
         assert entity.color_temp == 255
 
     async def test_sensible_on_value_for_color_mode_6(self, aioclient_mock):
-        pass
+        self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_6
+        self.STATE_DEFAULT["rgbw"]["colorMode"] = 6
+
+        await self.allow_get_info(aioclient_mock)
+        self.STATE_DEFAULT["colorMode"] = 6
+        entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
+
+        async def turn_on():
+            await entity.async_turn_on(color_temp=255)
+
+        self.STATE_ON = jmerge(
+            self.STATE_ON, self.patch_state("fa00ffff", "fa02ffff")
+        )
+
+        await self.allow_set_color(
+            turn_on, aioclient_mock, "fa00------", self.STATE_ON
+        )
+
+        assert entity.color_temp == 255
 
     async def test_sensible_on_value_for_color_mode_7(self, aioclient_mock):
-        pass
+        self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_7
+        self.STATE_DEFAULT["rgbw"]["colorMode"] = 7
+        self.STATE_DEFAULT = jmerge(self.STATE_DEFAULT, self.patch_state("fcfffcff00","fcfffcff00"))
+        await self.allow_get_info(aioclient_mock)
+        self.STATE_DEFAULT["colorMode"] = 7
+        entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
+        print("Statedefault", self.STATE_DEFAULT)
+        async def turn_on():
+            await entity.async_turn_on(rgbww_color=(0,0,0,120,214))
+
+        self.STATE_ON = jmerge(
+            self.STATE_ON, self.patch_state("000000d678", "000000d678")
+        )
+
+        await self.allow_set_color(
+            turn_on, aioclient_mock, "000000d678", self.STATE_ON
+        )
+
+        assert entity.rgbww_color == (0, 0, 0, 120, 214)
+
+
+def test_unit_light_evaluate_brightness_from_rgb():
+    tested_ob = Light.evaluate_brightness_from_rgb(self=None, iterable=(140, 230))
+    assert tested_ob == 230
+
+def test_unit_light_apply_brightness(mock_light_feature):
+    tested_ob = Light.apply_brightness(self=None, value=10, brightness=0)
+    assert tested_ob == 10

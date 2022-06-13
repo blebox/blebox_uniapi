@@ -1260,7 +1260,3 @@ class TestWLightBox(DefaultBoxTest):
 def test_unit_light_evaluate_brightness_from_rgb():
     tested_ob = Light.evaluate_brightness_from_rgb(self=None, iterable=(140, 230))
     assert tested_ob == 230
-
-def test_unit_light_apply_brightness(mock_light_feature):
-    tested_ob = Light.apply_brightness(self=None, value=10, brightness=0)
-    assert tested_ob == 10

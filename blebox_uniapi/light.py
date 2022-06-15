@@ -106,7 +106,7 @@ class Light(Feature):
         self._color_mode = color_mode
         self._effect_list = effect_list
         if self._effect_list is not None:
-            self._effect = effect_list.get(str(current_effect), None)
+            self._effect = current_effect
 
         if extended_state not in [None, {}]:
             self.extended_state = extended_state
@@ -233,15 +233,22 @@ class Light(Feature):
             return list(self._effect_list.values())
         else:
             return []
+
     @property
     def color_temp(self):
         ct, _ = self.color_temp_brightness_int_from_hex(self._desired)
         return ct
 
-    def evaluate_brightness_from_rgb(self, iterable: Sequence[int]) -> int:
+    @staticmethod
+    def evaluate_brightness_from_rgb(iterable: Sequence[int]) -> int:
         "return brightness from 0 to 255 evaluated basing rgb"
+        if max(iterable) > 255:
+            raise BadOnValueError(
+                f"evaluate_brightness_from_rgb values out of range, max is {max(iterable)}.")
+        elif min(iterable) < 0:
+            raise BadOnValueError(
+                f"evaluate_brightness_from_rgb values out of range, min is {min(iterable)}.")
         return int(max(iterable))
-
 
     def apply_brightness(self, value: int, brightness: int) -> Any:
         '''Return list of values with applied brightness.'''
@@ -257,7 +264,7 @@ class Light(Feature):
 
         if self.product.type == 'dimmerBox' or self.color_mode == BleboxColorMode.MONO:
             return [brightness]
-        if brightness is 0:
+        if brightness == 0:
             return [value]
 
         res = list(map(lambda x: round(x * (brightness / 255)), value))
@@ -319,7 +326,6 @@ class Light(Feature):
         white_hex = value[6:8]
         return f"{rgb_hex}{white_hex}"
 
-
     def return_color_temp_with_brightness(self, value, brightness: Any) -> Optional[str]:
         ''' Method returns value which will be send to  '''
         if value < 128:
@@ -348,8 +354,8 @@ class Light(Feature):
         last_index = lambda_result.rindex("x")
         return value[first_index:last_index+1]
 
-
-    def color_temp_brightness_int_from_hex(self, val) -> (int, int):
+    @staticmethod
+    def color_temp_brightness_int_from_hex(val) -> (int, int):
         ''' Assuming that hex is 2channels, 4characters. Return values for front end'''
         # okreslic po ktorej stronie jest przesuniete i dostosować ze wspolczynnikiem swiatla
         # 1 rozbic na temp
@@ -372,10 +378,14 @@ class Light(Feature):
         else:
             return 128, max(cold, warm)
 
-    def normalise_elements_of_rgb(self, elements):
+    @staticmethod
+    def normalise_elements_of_rgb(elements):
         max_val = max(elements)
-        if 0 > max_val > 255:
+        min_val = min(elements)
+        if 0 > max_val or max_val > 255:
             raise BadOnValueError(f"Max value in normalisation was outside range {max_val}.")
+        elif min_val < 0:
+            raise BadOnValueError(f"Min value in normalisation was outside range {min_val}.")
         elif max_val == 0:
             return [255] * len(elements)
         return list(map(lambda x: round(x * 255 / max_val), elements))
@@ -466,14 +476,10 @@ class Light(Feature):
             if int(self._last_on_state, 16) == 0:
                 if self.color_mode in (BleboxColorMode.RGBW, BleboxColorMode.RGBorW):
                     return 255, 255, 255, 255
-                if self.color_mode == BleboxColorMode.RGB:
-                    return 255, 255, 255
                 if self.color_mode == BleboxColorMode.MONO:
                     return 255
                 if self.color_mode in (BleboxColorMode.CT, BleboxColorMode.CTx2):
                     return 255, 255
-                if self.color_mode == BleboxColorMode.RGBWW:
-                    return 255, 255, 255, 255, 255
             else:
                 if self.color_mode == BleboxColorMode.MONO:
                     return self.rgb_hex_to_rgb_list(self._last_on_state)
@@ -485,15 +491,16 @@ class Light(Feature):
             elif self.color_mode == BleboxColorMode.MONO:
                 return self._last_on_state
             else:
-                return (self.rgb_hex_to_rgb_list(self._last_on_state))
+                return self.rgb_hex_to_rgb_list(self._last_on_state)
 
     @property
     def rgb_hex(self) -> Any:
-        '''Return hex str representing rgb'''
+        '''Return hex str representing rgb.'''
         if isinstance(self._desired, int):
             return f"{self._desired:02x}"
         else:
             return self._desired
+
     @property
     def rgbw_hex(self) -> Any:
         return self._desired
@@ -508,19 +515,19 @@ class Light(Feature):
             output_str = hex_str[0:6] + "".join([hex_str_warm_cold[i - 2:i] for i in range(len(hex_str_warm_cold), 0, -2)])
             return output_str
 
-    @classmethod
-    def rgb_hex_to_rgb_list(cls, hex_str) -> list[int]:
+    @staticmethod
+    def rgb_hex_to_rgb_list(hex_str) -> list[int]:
         """Return an RGB color value list from a hex color string."""
         if hex_str is not None:
             return [int(hex_str[i:i+2], 16) for i in range(0, len(hex_str), 2)]
         return []
 
-    @classmethod
-    def rgb_list_to_rgb_hex_list(cls, rgb_list) -> hex:
+    @staticmethod
+    def rgb_list_to_rgb_hex_list(rgb_list) -> hex:
         return [f"{i:02x}" for i in rgb_list]
 
     async def async_on(self, value: Any) -> None:
-        if isinstance(value, Iterable):
+        if isinstance(value, (list, tuple)):
             if self.color_mode == BleboxColorMode.RGBWW:
                 value.insert(3, value.pop())
             value = "".join(self.rgb_list_to_rgb_hex_list(value))

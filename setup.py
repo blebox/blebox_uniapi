@@ -19,7 +19,6 @@ setup_requirements = [
 test_requirements = [
     "pytest>=3",
     "pytest-asyncio>=0.10.0",
-    "asynctest>=0.13",
     "deepmerge",
 ]
 

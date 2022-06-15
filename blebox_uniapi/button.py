@@ -57,7 +57,6 @@ class Button(Feature):
     def after_update(self) -> None:
         pass
 
-
     def get_icon(self):
         '''Return icon for endpoint.'''
         if 'up' in self.query_string:

@@ -2,19 +2,17 @@
 
 import copy
 import json as _json
-import asyncio
 import re
 from datetime import date, timedelta
 
 import logging
 
-from asynctest import patch, CoroutineMock
-
+from unittest.mock import AsyncMock
 from deepmerge import Merger
 
 from unittest import mock
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientResponseError, ClientSession
 
 import pytest
 
@@ -30,13 +28,8 @@ retype = type(re.compile(""))
 
 @pytest.fixture
 def aioclient_mock():
-    with patch("aiohttp.ClientSession", spec_set=True, autospec=True) as mocked_session:
-        yield mocked_session.return_value
+    return AsyncMock(spec=ClientSession)
 
-
-@pytest.fixture
-def mock_light_feature():
-    patch("self.product.type", 'dimmerBox')
 
 def array_merge(config, path, base, nxt):
     """Replace an array element with the merge result of elements."""
@@ -105,7 +98,7 @@ def json_get_expect(mock, url, **kwargs):
             status = 200
             return AiohttpClientMockResponse("GET", url, status, response)
 
-    mock.get = CoroutineMock(side_effect=EffectWhenGet(mock))
+    mock.get = AsyncMock(side_effect=EffectWhenGet(mock))
 
 
 def json_post_expect(mock, url, **kwargs):
@@ -137,7 +130,7 @@ def json_post_expect(mock, url, **kwargs):
             status = 200
             return AiohttpClientMockResponse("POST", url, status, response)
 
-    mock.post = CoroutineMock(side_effect=EffectWhenPost(mock))
+    mock.post = AsyncMock(side_effect=EffectWhenPost(mock))
 
 
 class DefaultBoxTest:
@@ -288,20 +281,16 @@ class AiohttpClientMockResponse:
     def content_type(self):
         return self._headers.get("content-type")
 
-    @asyncio.coroutine
-    def read(self):
+    async def read(self):
         return self.response
 
-    @asyncio.coroutine
-    def text(self, encoding="utf-8"):
+    async def text(self, encoding="utf-8"):
         return self.response.decode(encoding)
 
-    @asyncio.coroutine
-    def json(self, encoding="utf-8"):
+    async def json(self, encoding="utf-8"):
         return _json.loads(self.response.decode(encoding))
 
-    @asyncio.coroutine
-    def release(self):
+    async def release(self):
         pass
 
     def raise_for_status(self):

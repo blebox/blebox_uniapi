@@ -4,7 +4,7 @@ import pytest
 
 from unittest import mock
 
-from asynctest import patch
+from unittest.mock import patch
 
 from blebox_uniapi.box import Box
 from blebox_uniapi import error

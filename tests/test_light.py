@@ -1095,14 +1095,6 @@ class TestWLightBox(DefaultBoxTest):
 
         assert max(entity.rgb_color) == 255
 
-    async def test_set_last_pn_value_while_raw_none_or_off(self, aioclient_mock):
-        pass
-
-    async def test_config_attribute_value_attr_effect(self, aioclient_mock):
-        pass
-
-    async def test_config_attribute_value_attr_effect_list(self, aioclient_mock):
-        pass
 
     async def test_sensible_on_value_for_color_mode_1(self, aioclient_mock):
 
@@ -1131,15 +1123,6 @@ class TestWLightBox(DefaultBoxTest):
         )
 
         assert entity.rgbw_color == (255, 255, 255, 255)
-
-    async def test_sensible_on_value_for_color_mode_2(self, aioclient_mock):
-        pass
-
-    async def test_sensible_on_value_for_color_mode_3(self, aioclient_mock):
-        pass
-
-    async def test_sensible_on_value_for_color_mode_4(self, aioclient_mock):
-        pass
 
     async def test_sensible_on_value_for_color_mode_5(self, aioclient_mock):
         self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_5
@@ -1258,5 +1241,5 @@ class TestWLightBox(DefaultBoxTest):
 
 
 def test_unit_light_evaluate_brightness_from_rgb():
-    tested_ob = Light.evaluate_brightness_from_rgb(self=None, iterable=(140, 230))
+    tested_ob = Light.evaluate_brightness_from_rgb(iterable=(140, 230))
     assert tested_ob == 230

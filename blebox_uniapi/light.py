@@ -151,10 +151,14 @@ class Light(Feature):
 
         if extended_state is not None and color_mode is not None:
             if BleboxColorMode(color_mode).name == "RGBW":
+                if len(desired_color) == 10:
+                    mask = lambda x: f"{x}--"
+                else:
+                    mask = None
                 alias, methods = box_type_config[0]
                 return [
                     cls(product, alias=alias + "_RGBW", methods=methods, extended_state=extended_state,
-                        mask=lambda x: f"{x}--", desired_color=desired_color, color_mode=color_mode,
+                        mask=mask, desired_color=desired_color, color_mode=color_mode,
                         current_effect=current_effect, effect_list=effect_list)]
 
             if BleboxColorMode(color_mode).name == "RGB":
@@ -431,10 +435,14 @@ class Light(Feature):
                 raw = product.expect_rgbw(alias, self.raw_value("last_color"))
                 if self.mask is not None:
                     raw = self.value_for_selected_channels_from_given_val(raw)
-                if raw == self._off_value:
-                    raw = "ffffffffff"
+                    if raw == self._off_value:
+                        raw = self.value_for_selected_channels_from_given_val("ffffffffff")
+                else:
+                    if raw == self._off_value:
+                        raw = "f" * len(raw)
             else:
                 raw = self._default_on_value
+
         if raw in (self._off_value, None):
             raise BadOnValueError(raw)
         # TODO: store as custom value permanently (exposed by API consumer)
@@ -442,6 +450,9 @@ class Light(Feature):
 
     def _set_is_on(self):
         self._is_on = (self._off_value != self._desired) or (self._effect != 0 and self._effect is not None)
+        if isinstance(self._desired, str):
+            if int(self._desired, 16) == 0:
+                self._is_on = False
 
     def _return_desired_value(self, alias, product) -> str:
         '''
@@ -485,14 +496,18 @@ class Light(Feature):
                     return self.rgb_hex_to_rgb_list(self._last_on_state)
                 return self.normalise_elements_of_rgb(self.rgb_hex_to_rgb_list(self._last_on_state))
         else:
-
-            if self.color_mode == BleboxColorMode.RGB:
-                return self.normalise_elements_of_rgb(self.rgb_hex_to_rgb_list(self._last_on_state[:6]))
-            elif self.color_mode == BleboxColorMode.MONO:
-                return self._last_on_state
+            if isinstance(self._last_on_state, str):
+                if int(self._last_on_state, 16) == 0:
+                    return [255] * len(self.rgb_hex_to_rgb_list(self._last_on_state))
+                else:
+                    if self.color_mode == BleboxColorMode.RGB:
+                        return self.normalise_elements_of_rgb(self.rgb_hex_to_rgb_list(self._last_on_state[:6]))
+                    elif self.color_mode == BleboxColorMode.MONO:
+                        return self._last_on_state
+                    else:
+                        return self.rgb_hex_to_rgb_list(self._last_on_state)
             else:
-                return self.rgb_hex_to_rgb_list(self._last_on_state)
-
+                return self._last_on_state
     @property
     def rgb_hex(self) -> Any:
         '''Return hex str representing rgb.'''

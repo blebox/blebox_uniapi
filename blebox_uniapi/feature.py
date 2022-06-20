@@ -53,5 +53,4 @@ class Feature:
         return None
 
     async def async_api_command(self, *args: Any, **kwargs: Any) -> None:
-
         await self._product.async_api_command(*args, **kwargs)

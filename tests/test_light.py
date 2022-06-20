@@ -1109,7 +1109,7 @@ class TestWLightBox(DefaultBoxTest):
         )
 
         await self.allow_get_info(aioclient_mock)
-        print("INTEST:\n", self.DEVICE_EXTENDED_INFO, "\nEntity:\n")
+
         entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
 
         async def turn_on():
@@ -1119,7 +1119,7 @@ class TestWLightBox(DefaultBoxTest):
             self.STATE_ON, self.patch_state("ffffffff", "ffffffff")
         )
         await self.allow_set_color(
-            turn_on, aioclient_mock, "ffffffff--", self.STATE_ON
+            turn_on, aioclient_mock, "ffffffff", self.STATE_ON
         )
 
         assert entity.rgbw_color == (255, 255, 255, 255)
@@ -1225,7 +1225,7 @@ class TestWLightBox(DefaultBoxTest):
         await self.allow_get_info(aioclient_mock)
         self.STATE_DEFAULT["colorMode"] = 7
         entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
-        print("Statedefault", self.STATE_DEFAULT)
+
         async def turn_on():
             await entity.async_turn_on(rgbww_color=(0,0,0,120,214))
 

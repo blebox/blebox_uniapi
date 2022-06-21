@@ -1,7 +1,7 @@
 from enum import IntEnum
 from .feature import Feature
 from .error import BadOnValueError
-from typing import TYPE_CHECKING, Optional, Dict, Any, Union, Iterable, Sequence
+from typing import TYPE_CHECKING, Optional, Dict, Any, Union, Sequence
 
 if TYPE_CHECKING:
     from .box import Box
@@ -124,7 +124,6 @@ class Light(Feature):
 
         if extended_state not in [None, {}]:
             self.extended_state = extended_state
-            rgbw = self.extended_state.get("rgbw", None)
             self.device_colorMode = color_mode
             if self.device_colorMode in [6, 7]:
                 config = self.COLOR_MODE_CONFIG[

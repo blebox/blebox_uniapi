@@ -3,7 +3,6 @@ from __future__ import annotations
 import re
 import asyncio
 import time
-import traceback
 
 from typing import Optional, Any, Dict
 
@@ -146,8 +145,8 @@ class Box:
                         box_type_config=box_type_config,
                         extended_state=extended_state,
                     )
-            except KeyError as ex:
-                raise UnsupportedBoxResponse(f" Failed to initialize:", info)
+            except KeyError:
+                raise UnsupportedBoxResponse("Failed to initialize:", info)
         return features
 
     @classmethod
@@ -176,7 +175,7 @@ class Box:
         try:
             device_type = info["type"]
         except KeyError as ex:
-            raise UnsupportedBoxResponse(info, f"Device info has no type key") from ex
+            raise UnsupportedBoxResponse(info, "Device info has no type key") from ex
         try:
             product = info["product"]
         except KeyError:

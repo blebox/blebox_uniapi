@@ -23,6 +23,7 @@ test_requirements = [
 ]
 
 setup(
+    version="2.0.0",
     author="BleBox",
     author_email="opensource@blebox.eu",
     python_requires=">=3.9",
@@ -38,7 +39,7 @@ setup(
     install_requires=requirements,
     license="Apache Software License 2.0",
     long_description=readme + "\n\n" + history,
-    include_package_data=True,
+    include_package_data=False,
     keywords="blebox_uniapi",
     name="blebox_uniapi",
     packages=find_packages(include=["blebox_uniapi", "blebox_uniapi.*"]),
@@ -46,6 +47,5 @@ setup(
     test_suite="tests",
     tests_require=test_requirements,
     url="https://github.com/blebox/blebox_uniapi",
-    version="1.3.3",
     zip_safe=False,
 )

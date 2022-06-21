@@ -6,6 +6,7 @@ from .conftest import CommonEntity, DefaultBoxTest, future_date, jmerge
 from blebox_uniapi.box_types import get_latest_api_level
 from blebox_uniapi.error import BadOnValueError, UnsupportedBoxVersion
 from blebox_uniapi.light import Light
+
 # TODO: remove
 import colorsys
 
@@ -351,7 +352,6 @@ class TestDimmer(DefaultBoxTest):
         entity = await self.updated(aioclient_mock, self.STATE_OFF)
         assert entity.is_on is False
 
-
         async def turn_on():
             await entity.async_turn_on()
 
@@ -434,17 +434,16 @@ class TestWLightBoxS(DefaultBoxTest):
         }
     }
 
-    DEVICE_EXTENDED_INFO ={
+    DEVICE_EXTENDED_INFO = {
         "rgbw": {
             "desiredColor": "f5",
             "currentColor": "f5",
             "lastOnColor": "f5",
-            "durationsMs": {"colorFade":1000,"effectFade":1000,"effectStep":1000},
+            "durationsMs": {"colorFade": 1000, "effectFade": 1000, "effectStep": 1000},
             "effectID": 0,
             "colorMode": 3,
-            "favColors":
-                {"0":"ff","1":"00","2":"c0","3":"40","4":"00"},
-            "effectsNames":{"0":"NONE","1":"FADE","2":"Stroboskop","3":"BELL"}
+            "favColors": {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
+            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"},
         }
     }
 
@@ -576,7 +575,9 @@ class TestWLightBoxS(DefaultBoxTest):
             code,
             aioclient_mock,
             "/api/rgbw/set",
-            json.dumps({"rgbw": {"desiredColor": raw+"------"}}), # simulating mask for color mod 3
+            json.dumps(
+                {"rgbw": {"desiredColor": raw + "------"}}
+            ),  # simulating mask for color mod 3
             response,
         )
 
@@ -663,14 +664,9 @@ class TestWLightBox(DefaultBoxTest):
             "desiredColor": "fa00203A",
             "currentColor": "ff00302F",
             "lastOnColor": "f1e2d3e4",
-            "durationsMs": {
-                "colorFade": 1000,
-                "effectFade": 1500,
-                "effectStep": 2000
-            },
-            "favColors":
-                {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
-            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"}
+            "durationsMs": {"colorFade": 1000, "effectFade": 1500, "effectStep": 2000},
+            "favColors": {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
+            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"},
         }
     }
     DEVICE_EXTENDED_INFO_COLORMODE_1 = {
@@ -680,14 +676,9 @@ class TestWLightBox(DefaultBoxTest):
             "desiredColor": "fa",
             "currentColor": "ff",
             "lastOnColor": "ff",
-            "durationsMs": {
-                "colorFade": 1000,
-                "effectFade": 1500,
-                "effectStep": 2000
-            },
-            "favColors":
-                {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
-            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"}
+            "durationsMs": {"colorFade": 1000, "effectFade": 1500, "effectStep": 2000},
+            "favColors": {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
+            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"},
         }
     }
     DEVICE_EXTENDED_INFO_COLORMODE_2 = {
@@ -697,14 +688,9 @@ class TestWLightBox(DefaultBoxTest):
             "desiredColor": "fa00203A",
             "currentColor": "ff00302F",
             "lastOnColor": "f1e2d3e4",
-            "durationsMs": {
-                "colorFade": 1000,
-                "effectFade": 1500,
-                "effectStep": 2000
-            },
-            "favColors":
-                {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
-            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"}
+            "durationsMs": {"colorFade": 1000, "effectFade": 1500, "effectStep": 2000},
+            "favColors": {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
+            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"},
         }
     }
     DEVICE_EXTENDED_INFO_COLORMODE_3 = {
@@ -714,14 +700,9 @@ class TestWLightBox(DefaultBoxTest):
             "desiredColor": "fa00203A",
             "currentColor": "ff00302F",
             "lastOnColor": "f1e2d3e4",
-            "durationsMs": {
-                "colorFade": 1000,
-                "effectFade": 1500,
-                "effectStep": 2000
-            },
-            "favColors":
-                {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
-            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"}
+            "durationsMs": {"colorFade": 1000, "effectFade": 1500, "effectStep": 2000},
+            "favColors": {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
+            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"},
         }
     }
     DEVICE_EXTENDED_INFO_COLORMODE_4 = {
@@ -731,14 +712,9 @@ class TestWLightBox(DefaultBoxTest):
             "desiredColor": "fa00203A",
             "currentColor": "ff00302F",
             "lastOnColor": "f1e2d3e4",
-            "durationsMs": {
-                "colorFade": 1000,
-                "effectFade": 1500,
-                "effectStep": 2000
-            },
-            "favColors":
-                {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
-            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"}
+            "durationsMs": {"colorFade": 1000, "effectFade": 1500, "effectStep": 2000},
+            "favColors": {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
+            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"},
         }
     }
     DEVICE_EXTENDED_INFO_COLORMODE_5 = {
@@ -748,14 +724,9 @@ class TestWLightBox(DefaultBoxTest):
             "desiredColor": "fa00203A",
             "currentColor": "ff00302F",
             "lastOnColor": "f1e2d3e4",
-            "durationsMs": {
-                "colorFade": 1000,
-                "effectFade": 1500,
-                "effectStep": 2000
-            },
-            "favColors":
-                {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
-            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"}
+            "durationsMs": {"colorFade": 1000, "effectFade": 1500, "effectStep": 2000},
+            "favColors": {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
+            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"},
         }
     }
 
@@ -766,14 +737,9 @@ class TestWLightBox(DefaultBoxTest):
             "desiredColor": "fa00203A",
             "currentColor": "ff00302F",
             "lastOnColor": "f1e2d3e4",
-            "durationsMs": {
-                "colorFade": 1000,
-                "effectFade": 1500,
-                "effectStep": 2000
-            },
-            "favColors":
-                {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
-            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"}
+            "durationsMs": {"colorFade": 1000, "effectFade": 1500, "effectStep": 2000},
+            "favColors": {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
+            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"},
         }
     }
     DEVICE_EXTENDED_INFO_COLORMODE_7 = {
@@ -783,17 +749,11 @@ class TestWLightBox(DefaultBoxTest):
             "desiredColor": "fcfffcff00",
             "currentColor": "fcfffcff00",
             "lastOnColor": "fcfffcff00",
-            "durationsMs": {
-                "colorFade": 1000,
-                "effectFade": 1000,
-                "effectStep": 1000
-            },
-            "favColors":
-                {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
-            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"}
+            "durationsMs": {"colorFade": 1000, "effectFade": 1000, "effectStep": 1000},
+            "favColors": {"0": "ff", "1": "00", "2": "c0", "3": "40", "4": "00"},
+            "effectsNames": {"0": "NONE", "1": "FADE", "2": "Stroboskop", "3": "BELL"},
         }
     }
-
 
     def patch_version(apiLevel):
         """Generate a patch for a JSON state fixture."""
@@ -855,8 +815,6 @@ class TestWLightBox(DefaultBoxTest):
     """
     )
 
-
-
     def patch_state(current, desired=None, last=None):
         """Generate a patch for a JSON state fixture."""
 
@@ -888,6 +846,7 @@ class TestWLightBox(DefaultBoxTest):
     STATE_ON_ONLY_SOME_COLOR = jmerge(STATE_DEFAULT, patch_state("ffa1b200"))
     STATE_ON_LAST = jmerge(STATE_DEFAULT, patch_state("01020304", "f1e2d3e4"))
     STATE_AFTER_SOME_COLOR_SET = jmerge(STATE_DEFAULT, patch_state("ffa1b2e4"))
+
     async def test_init(self, aioclient_mock):
         """Test cover default state."""
         await self.allow_get_info(aioclient_mock)
@@ -950,7 +909,9 @@ class TestWLightBox(DefaultBoxTest):
 
         assert entity.is_on is True
         # assert entity.white_value == 0xE4
-        assert entity.rgbw_color == tuple([int(i, 16) for i in ["f1","e2","d3","e4"]])
+        assert entity.rgbw_color == tuple(
+            [int(i, 16) for i in ["f1", "e2", "d3", "e4"]]
+        )
 
     async def test_off(self, aioclient_mock):
         """Test light off."""
@@ -986,11 +947,11 @@ class TestWLightBox(DefaultBoxTest):
         with pytest.raises(UnsupportedBoxVersion):
             await self.async_entities(aioclient_mock)
 
-    '''
+    """
         1. ustawic setup mocka do inicjalizacji obiektu
         2. dostep do encji
         3. asercje
-    '''
+    """
 
     async def test_colormode_5_brightness(self, aioclient_mock):
         self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_5
@@ -1012,6 +973,7 @@ class TestWLightBox(DefaultBoxTest):
 
     async def test_many_from_config_check_empty(self, aioclient_mock):
         pass
+
     async def test_effect_list_return_list(self, aioclient_mock):
         self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_5
         await self.allow_get_info(aioclient_mock)
@@ -1040,7 +1002,7 @@ class TestWLightBox(DefaultBoxTest):
         assert entity.brightness
 
     async def test_normalise_element_colormode_rgb(self, aioclient_mock):
-        #testing sensible on value which is used only while async_turn_on executed
+        # testing sensible on value which is used only while async_turn_on executed
 
         self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_2
         self.DEVICE_EXTENDED_INFO = jmerge(
@@ -1057,18 +1019,15 @@ class TestWLightBox(DefaultBoxTest):
         entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
 
         async def turn_on():
-            await entity.async_turn_on(rgb_color= (255, 0, 140))
-        self.STATE_ON = jmerge(
-            self.STATE_ON, self.patch_state("fafafa", "fafafa")
-        )
-        await self.allow_set_color(
-            turn_on, aioclient_mock, "fa0089", self.STATE_ON
-        )
+            await entity.async_turn_on(rgb_color=(255, 0, 140))
+
+        self.STATE_ON = jmerge(self.STATE_ON, self.patch_state("fafafa", "fafafa"))
+        await self.allow_set_color(turn_on, aioclient_mock, "fa0089", self.STATE_ON)
 
         assert max(entity.rgbw_color) == 250
 
     async def test_normalise_when_max_is_zero_rgb(self, aioclient_mock):
-        #testing sensible on value which is used only while async_turn_on executed
+        # testing sensible on value which is used only while async_turn_on executed
 
         self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_2
         self.DEVICE_EXTENDED_INFO = jmerge(
@@ -1086,15 +1045,11 @@ class TestWLightBox(DefaultBoxTest):
 
         async def turn_on():
             await entity.async_turn_on(rgb_color=(255, 10, 255))
-        self.STATE_ON = jmerge(
-            self.STATE_ON, self.patch_state("000000", "000000")
-        )
-        await self.allow_set_color(
-            turn_on, aioclient_mock, "030003", self.STATE_ON
-        )
+
+        self.STATE_ON = jmerge(self.STATE_ON, self.patch_state("000000", "000000"))
+        await self.allow_set_color(turn_on, aioclient_mock, "030003", self.STATE_ON)
 
         assert max(entity.rgb_color) == 255
-
 
     async def test_sensible_on_value_for_color_mode_1(self, aioclient_mock):
 
@@ -1115,12 +1070,8 @@ class TestWLightBox(DefaultBoxTest):
         async def turn_on():
             await entity.async_turn_on()
 
-        self.STATE_ON = jmerge(
-            self.STATE_ON, self.patch_state("ffffffff", "ffffffff")
-        )
-        await self.allow_set_color(
-            turn_on, aioclient_mock, "ffffffff", self.STATE_ON
-        )
+        self.STATE_ON = jmerge(self.STATE_ON, self.patch_state("ffffffff", "ffffffff"))
+        await self.allow_set_color(turn_on, aioclient_mock, "ffffffff", self.STATE_ON)
 
         assert entity.rgbw_color == (255, 255, 255, 255)
 
@@ -1144,12 +1095,8 @@ class TestWLightBox(DefaultBoxTest):
         async def turn_on():
             await entity.async_turn_on()
 
-        self.STATE_ON = jmerge(
-            self.STATE_ON, self.patch_state("ffffffff", "ffffffff")
-        )
-        await self.allow_set_color(
-            turn_on, aioclient_mock, "ffff------", self.STATE_ON
-        )
+        self.STATE_ON = jmerge(self.STATE_ON, self.patch_state("ffffffff", "ffffffff"))
+        await self.allow_set_color(turn_on, aioclient_mock, "ffff------", self.STATE_ON)
 
         assert entity.color_temp == 128
 
@@ -1166,13 +1113,9 @@ class TestWLightBox(DefaultBoxTest):
         async def turn_on():
             await entity.async_turn_on(color_temp=1)
 
-        self.STATE_ON = jmerge(
-            self.STATE_ON, self.patch_state("02ffffff", "02ffffff")
-        )
+        self.STATE_ON = jmerge(self.STATE_ON, self.patch_state("02ffffff", "02ffffff"))
 
-        await self.allow_set_color(
-            turn_on, aioclient_mock, "02fa------", self.STATE_ON
-        )
+        await self.allow_set_color(turn_on, aioclient_mock, "02fa------", self.STATE_ON)
 
         assert entity.color_temp == 1
 
@@ -1187,13 +1130,9 @@ class TestWLightBox(DefaultBoxTest):
         async def turn_on():
             await entity.async_turn_on(color_temp=255)
 
-        self.STATE_ON = jmerge(
-            self.STATE_ON, self.patch_state("fa00ffff", "fa02ffff")
-        )
+        self.STATE_ON = jmerge(self.STATE_ON, self.patch_state("fa00ffff", "fa02ffff"))
 
-        await self.allow_set_color(
-            turn_on, aioclient_mock, "fa00------", self.STATE_ON
-        )
+        await self.allow_set_color(turn_on, aioclient_mock, "fa00------", self.STATE_ON)
 
         assert entity.color_temp == 255
 
@@ -1208,34 +1147,30 @@ class TestWLightBox(DefaultBoxTest):
         async def turn_on():
             await entity.async_turn_on(color_temp=255)
 
-        self.STATE_ON = jmerge(
-            self.STATE_ON, self.patch_state("fa00ffff", "fa02ffff")
-        )
+        self.STATE_ON = jmerge(self.STATE_ON, self.patch_state("fa00ffff", "fa02ffff"))
 
-        await self.allow_set_color(
-            turn_on, aioclient_mock, "fa00------", self.STATE_ON
-        )
+        await self.allow_set_color(turn_on, aioclient_mock, "fa00------", self.STATE_ON)
 
         assert entity.color_temp == 255
 
     async def test_sensible_on_value_for_color_mode_7(self, aioclient_mock):
         self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_7
         self.STATE_DEFAULT["rgbw"]["colorMode"] = 7
-        self.STATE_DEFAULT = jmerge(self.STATE_DEFAULT, self.patch_state("fcfffcff00","fcfffcff00"))
+        self.STATE_DEFAULT = jmerge(
+            self.STATE_DEFAULT, self.patch_state("fcfffcff00", "fcfffcff00")
+        )
         await self.allow_get_info(aioclient_mock)
         self.STATE_DEFAULT["colorMode"] = 7
         entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
 
         async def turn_on():
-            await entity.async_turn_on(rgbww_color=(0,0,0,120,214))
+            await entity.async_turn_on(rgbww_color=(0, 0, 0, 120, 214))
 
         self.STATE_ON = jmerge(
             self.STATE_ON, self.patch_state("000000d678", "000000d678")
         )
 
-        await self.allow_set_color(
-            turn_on, aioclient_mock, "000000d678", self.STATE_ON
-        )
+        await self.allow_set_color(turn_on, aioclient_mock, "000000d678", self.STATE_ON)
 
         assert entity.rgbww_color == (0, 0, 0, 120, 214)
 

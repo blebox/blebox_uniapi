@@ -125,7 +125,9 @@ class Box:
 
         self._update_last_data(None)
 
-    def create_features(self, config: dict, info: dict, extended_state: Optional[dict]) -> dict:
+    def create_features(
+        self, config: dict, info: dict, extended_state: Optional[dict]
+    ) -> dict:
 
         features = {}
         for field, klass in {
@@ -139,12 +141,13 @@ class Box:
         }.items():
             try:
                 if box_type_config := config.get(field):
-                    features[field] = klass.many_from_config(self, box_type_config=box_type_config,
-                                                             extended_state=extended_state)
+                    features[field] = klass.many_from_config(
+                        self,
+                        box_type_config=box_type_config,
+                        extended_state=extended_state,
+                    )
             except KeyError as ex:
-                raise UnsupportedBoxResponse(
-                    f" Failed to initialize:", info
-                )
+                raise UnsupportedBoxResponse(f" Failed to initialize:", info)
         return features
 
     @classmethod
@@ -186,7 +189,9 @@ class Box:
             raise UnsupportedBoxResponse(f"{device_type} is not a supported type")
         config = get_conf(level, config_set)
         if not config:
-            raise UnsupportedBoxVersion(f"{device_type} has unsupported version ({level}).")
+            raise UnsupportedBoxVersion(
+                f"{device_type} has unsupported version ({level})."
+            )
 
         return config
 
@@ -198,7 +203,7 @@ class Box:
     def last_data(self) -> Optional[Dict[Any, Any]]:
         return self._last_data
 
-    #Used in full_name, track down and refactor.
+    # Used in full_name, track down and refactor.
     @property
     def type(self) -> str:
         return self._type
@@ -246,13 +251,13 @@ class Box:
         return await self._async_api(False, method, *args)
 
     def follow(self, data: dict, path: str) -> Any:
-        '''
+        """
         Return payloadu from device response json.
         :param self:
         :param data:
         :param path:
         :return:
-        '''
+        """
         if data is None:
             raise RuntimeError(f"bad argument: data {data}")  # pragma: no cover
 
@@ -329,10 +334,14 @@ class Box:
                 )
         return current_tree
 
-    def expect_int(self, field: str, raw_value: int, maximum: int = -1, minimum: int = 0) -> int:
+    def expect_int(
+        self, field: str, raw_value: int, maximum: int = -1, minimum: int = 0
+    ) -> int:
         return self.check_int(raw_value, field, maximum, minimum)
 
-    def expect_hex_str(self, field: str, raw_value: int, maximum: int = -1, minimum: int = 0) -> int:
+    def expect_hex_str(
+        self, field: str, raw_value: int, maximum: int = -1, minimum: int = 0
+    ) -> int:
         return self.check_hex_str(raw_value, field, maximum, minimum)
 
     def expect_rgbw(self, field: str, raw_value: int) -> int:
@@ -366,7 +375,10 @@ class Box:
         if not isinstance(value, str):
             raise BadFieldNotAString(self.name, field, value)
 
-        if self.check_int_range(int(value, 16), field, max_value, min_value) is not None:
+        if (
+            self.check_int_range(int(value, 16), field, max_value, min_value)
+            is not None
+        ):
             return value
 
     def check_rgbw(self, value: int, field: str) -> int:

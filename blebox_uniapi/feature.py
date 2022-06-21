@@ -1,4 +1,3 @@
-
 from .error import DeviceStateNotAvailable
 from typing import Any, TYPE_CHECKING
 
@@ -13,8 +12,11 @@ class Feature:
         self._product = product
         self._alias = alias
         self._methods = methods
+
     @classmethod
-    def many_from_config(cls, product, box_type_config, extended_state) -> list["Feature"]:
+    def many_from_config(
+        cls, product, box_type_config, extended_state
+    ) -> list["Feature"]:
         # note: by default single config entry yields single feature instance but certain feature
         # domains (e.g. lights) may handle this differently depending on their `extended_state`
         return [cls(product, *args) for args in box_type_config]

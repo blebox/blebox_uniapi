@@ -122,7 +122,7 @@ def json_post_expect(mock, url, **kwargs):
         def __call__(self, url, **kwargs):
             # TODO: timeout
             params = kwargs.get("data")
-            print("HTTP_MOCKS:\n",HTTP_MOCKS)
+            print("HTTP_MOCKS:\n", HTTP_MOCKS)
             print(f"{kwargs=}")
             # TODO: better checking of params (content vs raw json)
             data = HTTP_MOCKS[self._key][url][params]
@@ -162,7 +162,9 @@ class DefaultBoxTest:
         if hasattr(self, "DEVICE_EXTENDED_INFO"):
             data = self.DEVICE_EXTENDED_INFO if info is None else info
             json_get_expect(
-                aioclient_mock, f"http://{self.IP}:80{self.DEVICE_EXTENDED_INFO_PATH}", json=data
+                aioclient_mock,
+                f"http://{self.IP}:80{self.DEVICE_EXTENDED_INFO_PATH}",
+                json=data,
             )
 
     def allow_get_state(self, aioclient_mock, data):

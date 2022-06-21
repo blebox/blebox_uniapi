@@ -73,7 +73,9 @@ class ApiHost:
     async def async_api_get(self, path: str) -> Optional[dict]:
         return await self.async_request(path, self._session.get)
 
-    async def async_api_post(self, path: str, data: Union[dict, str, None]) -> Optional[dict]:
+    async def async_api_post(
+        self, path: str, data: Union[dict, str, None]
+    ) -> Optional[dict]:
         return await self.async_request(path, self._session.post, data)
 
     def api_path(self, path: str) -> str:

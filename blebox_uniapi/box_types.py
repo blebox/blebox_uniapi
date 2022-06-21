@@ -46,17 +46,8 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
         20200518: {
             "api_path": "/api/device/state",
             "extended_state_path": "/state/extended",
-            "api": {
-                "set": lambda command: (
-                    "GET",
-                    f"/s/c/{command}"
-                )
-            },
-            "buttons":
-                [
-                    "tvLift",
-                    {"lift": ""}
-                ]
+            "api": {"set": lambda command: ("GET", f"/s/c/{command}")},
+            "buttons": ["tvLift", {"lift": ""}],
         }
     },
     "airSensor": {
@@ -88,32 +79,8 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     '{"dimmer":{"desiredBrightness": ' + str(x) + "}}",
                 ),
             },
-            "lights": [
-                [
-                    "brightness",
-                    {
-                        "desired": "dimmer/desiredBrightness"
-                    }
-                ]
-            ],
+            "lights": [["brightness", {"desired": "dimmer/desiredBrightness"}]],
         },
-        # 20200518: {
-        #     "api_path": "/state",
-        #     "api": {
-        #         "set": lambda x: (
-        #             "GET",
-        #             f"/s/{x}"
-        #         )
-        #     },
-        #     "lights": [
-        #         [
-        #             "brightness",
-        #             {
-        #                 "desired": "dimmer/desiredBrightness"
-        #             }
-        #         ]
-        #     ],
-        # }
     },
     # gateBox
     "gateBox": {
@@ -241,15 +208,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 "on": lambda x=None: ("GET", "/s/1", None),
                 "off": lambda x=None: ("GET", "/s/0", None),
             },
-            "switches": [
-                [
-                    "0.relay",
-                    {
-                        "state": "[relay=0]/state"
-                    },
-                    "relay"
-                ]
-            ],
+            "switches": [["0.relay", {"state": "[relay=0]/state"}, "relay"]],
         },
         20190808: {
             "api_path": "/api/relay/state",
@@ -258,15 +217,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 "on": lambda x=None: ("GET", "/s/1", None),
                 "off": lambda x=None: ("GET", "/s/0", None),
             },
-            "switches": [
-                [
-                    "0.relay",
-                    {
-                        "state": "relays/[relay=0]/state"
-                    },
-                    "relay"
-                ]
-            ],
+            "switches": [["0.relay", {"state": "relays/[relay=0]/state"}, "relay"]],
         },
     },
     # switchBoxD
@@ -278,19 +229,10 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 "off": lambda x=None: ("GET", f"/s/{int(x)}/0", None),
             },
             "switches": [
-                [
-                    "0.relay",
-                    {
-                        "state": "relays/[relay=0]/state"
-                    },
-                    "relay",
-                    0
-                 ],
+                ["0.relay", {"state": "relays/[relay=0]/state"}, "relay", 0],
                 [
                     "1.relay",
-                    {
-                        "state": "relays/[relay=1]/state"
-                    },
+                    {"state": "relays/[relay=1]/state"},
                     "relay",
                     1,
                 ],
@@ -325,11 +267,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     "/api/rgbw/set",
                     f'{{"rgbw":{{"desiredColor": "{str(x)}"}}}}',
                 ),
-                "effect": lambda x: (
-                    "GET",
-                    f"/s/x/{x}",
-                    None
-                )
+                "effect": lambda x: ("GET", f"/s/x/{x}", None),
             },
             "lights": [
                 [
@@ -340,7 +278,6 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                         "currentEffect": "rgbw/effectID",
                         "colorMode": "rgbw/colorMode",
                     },
-
                 ]
             ],
         },
@@ -353,10 +290,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     "/api/rgbw/set",
                     f'{{"rgbw": {{"desiredColor": "{x}"}}}}',
                 ),
-                "effect": lambda x: (
-                    "GET",
-                    f"/s/x/{x}"
-                )
+                "effect": lambda x: ("GET", f"/s/x/{x}"),
             },
             "lights": [
                 [
@@ -366,7 +300,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                         "last_color": "rgbw/lastOnColor",
                         "currentEffect": "rgbw/effectID",
                         "colorMode": "rgbw/colorMode",
-                    }
+                    },
                 ],
             ],
         },
@@ -381,17 +315,14 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     "/api/light/set",
                     f'{{"light": {{"desiredColor": "{x}"}}}}',
                 ),
-                "effect": lambda x: (
-                    "GET",
-                    f"/s/x/{x}"
-                )
+                "effect": lambda x: ("GET", f"/s/x/{x}"),
             },
             "lights": [
                 [
                     "brightness",
                     {
                         "desired": "light/desiredColor",
-                    }
+                    },
                 ]
             ],
         },
@@ -404,11 +335,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     "/api/rgbw/set",
                     f'{{"rgbw": {{"desiredColor": "{x}"}}}}',
                 ),
-                "effect": lambda x: (
-                    "GET",
-                    f"/s/x/{x}"
-                )
-
+                "effect": lambda x: ("GET", f"/s/x/{x}"),
             },
             "lights": [
                 [
@@ -418,7 +345,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                         "colorMode": "rgbw/colorMode",
                         "currentEffect": "rgbw/effectID",
                         "last_color": "rgbw/lastOnColor",
-                    }
+                    },
                 ]
             ],
         },

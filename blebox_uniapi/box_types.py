@@ -1,17 +1,17 @@
 from .cover import Gate, GateBox, GateBoxB, Shutter
-
+from typing import Union, Any
 
 # default api level for all products that don't have one
 default_api_level = 20151206
 
 
-def get_conf_set(product_type):
+def get_conf_set(product_type: str) -> dict:
     """Get all configurations for provided product type."""
     conf_set = BOX_TYPE_CONF.get(product_type, {})
     return conf_set
 
 
-def get_conf(api_level, conf_set):
+def get_conf(api_level: Union[int, str], conf_set: dict) -> dict:
     """Get configuration from conf_set for provided api_level."""
     for min_api_level in sorted(conf_set, reverse=True):
         if api_level >= min_api_level:
@@ -20,7 +20,7 @@ def get_conf(api_level, conf_set):
     return {}
 
 
-def get_latest_conf(product_type):
+def get_latest_conf(product_type: str) -> dict:
     """Get latest configuration for provided product type."""
     conf_set = get_conf_set(product_type)
     if conf_set:
@@ -30,18 +30,26 @@ def get_latest_conf(product_type):
     return conf_set
 
 
-def get_latest_api_level(product_type):
+def get_latest_api_level(product_type: str) -> Union[dict, int]:
     """Get latest supported api_level for provided product type."""
     conf_set = get_conf_set(product_type)
     if conf_set:
         return sorted(conf_set, reverse=True)[0]
-
     return 0
 
 
 # Configuration for all box types
-BOX_TYPE_CONF = {
+
+BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     # airSensor
+    "tvLiftBox": {
+        20200518: {
+            "api_path": "/api/device/state",
+            "extended_state_path": "/state/extended",
+            "api": {"set": lambda command: ("GET", f"/s/c/{command}")},
+            "buttons": ["tvLift", {"lift": ""}],
+        }
+    },
     "airSensor": {
         20180403: {
             "api_path": "/api/air/state",
@@ -72,13 +80,11 @@ BOX_TYPE_CONF = {
                 ),
             },
             "lights": [["brightness", {"desired": "dimmer/desiredBrightness"}]],
-        }
+        },
     },
     # gateBox
     "gateBox": {
         default_api_level: {
-            # name of the subclass class of gatebox family
-            "subclass": GateBox,
             "api_path": "/api/gate/state",
             "api": {
                 "primary": lambda x=None: ("GET", "/s/p", None),
@@ -93,13 +99,13 @@ BOX_TYPE_CONF = {
                         "extraButtonType": "extraButtonType",
                     },
                     "gatebox",
+                    GateBox,
                 ]
             ],
         },
         20200831: {
-            # name of the subclass class of gatebox family
-            "subclass": GateBoxB,
             "api_path": "/state",
+            "extended_state_path": "/state/extended",
             "api": {
                 "primary": lambda x=None: ("GET", "/s/p", None),
                 "secondary": lambda x=None: ("GET", "/s/s", None),
@@ -111,16 +117,16 @@ BOX_TYPE_CONF = {
                         "position": "gate/currentPos",
                     },
                     "gatebox",
+                    GateBoxB,
                 ]
             ],
-        }
+        },
     },
     # gateController
     "gateController": {
         20180604: {
-            # name of the subclass class of gate family
-            "subclass": Gate,
             "api_path": "/api/gatecontroller/state",
+            "extended_state_path": "/api/gatecontroller/extended/state",
             "api": {
                 "open": lambda x=None: ("GET", "/s/o", None),
                 "close": lambda x=None: ("GET", "/s/c", None),
@@ -138,6 +144,7 @@ BOX_TYPE_CONF = {
                         "state": "gateController/state",
                     },
                     "gate",
+                    Gate,
                 ]
             ],
         }
@@ -147,6 +154,7 @@ BOX_TYPE_CONF = {
         20180604: {
             # TODO: read extended state only once on startup
             "api_path": "/api/heat/extended/state",
+            "extended_state_path": "/api/heat/extended/state",
             # TODO: use an api map (map to semver)? Or constraints?
             "api": {
                 "on": lambda x=None: ("GET", "/s/1", None),
@@ -169,9 +177,8 @@ BOX_TYPE_CONF = {
     },
     "shutterBox": {
         20180604: {
-            # name of the subclass class of shutter family
-            "subclass": Shutter,
             "api_path": "/api/shutter/state",
+            "extended_state_path": "/api/shutter/extended/state",
             "api": {
                 "open": lambda x=None: ("GET", "/s/u", None),
                 "close": lambda x=None: ("GET", "/s/d", None),
@@ -187,6 +194,7 @@ BOX_TYPE_CONF = {
                         "state": "shutter/state",
                     },
                     "shutter",
+                    Shutter,
                 ]
             ],
         }
@@ -195,6 +203,7 @@ BOX_TYPE_CONF = {
         20180604: {
             "model": "switchBox",
             "api_path": "/api/relay/state",
+            "extended_state_path": "/api/relay/extended/state",
             "api": {
                 "on": lambda x=None: ("GET", "/s/1", None),
                 "off": lambda x=None: ("GET", "/s/0", None),
@@ -203,12 +212,13 @@ BOX_TYPE_CONF = {
         },
         20190808: {
             "api_path": "/api/relay/state",
+            "extended_state_path": "/api/relay/extended/state",
             "api": {
                 "on": lambda x=None: ("GET", "/s/1", None),
                 "off": lambda x=None: ("GET", "/s/0", None),
             },
             "switches": [["0.relay", {"state": "relays/[relay=0]/state"}, "relay"]],
-        }
+        },
     },
     # switchBoxD
     "switchBoxD": {
@@ -220,7 +230,12 @@ BOX_TYPE_CONF = {
             },
             "switches": [
                 ["0.relay", {"state": "relays/[relay=0]/state"}, "relay", 0],
-                ["1.relay", {"state": "relays/[relay=1]/state"}, "relay", 1],
+                [
+                    "1.relay",
+                    {"state": "relays/[relay=1]/state"},
+                    "relay",
+                    1,
+                ],
             ],
         }
     },
@@ -243,14 +258,16 @@ BOX_TYPE_CONF = {
     },
     # wLightBox
     "wLightBox": {
-        20180718: {
+        20190808: {
             "api_path": "/api/rgbw/state",
+            "extended_state_path": "/api/rgbw/extended/state",
             "api": {
                 "set": lambda x: (
                     "POST",
                     "/api/rgbw/set",
                     f'{{"rgbw":{{"desiredColor": "{str(x)}"}}}}',
-                )
+                ),
+                "effect": lambda x: ("GET", f"/s/x/{x}", None),
             },
             "lights": [
                 [
@@ -258,10 +275,35 @@ BOX_TYPE_CONF = {
                     {
                         "desired": "rgbw/desiredColor",
                         "last_color": "rgbw/lastOnColor",
+                        "currentEffect": "rgbw/effectID",
+                        "colorMode": "rgbw/colorMode",
                     },
                 ]
             ],
-        }
+        },
+        20200229: {
+            "api_path": "/api/rgbw/state",
+            "extended_state_path": "/api/rgbw/extended/state",
+            "api": {
+                "set": lambda x: (
+                    "POST",
+                    "/api/rgbw/set",
+                    f'{{"rgbw": {{"desiredColor": "{x}"}}}}',
+                ),
+                "effect": lambda x: ("GET", f"/s/x/{x}"),
+            },
+            "lights": [
+                [
+                    "color",
+                    {
+                        "desired": "rgbw/desiredColor",
+                        "last_color": "rgbw/lastOnColor",
+                        "currentEffect": "rgbw/effectID",
+                        "colorMode": "rgbw/colorMode",
+                    },
+                ],
+            ],
+        },
     },
     # wLightBoxS
     "wLightBoxS": {
@@ -272,20 +314,40 @@ BOX_TYPE_CONF = {
                     "POST",
                     "/api/light/set",
                     f'{{"light": {{"desiredColor": "{x}"}}}}',
-                )
+                ),
+                "effect": lambda x: ("GET", f"/s/x/{x}"),
             },
-            "lights": [["brightness", {"desired": "light/desiredColor"}]],
+            "lights": [
+                [
+                    "brightness",
+                    {
+                        "desired": "light/desiredColor",
+                    },
+                ]
+            ],
         },
         20200229: {
             "api_path": "/api/rgbw/state",
+            "extended_state_path": "/api/rgbw/extended/state",
             "api": {
                 "set": lambda x: (
                     "POST",
                     "/api/rgbw/set",
                     f'{{"rgbw": {{"desiredColor": "{x}"}}}}',
-                )
+                ),
+                "effect": lambda x: ("GET", f"/s/x/{x}"),
             },
-            "lights": [["brightness", {"desired": "rgbw/desiredColor"}]],
-        }
-    }
+            "lights": [
+                [
+                    "brightness",
+                    {
+                        "desired": "rgbw/desiredColor",
+                        "colorMode": "rgbw/colorMode",
+                        "currentEffect": "rgbw/effectID",
+                        "last_color": "rgbw/lastOnColor",
+                    },
+                ]
+            ],
+        },
+    },
 }

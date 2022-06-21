@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+from typing import Any, Optional, Union
 
 import aiohttp
 import asyncio
@@ -9,11 +9,19 @@ from . import error
 DEFAULT_TIMEOUT = aiohttp.ClientTimeout(total=None, sock_connect=5, sock_read=5)
 DEFAULT_PORT = 80
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class ApiHost:
-    def __init__(self, host, port, timeout, session, loop, logger=LOGGER):
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        timeout: int,
+        session: Any,
+        loop: Any,
+        logger: logging.Logger = logger,
+    ):
         self._host = host
         self._port = port
 
@@ -30,12 +38,12 @@ class ApiHost:
         # TODO: remove?
         self._loop = loop
 
-    async def async_request(self, path, async_method, data=None):
+    async def async_request(
+        self, path: str, async_method: Any, data: Union[dict, str, None] = None
+    ) -> Optional[dict]:
         # TODO: check timeout
         client_timeout = self._timeout
-
         url = self.api_path(path)
-
         try:
             if data is not None:
                 response = await async_method(url, timeout=client_timeout, data=data)
@@ -62,13 +70,15 @@ class ApiHost:
         except aiohttp.ClientError as ex:
             raise error.ClientError(f"API request {url} failed: {ex}") from ex
 
-    async def async_api_get(self, path):
+    async def async_api_get(self, path: str) -> Optional[dict]:
         return await self.async_request(path, self._session.get)
 
-    async def async_api_post(self, path, data):
+    async def async_api_post(
+        self, path: str, data: Union[dict, str, None]
+    ) -> Optional[dict]:
         return await self.async_request(path, self._session.post, data)
 
-    def api_path(self, path):
+    def api_path(self, path: str) -> str:
         host = self._host
         port = self._port
 
@@ -76,13 +86,13 @@ class ApiHost:
         return f"http://{host}:{port}/{path[1:]}"
 
     @property
-    def logger(self):
+    def logger(self) -> Any:
         return self._logger
 
     @property
-    def host(self):
+    def host(self) -> str:
         return self._host
 
     @property
-    def port(self):
+    def port(self) -> int:
         return self._port

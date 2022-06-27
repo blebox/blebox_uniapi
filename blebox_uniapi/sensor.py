@@ -9,7 +9,7 @@ class Sensor(Feature):
     _unit: str
 
     def __init__(self, product: "Box", alias: str, methods: dict):
-        super.__init__(product, alias, methods)
+        super().__init__(product, alias, methods)
 
     @property
     def unit(self) -> str:
@@ -17,10 +17,34 @@ class Sensor(Feature):
 
     @classmethod
     def many_from_config(cls, product, box_type_config, extended_state) -> list["Sensor"]:
-        pass
+        #pass
         sensor_list = list()
+        type_class_mapper = {
+            "temperature": Temperature,
+            "wind": Wind,
+        }
+        # robiera listę sensorów, wydziela im methods w zalezności o
+        # utworzyc liste sensorów na podstawie extended state,
+        # powinien implementodwać odpowiednią klasę dla danego typu urządenia,
+        # modyfikować methods aby utrzymywać id obiektu(methods to path po drzewie do wartosci)
+
         print("SENSOR many from config.:",len(box_type_config[0]))
         alias, methods = box_type_config[0]
+        print("Alias:",alias,"\nmethods:", methods,"\nES", extended_state)
+        sensor_list = extended_state.get("multiSensor").get("sensors", {})
+        print("\nsensor_list",sensor_list)
+        s_li = list()
+        for sensor in sensor_list:
+            print("sensor:",sensor)
+            sensor_type = sensor.get("type")
+            sensor_id = sensor.get("id")
+            value_method = {sensor_type: methods[sensor_type](sensor_id)}
+            print("Sensor:", sensor_type, sensor_id, value_method)
+
+            s_li.append(type_class_mapper[sensor_type](product=product, alias=sensor_type + "_" + str(sensor_id), methods=value_method))
+        print("SLI:", s_li)
+        return s_li
+
         if extended_state is not None:
             print("SENSOR mfc ex state")
         return [Temperature(product=product, alias=alias, methods=methods)]
@@ -58,18 +82,8 @@ class Wind(Sensor):
         self._device_class = "temperature"
         super().__init__(product, alias, methods)
 
-
-class Rain(Sensor):
-    def __init__(self, product: "Box", alias: str, methods: dict):
-        self._device_class = "moisture"
-        super().__init__(product, alias, methods)
-    @property
-    def state(self) -> bool:
-        return True
-
-    @property
-    def device_class(self) -> str:
-        return self._device_class
+    def after_update(self) -> None:
+        self._current = self._read_temperature("temperature")
 
 
 

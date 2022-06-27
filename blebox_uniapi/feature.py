@@ -48,7 +48,7 @@ class Feature:
         if product.last_data is None:
             # TODO: coverage
             raise DeviceStateNotAvailable  # pragma: no cover
-
+        print("feature.raw_value.m:", self._methods)
         methods = self._methods
         if method := methods.get(name):
             return product.follow(product.last_data, method)

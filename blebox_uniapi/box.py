@@ -12,7 +12,8 @@ from .button import Button
 from .climate import Climate
 from .cover import Cover
 from .light import Light
-from .sensor import Temperature, Sensor
+from .sensor import Sensor
+from .binary_sensor import BinarySensor
 from .session import ApiHost
 from .switch import Switch
 
@@ -134,15 +135,17 @@ class Box:
             "air_qualities": AirQuality,
             "covers": Cover,
             "sensors": Sensor,  # TODO: too narrow
+            "binary_sensors": Sensor,
             "lights": Light,
             "climates": Climate,
             "switches": Switch,
             "buttons": Button,
+            "binary_sensors": BinarySensor,
         }.items():
             try:
                 print(config, field)
                 if box_type_config := config.get(field):
-                    print("KLASA:", klass)
+                    print("KLASA:", klass, box_type_config)
                     features[field] = klass.many_from_config(
                         self,
                         box_type_config=box_type_config,
@@ -263,6 +266,7 @@ class Box:
         :param path:
         :return:
         """
+        print("follow:\n", data,"\n", path)
         if data is None:
             raise RuntimeError(f"bad argument: data {data}")  # pragma: no cover
 
@@ -271,7 +275,7 @@ class Box:
 
         for chunk in results:
             with_string_value = re.compile("^\\[(.*)='(.*)'\\]$")
-
+            print("with_string_value:", with_string_value, "\n chunk:", chunk)
             match = with_string_value.match(chunk)
             if match:
                 name = match.group(1)
@@ -281,6 +285,7 @@ class Box:
 
                 for item in current_tree:
                     if item[name] == value:
+                        print(current_tree)
                         current_tree = item
                         found = True
                         break

@@ -354,12 +354,45 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
         20210413: {
             "api_path": "/state",
             "extended_state_path": "/state/extended",
-            "sensors":[
+            "sensors": [
                 [
-                "temperature",
-                {
-                    "temperature": lambda x: f"multiSenso/sensor/[{x}]/value",
-                }
+                    "multiSensor",
+                    {
+                        "temperature": lambda x: f"multiSensor/sensors/[id={x}]/value",#"multiSenso/sensor/0/value",  # "temperature": lambda x: f"multiSensor/sensor/0/value",
+                        "wind": lambda x: f"multiSensor/sensors/[id={x}]/value",
+
+                    }
+                ]
+            ],
+            "binary_sensors":[
+                [
+                    "multiSensor",
+                    {
+                        "rain": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                    }
+                ]
+            ]
+
+        },
+        20200831: {
+            "api_path": "/state",
+            "extended_state_path": "/state/extended",
+            "sensors": [
+                [
+                    "multiSensor",
+                    {
+                        "temperature": lambda x: f"multiSensor/sensors/[id={x}]/value",#"multiSenso/sensor/0/value",  # "temperature": lambda x: f"multiSensor/sensor/0/value",
+                        "wind": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "rain": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                    }
+                ]
+            ],
+            "binary_sensors":[
+                [
+                    "multiSensor",
+                    {
+                        "rain": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                    }
                 ]
             ]
         },

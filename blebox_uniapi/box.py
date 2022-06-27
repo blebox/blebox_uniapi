@@ -12,7 +12,7 @@ from .button import Button
 from .climate import Climate
 from .cover import Cover
 from .light import Light
-from .sensor import Temperature
+from .sensor import Temperature, Sensor
 from .session import ApiHost
 from .switch import Switch
 
@@ -129,17 +129,20 @@ class Box:
     ) -> dict:
 
         features = {}
+        print("Create features.")
         for field, klass in {
             "air_qualities": AirQuality,
             "covers": Cover,
-            "sensors": Temperature,  # TODO: too narrow
+            "sensors": Sensor,  # TODO: too narrow
             "lights": Light,
             "climates": Climate,
             "switches": Switch,
             "buttons": Button,
         }.items():
             try:
+                print(config, field)
                 if box_type_config := config.get(field):
+                    print("KLASA:", klass)
                     features[field] = klass.many_from_config(
                         self,
                         box_type_config=box_type_config,
@@ -157,17 +160,19 @@ class Box:
         except HttpError:
             path = "/info"
             data = await api_host.async_api_get(path)
-
+        print("payload:\n",data)
         info = data.get("device", data)  # type: ignore
         extended_state = None
 
         config = cls._match_device_config(info)
+        print(config)
         if extended_state_path := config.get("extended_state_path"):
             try:
                 extended_state = await api_host.async_api_get(extended_state_path)
             except (HttpError, KeyError):
                 extended_state = None
 
+        print("async_from_host", info, extended_state)
         return cls(api_host, info, config, extended_state)
 
     @classmethod
@@ -184,6 +189,7 @@ class Box:
             device_type = "wLightBoxS"
         level = int(info.get("apiLevel", default_api_level))
         config_set = get_conf_set(device_type)
+        print("config_set",config_set)
         if not config_set:
             raise UnsupportedBoxResponse(f"{device_type} is not a supported type")
         config = get_conf(level, config_set)

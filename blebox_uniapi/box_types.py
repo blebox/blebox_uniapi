@@ -350,4 +350,21 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
             ],
         },
     },
+    "multiSensor": {
+        20210413: {
+            "api_path": "/state",
+            "extended_state_path": "/state/extended",
+            "sensors":[
+                [
+                "temperature",
+                {
+                    "temperature": lambda x: f"multiSenso/sensor/[{x}]/value",
+                }
+                ]
+            ]
+        },
+
+
+
+    }
 }

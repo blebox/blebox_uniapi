@@ -152,7 +152,7 @@ class Light(Feature):
             color_mode = None
             current_effect = None
             effect_list = None
-
+        print("lajt:\n",box_type_config[0])
         alias, methods = box_type_config[0]
         const_kwargs = dict(
             methods=methods,

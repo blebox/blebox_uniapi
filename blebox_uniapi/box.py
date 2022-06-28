@@ -57,7 +57,7 @@ class Box:
         address = f"{api_session.host}:{api_session.port}"
 
         location = f"Device at {address}"
-
+        print("BOX initialisation:", "\nas",api_session != None, "\ni",info,"\nc", config,"\nes", extended_state)
         # NOTE: get ID first for better error messages
         try:
             unique_id = info["id"]
@@ -130,20 +130,19 @@ class Box:
     ) -> dict:
 
         features = {}
-        print("Create features.")
+        print("Create features.", config)
         for field, klass in {
             "air_qualities": AirQuality,
             "covers": Cover,
-            "sensors": Sensor,  # TODO: too narrow
-            "binary_sensors": Sensor,
+            "sensors": Sensor,
+            "binary_sensors": BinarySensor,
             "lights": Light,
             "climates": Climate,
             "switches": Switch,
             "buttons": Button,
-            "binary_sensors": BinarySensor,
         }.items():
             try:
-                print(config, field)
+                print(field)
                 if box_type_config := config.get(field):
                     print("KLASA:", klass, box_type_config)
                     features[field] = klass.many_from_config(
@@ -168,10 +167,11 @@ class Box:
         extended_state = None
 
         config = cls._match_device_config(info)
-        print(config)
+        print("config", config, "\n")
         if extended_state_path := config.get("extended_state_path"):
             try:
                 extended_state = await api_host.async_api_get(extended_state_path)
+                print("async_from_host.Ext_state:", extended_state , "\n")
             except (HttpError, KeyError):
                 extended_state = None
 

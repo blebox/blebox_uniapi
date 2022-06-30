@@ -13,10 +13,7 @@ class BinarySensor(Feature):
         output_list = list()
         sensors_list = extended_state.get("multiSensor").get("sensors", {})
         alias, methods = box_type_config[0]
-        print("BrinarySensor.many_from_cfg:", alias, methods)
         for sensor in sensors_list:
-            print("DUPA JASIU:", sensor, "\n")
-
             if sensor.get("type") == "rain":
                 sensor_type = sensor.get("type")
                 sensor_id = sensor.get("id")

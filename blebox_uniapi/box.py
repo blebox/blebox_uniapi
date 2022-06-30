@@ -245,6 +245,7 @@ class Box:
         return self._model
 
     async def async_update_data(self) -> None:
+        print("box.async_update_data:", self._data_path, self.name)
         await self._async_api(True, "GET", self._data_path)
 
     def _update_last_data(self, new_data: Optional[dict]) -> None:
@@ -266,7 +267,6 @@ class Box:
         :param path:
         :return:
         """
-        print("follow:\n", data,"\n", path)
         if data is None:
             raise RuntimeError(f"bad argument: data {data}")  # pragma: no cover
 
@@ -275,7 +275,6 @@ class Box:
 
         for chunk in results:
             with_string_value = re.compile("^\\[(.*)='(.*)'\\]$")
-            print("with_string_value:", with_string_value, "\n chunk:", chunk)
             match = with_string_value.match(chunk)
             if match:
                 name = match.group(1)

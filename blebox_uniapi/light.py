@@ -575,7 +575,7 @@ class Light(Feature):
             if not isinstance(value, int):
                 value = int(value, 16)
         if not isinstance(value, type(self._off_value)):
-            raise BadOnValueError(
+            raise ValueError(
                 f"turn_on called with bad parameter ({value} is {type(value)}, compared to {self._off_value} which is "
                 f"{type(self._off_value)})"
             )

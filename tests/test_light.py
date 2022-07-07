@@ -603,7 +603,7 @@ class TestWLightBoxS(DefaultBoxTest):
         assert entity.is_on is False
 
         with pytest.raises(
-            BadOnValueError,
+            ValueError,
             match=r"adjust_brightness called with bad parameter \(00 is <class 'str'> instead of int\)",
         ):
             await entity.async_turn_on(brightness="00")
@@ -614,7 +614,7 @@ class TestWLightBoxS(DefaultBoxTest):
         assert entity.is_on is False
 
         with pytest.raises(
-            BadOnValueError,
+            ValueError,
             match=r"adjust_brightness called with bad parameter \(1234 is greater than 255\)",
         ):
             await entity.async_turn_on(brightness=1234)

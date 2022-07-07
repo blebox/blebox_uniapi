@@ -1,6 +1,10 @@
 =======
 History
 =======
+2.0.2 (2022-07-06)
+------------------
+* added :code:`query_string` property in :code:`Button` class
+* fixed test assertions after changes in error raised ValueError
 
 2.0.1 (2022-06-01)
 ------------------
@@ -11,7 +15,6 @@ History
   * normalise_elements_of_rgb
   * _set_last_on_value
   * async_on
-
 
 2.0.0 (2022-06-21)
 ------------------

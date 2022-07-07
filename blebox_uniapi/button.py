@@ -29,7 +29,7 @@ class Button(Feature):
     ) -> None:
         super().__init__(product, alias, methods)
         self._device_class = "UPDATE"
-        self.query_string: str = query_string
+        self._query_string: str = query_string
 
     @classmethod
     def many_from_config(cls, product, box_type_config, extended_state):
@@ -69,3 +69,7 @@ class Button(Feature):
             return ControlType.CLOSE
         else:
             return None
+
+    @property
+    def query_string(self) -> str:
+        return self._query_string

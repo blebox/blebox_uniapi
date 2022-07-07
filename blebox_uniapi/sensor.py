@@ -27,24 +27,28 @@ class Sensor(Feature):
         # utworzyc liste sensorów na podstawie extended state,
         # powinien implementodwać odpowiednią klasę dla danego typu urządenia,
         # modyfikować methods aby utrzymywać id obiektu(methods to path po drzewie do wartosci)
-        print("MFC_sensor:")
-        alias, methods = box_type_config[0]
-        sensor_list = extended_state.get("multiSensor", {}).get("sensors", {})
-        s_li = list()
-        try:
-            for sensor in sensor_list:
-                print("Sensor:",sensor,"\n")
-                sensor_type = sensor.get("type")
-                sensor_id = sensor.get("id")
+        if extended_state:
+            print("MFC_sensor:\n", extended_state, "\n", box_type_config, "\n")
+            alias, methods = box_type_config[0]
+            sensor_list = extended_state.get("multiSensor", {}).get("sensors", {})
+            s_li = list()
+            try:
+                for sensor in sensor_list:
+                    print("Sensor:",sensor,"\n")
+                    sensor_type = sensor.get("type")
+                    sensor_id = sensor.get("id")
 
-                if type_class_mapper.get(sensor_type):
-                    value_method = {sensor_type: methods[sensor_type](sensor_id)}
-                    s_li.append(type_class_mapper[sensor_type](product=product, alias=sensor_type + "_" + str(sensor_id), methods=value_method))
-                    print("s_type:", sensor_type, "s_id:", sensor_id, "s_v_method:", value_method)
-            return s_li
-        except Exception as ex:
-            print("Error YOU MF:", ex.args)
-            return []
+                    if type_class_mapper.get(sensor_type):
+                        value_method = {sensor_type: methods[sensor_type](sensor_id)}
+                        s_li.append(type_class_mapper[sensor_type](product=product, alias=sensor_type + "_" + str(sensor_id), methods=value_method))
+                        print("s_type:", sensor_type, "s_id:", sensor_id, "s_v_method:", value_method)
+                return s_li
+            except Exception as ex:
+                print("Error YOU MF:", ex.args)
+                return []
+        else:
+            alias, methods = box_type_config[0]
+            return [Temperature(product=product, alias=alias, methods=methods)]
 
 
 class Temperature(Sensor):
@@ -62,7 +66,7 @@ class Temperature(Sensor):
     # TODO: use as attribute in product config
     def _read_temperature(self, field: str) -> Union[float, int, None]:
         product = self._product
-        print("Temperature._read_temperature", product.last_data)
+        # print("Temperature._read_temperature", product.last_data)
         if product.last_data is not None:
             raw = self.raw_value(field)
             if raw is not None:  # no reading

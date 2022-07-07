@@ -52,7 +52,7 @@ async def test_dimmer_box_async_on_with_int(dimmer_box: Light, product: Mock, in
 
 
 async def test_dimmer_box_async_on_zero(dimmer_box: Light, product: Mock):
-    with pytest.raises(BadOnValueError):
+    with pytest.raises(ValueError):
         await dimmer_box.async_on(0)
 
 
@@ -104,14 +104,14 @@ def test_dimmer_box_normalise_elements_of_rgb(dimmer_box: Light, io_params):
     assert dimmer_box.normalise_elements_of_rgb(io_params[0]) == io_params[1]
 
 
-def test_dimmer_box_normalise_elements_of_rgb_(dimmer_box: Light):
-    with pytest.raises(BadOnValueError):
+def test_dimmer_box_normalise_elements_of_rgb(dimmer_box: Light):
+    with pytest.raises(ValueError):
         dimmer_box.normalise_elements_of_rgb([-10])
 
-    with pytest.raises(BadOnValueError):
+    with pytest.raises(ValueError):
         dimmer_box.normalise_elements_of_rgb([256])
 
-    with pytest.raises(BadOnValueError):
+    with pytest.raises(ValueError):
         dimmer_box.normalise_elements_of_rgb([-1, 0])
 
 
@@ -127,13 +127,13 @@ def test_dimmer_box_apply_brightness_zero(dimmer_box: Light):
 
 
 def test_dimmer_box_evaluate_brightness_from_rgb_out_of_range(dimmer_box: Light):
-    with pytest.raises(BadOnValueError):
+    with pytest.raises(ValueError):
         dimmer_box.evaluate_brightness_from_rgb([257, 135, 90])
 
-    with pytest.raises(BadOnValueError):
+    with pytest.raises(ValueError):
         dimmer_box.evaluate_brightness_from_rgb([145, 135, -1])
 
-    with pytest.raises(BadOnValueError):
+    with pytest.raises(ValueError):
         dimmer_box.evaluate_brightness_from_rgb([145, -10, 900])
 
 

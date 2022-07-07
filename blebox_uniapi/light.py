@@ -1,6 +1,5 @@
 from enum import IntEnum
 from .feature import Feature
-from .error import BadOnValueError
 from typing import TYPE_CHECKING, Optional, Dict, Any, Union, Sequence
 
 if TYPE_CHECKING:
@@ -256,11 +255,11 @@ class Light(Feature):
     def evaluate_brightness_from_rgb(iterable: Sequence[int]) -> int:
         "return brightness from 0 to 255 evaluated basing rgb"
         if max(iterable) > 255:
-            raise BadOnValueError(
+            raise ValueError(
                 f"evaluate_brightness_from_rgb values out of range, max is {max(iterable)}."
             )
         elif min(iterable) < 0:
-            raise BadOnValueError(
+            raise ValueError(
                 f"evaluate_brightness_from_rgb values out of range, min is {min(iterable)}."
             )
         return int(max(iterable))
@@ -268,12 +267,12 @@ class Light(Feature):
     def apply_brightness(self, value: int, brightness: int) -> Any:
         """Return list of values with applied brightness."""
         if not isinstance(brightness, int):
-            raise BadOnValueError(
+            raise ValueError(
                 f"adjust_brightness called with bad parameter ({brightness} is {type(brightness)} instead of int)"
             )
 
         if brightness > 255:
-            raise BadOnValueError(
+            raise ValueError(
                 f"adjust_brightness called with bad parameter ({brightness} is greater than 255)"
             )
 
@@ -399,11 +398,11 @@ class Light(Feature):
         max_val = max(elements)
         min_val = min(elements)
         if 0 > max_val or max_val > 255:
-            raise BadOnValueError(
+            raise ValueError(
                 f"Max value in normalisation was outside range {max_val}."
             )
         elif min_val < 0:
-            raise BadOnValueError(
+            raise ValueError(
                 f"Min value in normalisation was outside range {min_val}."
             )
         elif max_val == 0:
@@ -457,7 +456,7 @@ class Light(Feature):
                 raw = self._default_on_value
 
         if raw in (self._off_value, None):
-            raise BadOnValueError(raw)
+            raise ValueError(raw)
         # TODO: store as custom value permanently (exposed by API consumer)
         self._last_on_state = raw
 
@@ -575,13 +574,13 @@ class Light(Feature):
             if not isinstance(value, int):
                 value = int(value, 16)
         if not isinstance(value, type(self._off_value)):
-            raise BadOnValueError(
+            raise ValueError(
                 f"turn_on called with bad parameter ({value} is {type(value)}, compared to {self._off_value} which is "
                 f"{type(self._off_value)})"
             )
 
         if value == self._off_value:
-            raise BadOnValueError(f"turn_on called with invalid value ({value})")
+            raise ValueError(f"turn_on called with invalid value ({value})")
 
         if self.mask is not None:
             value = self.mask(value)

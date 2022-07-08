@@ -53,7 +53,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     "airSensor": {
         20180403: {
             "api_path": "/api/air/state",
-            "air_qualities": [
+            "sensors": [
                 [
                     "0.air",
                     {

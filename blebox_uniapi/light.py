@@ -151,7 +151,6 @@ class Light(Feature):
             color_mode = None
             current_effect = None
             effect_list = None
-        print("lajt:\n",box_type_config[0])
         alias, methods = box_type_config[0]
         const_kwargs = dict(
             methods=methods,
@@ -584,6 +583,7 @@ class Light(Feature):
 
         if self.mask is not None:
             value = self.mask(value)
+
         await self.async_api_command("set", value)
 
     async def async_off(self) -> None:

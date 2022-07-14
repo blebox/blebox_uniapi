@@ -6,7 +6,6 @@ import time
 
 from typing import Optional, Any, Dict
 
-from .air_quality import AirQuality
 from .box_types import default_api_level, get_conf, get_conf_set
 from .button import Button
 from .climate import Climate
@@ -57,7 +56,6 @@ class Box:
         address = f"{api_session.host}:{api_session.port}"
 
         location = f"Device at {address}"
-        print("BOX initialisation:", "\nas",api_session != None, "\ni",info,"\nc", config,"\nes", extended_state)
         # NOTE: get ID first for better error messages
         try:
             unique_id = info["id"]
@@ -132,7 +130,7 @@ class Box:
         features = {}
         print("Create features.", config)
         for field, klass in {
-            "air_qualities": AirQuality,
+            # "air_qualities": AirQuality,
             "covers": Cover,
             "sensors": Sensor,
             "binary_sensors": BinarySensor,
@@ -192,7 +190,7 @@ class Box:
             device_type = "wLightBoxS"
         level = int(info.get("apiLevel", default_api_level))
         config_set = get_conf_set(device_type)
-        print("config_set",config_set)
+
         if not config_set:
             raise UnsupportedBoxResponse(f"{device_type} is not a supported type")
         config = get_conf(level, config_set)

@@ -130,7 +130,6 @@ class Box:
         features = {}
         print("Create features.", config)
         for field, klass in {
-            # "air_qualities": AirQuality,
             "covers": Cover,
             "sensors": Sensor,
             "binary_sensors": BinarySensor,

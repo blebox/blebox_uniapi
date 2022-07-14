@@ -34,26 +34,23 @@ class Sensor(Feature):
         s_li = list()
         if extended_state:
             alias, methods = box_type_config[0]
-            sensor_list = extended_state.get("multiSensor", {}).get("sensors", {})
-            if len(sensor_list) > 0:
-                for sensor in sensor_list:
-                    sensor_type = sensor.get("type")
-                    sensor_id = sensor.get("id")
-                    if type_class_mapper.get(sensor_type):
-                        value_method = {sensor_type: methods[sensor_type](sensor_id)}
-                        s_li.append(type_class_mapper[sensor_type](product=product, alias=sensor_type + "_" + str(sensor_id), methods=value_method))
-                return s_li
-            else:
-                return []
+            sensor_list = extended_state.get("multiSensor", {}).get("sensors", [])
+            for sensor in sensor_list:
+                sensor_type = sensor.get("type")
+                sensor_id = sensor.get("id")
+                if type_class_mapper.get(sensor_type):
+                    value_method = {sensor_type: methods[sensor_type](sensor_id)}
+                    s_li.append(type_class_mapper[sensor_type](product=product, alias=sensor_type + "_" + str(sensor_id), methods=value_method))
+            return s_li
         else:
             alias, methods = box_type_config[0]
-            if "air" in alias:
+            if alias.endswith("air"):
                 method_li = [method for method in methods if "value" in method]
                 for method in method_li:
                     alias = method.split('.')[0]
                     s_li.append(AirQuality(product=product, alias=alias, methods=methods))
                 return s_li
-            if "temperature" in alias:
+            if alias.endswith("temperature"):
                 return [Temperature(product=product, alias=alias, methods=methods)]
             else:
                 return []

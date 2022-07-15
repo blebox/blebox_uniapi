@@ -189,7 +189,7 @@ class Box:
             device_type = "wLightBoxS"
         level = int(info.get("apiLevel", default_api_level))
         config_set = get_conf_set(device_type)
-
+        print(f"lvl:{level}")
         if not config_set:
             raise UnsupportedBoxResponse(f"{device_type} is not a supported type")
         config = get_conf(level, config_set)

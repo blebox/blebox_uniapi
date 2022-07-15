@@ -200,6 +200,15 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
         }
     },
     "switchBox": {
+        20220114: {
+            "api_path": "/api/relay/state",
+            "extended_state_path": "/extended/state",
+            "api": {
+                "on": lambda x=None: ("GET", f"/s/{x}/1", None),
+                "off": lambda x=None: ("GET", f"/s/{x}/0", None),
+            },
+            "switches": ["relay", {"state": lambda x: f"relays/[relay={x}]/state"}, "relay"]
+        },
         20180604: {
             "model": "switchBox",
             "api_path": "/api/relay/state",
@@ -223,13 +232,19 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     # switchBoxD
     "switchBoxD": {
         20190808: {
+            "extended_state_path": "/state/extended", # tylko dla testów do usunięcia nie w tym api
             "api_path": "/api/relay/state",
             "api": {
                 "on": lambda x: ("GET", f"/s/{int(x)}/1", None),
                 "off": lambda x=None: ("GET", f"/s/{int(x)}/0", None),
             },
             "switches": [
-                ["0.relay", {"state": "relays/[relay=0]/state"}, "relay", 0],
+                [
+                    "0.relay",
+                    {"state": "relays/[relay=0]/state"},
+                    "relay",
+                    0
+                ],
                 [
                     "1.relay",
                     {"state": "relays/[relay=1]/state"},

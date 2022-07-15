@@ -20,6 +20,26 @@ class Switch(Feature):
         self._device_class = dev_class
         self._unit_id = unit_id
 
+    @classmethod
+    def many_from_config(
+        cls, product, box_type_config, extended_state
+    ) -> list["Feature"]:
+        # note: by default single config entry yields single feature instance but certain feature
+        # domains (e.g. lights) may handle this differently depending on their `extended_state`
+        print("switch.box_type_config:", box_type_config, "\nswitch.extended_state:", extended_state, f"prodinfo:\nfv:{product.firmware_version}\nav:{product.api_version}")
+        relay_list = list()
+        if extended_state:
+            alias, methods, relay_type, *_ = box_type_config[0]
+            relays_in_ex = extended_state.get("relays", [])
+            for relay in relays_in_ex:
+                print("method:",methods,"\n",type(methods))
+                relay_id = relay.get("relay")
+                value_method = {relay_type: methods[relay_type](relay_id)}
+                relay_list.append(cls(product, alias+"_"+str(relay_id), value_method, relay_type, relay_id))
+            return relay_list
+        else:
+            return [cls(product, *args) for args in box_type_config]
+
     def after_update(self) -> None:
         self._is_on = self._read_is_on()
 

@@ -128,7 +128,6 @@ class Box:
     ) -> dict:
 
         features = {}
-        print("Create features.", config)
         for field, klass in {
             "covers": Cover,
             "sensors": Sensor,
@@ -159,20 +158,16 @@ class Box:
         except HttpError:
             path = "/info"
             data = await api_host.async_api_get(path)
-        print("payload:\n",data)
         info = data.get("device", data)  # type: ignore
         extended_state = None
 
         config = cls._match_device_config(info)
-        print("config", config, "\n")
         if extended_state_path := config.get("extended_state_path"):
             try:
                 extended_state = await api_host.async_api_get(extended_state_path)
-                print("async_from_host.Ext_state:", extended_state , "\n")
             except (HttpError, KeyError):
                 extended_state = None
 
-        print("async_from_host", info, extended_state)
         return cls(api_host, info, config, extended_state)
 
     @classmethod
@@ -189,7 +184,6 @@ class Box:
             device_type = "wLightBoxS"
         level = int(info.get("apiLevel", default_api_level))
         config_set = get_conf_set(device_type)
-        print(f"lvl:{level}")
         if not config_set:
             raise UnsupportedBoxResponse(f"{device_type} is not a supported type")
         config = get_conf(level, config_set)
@@ -242,7 +236,6 @@ class Box:
         return self._model
 
     async def async_update_data(self) -> None:
-        print("box.async_update_data:", self._data_path, self.name)
         await self._async_api(True, "GET", self._data_path)
 
     def _update_last_data(self, new_data: Optional[dict]) -> None:

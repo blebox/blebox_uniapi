@@ -32,7 +32,6 @@ class Sensor(Feature):
             "temperature": Temperature,
         }
         s_li = list()
-        print("box_type_config:",box_type_config, "\nextended_state:", extended_state)
         if extended_state:
             alias, methods = box_type_config[0]
             sensor_list = extended_state.get("multiSensor", {}).get("sensors", [])
@@ -40,7 +39,6 @@ class Sensor(Feature):
                 sensor_type = sensor.get("type")
                 sensor_id = sensor.get("id")
                 if type_class_mapper.get(sensor_type):
-                    # tutaj metoda która sprawdza czy któras z methods jest callable i zwraca z uzupełnionymi o ID. method resolver
                     value_method = {sensor_type: methods[sensor_type](sensor_id)}
                     s_li.append(type_class_mapper[sensor_type](product=product, alias=sensor_type + "_" + str(sensor_id), methods=value_method))
             return s_li
@@ -57,12 +55,6 @@ class Sensor(Feature):
             else:
                 return []
         # todo add  _read_state_value(self)
-
-    # def method_resolver(self, methods: dict) -> dict:
-    #     resolved_methods = dict()
-    #     for method in methods:
-    #         if
-
 
     def read_value(self, field: str) -> Union[float, int, None]:
         product = self._product

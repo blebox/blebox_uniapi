@@ -55,3 +55,18 @@ class Feature:
 
     async def async_api_command(self, *args: Any, **kwargs: Any) -> None:
         await self._product.async_api_command(*args, **kwargs)
+
+    @staticmethod
+    def access_method_path_resolver(methods: dict, id_val: str = None) -> dict:
+        '''Return dict with resolved lambda used as data path.'''
+        new = dict()
+        if not isinstance(methods, dict):
+            raise TypeError(f"Parameter methods should be dict, instead of {type(methods)}.")
+        if not isinstance(id_val, str):
+            return methods
+        for key, value in methods.items():
+            if callable(value):
+                new[key] = value(id_val)
+            else:
+                new[key] = value
+        return new

@@ -201,13 +201,13 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     },
     "switchBox": {
         20220114: {
-            "api_path": "/api/relay/state",
-            "extended_state_path": "/extended/state",
+            "api_path": "/state",
+            "extended_state_path": "/state/extended",
             "api": {
                 "on": lambda x=None: ("GET", f"/s/{x}/1", None),
                 "off": lambda x=None: ("GET", f"/s/{x}/0", None),
             },
-            "switches": ["relay", {"state": lambda x: f"relays/[relay={x}]/state"}, "relay"]
+            "switches": [["relay", {"state": lambda x: f"relays/[relay={x}]/state"}, "relay"]]
         },
         20180604: {
             "model": "switchBox",
@@ -217,7 +217,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 "on": lambda x=None: ("GET", "/s/1", None),
                 "off": lambda x=None: ("GET", "/s/0", None),
             },
-            "switches": [["0.relay", {"state": "[relay=0]/state"}, "relay"]],
+            "switches": [["0.relay",  {"state": "[relay=0]/state"}, "relay"]],
         },
         20190808: {
             "api_path": "/api/relay/state",
@@ -226,7 +226,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 "on": lambda x=None: ("GET", "/s/1", None),
                 "off": lambda x=None: ("GET", "/s/0", None),
             },
-            "switches": [["0.relay", {"state": "relays/[relay=0]/state"}, "relay"]],
+            "switches": [["0.relay", {"state": lambda x: f"relays/[relay={x}]/state"}, "relay"]],
         },
     },
     # switchBoxD
@@ -241,15 +241,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
             "switches": [
                 [
                     "0.relay",
-                    {"state": "relays/[relay=0]/state"},
+                    {"state": lambda x: f"relays/[relay={x}]/state"},
                     "relay",
                     0
-                ],
-                [
-                    "1.relay",
-                    {"state": "relays/[relay=1]/state"},
-                    "relay",
-                    1,
                 ],
             ],
         }

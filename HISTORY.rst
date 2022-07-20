@@ -1,6 +1,29 @@
 =======
 History
 =======
+2.0.2 (2022-07-06)
+------------------
+* added :code:`query_string` property in :code:`Button` class
+* fixed test assertions after changes in error raised ValueError
+
+2.0.1 (2022-06-01)
+------------------
+* used :code:`ValueError` type instead of :code:`BadOnValueError` in methods:
+
+  * evaluate_brightness_from_rgb
+  * apply_brightness
+  * normalise_elements_of_rgb
+  * _set_last_on_value
+  * async_on
+
+2.0.0 (2022-06-21)
+------------------
+
+* extended support for color modes in wLightBox devices
+* initial support for tvLiftBox device
+* major backward-incompatible architectural changes to enable dynamic configuration of devices
+* removed products.py module and replaced with factory method on Box class
+* general overhaul of public interfaces
 
 1.3.3 (2021-05-12)
 ------------------

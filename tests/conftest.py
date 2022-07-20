@@ -2,25 +2,23 @@
 
 import copy
 import json as _json
-import asyncio
 import re
 from datetime import date, timedelta
 
 import logging
 
-from asynctest import patch, CoroutineMock
-
+from unittest.mock import AsyncMock
 from deepmerge import Merger
 
 from unittest import mock
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientResponseError, ClientSession
 
 import pytest
 
 from blebox_uniapi.box_types import get_latest_conf
 from blebox_uniapi.session import ApiHost
-from blebox_uniapi.products import Products
+from blebox_uniapi.box import Box
 from blebox_uniapi.error import UnsupportedBoxVersion
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,8 +28,7 @@ retype = type(re.compile(""))
 
 @pytest.fixture
 def aioclient_mock():
-    with patch("aiohttp.ClientSession", spec_set=True, autospec=True) as mocked_session:
-        yield mocked_session.return_value
+    return AsyncMock(spec=ClientSession)
 
 
 def array_merge(config, path, base, nxt):
@@ -76,7 +73,7 @@ def jmerge(base, ext):
 def future_date(delta_days=300):
     """Generate future date string in 'YYYYMMDD' format."""
     future_date = date.today() + timedelta(days=delta_days)
-    return future_date.strftime('%Y%m%d')
+    return future_date.strftime("%Y%m%d")
 
 
 HTTP_MOCKS = {}
@@ -85,6 +82,7 @@ HTTP_MOCKS = {}
 def json_get_expect(mock, url, **kwargs):
     json = kwargs["json"]
 
+    # print("json_get_expect", mock, url, "\nend:json_get_expect")
     if mock not in HTTP_MOCKS:
         HTTP_MOCKS[mock] = {}
     HTTP_MOCKS[mock][url] = json
@@ -94,13 +92,13 @@ def json_get_expect(mock, url, **kwargs):
             self._key = key
 
         def __call__(self, url, **kwargs):
-            # TODO: check kwargs?
+            # print("HTTP_MOCK: ",HTTP_MOCKS)
             data = HTTP_MOCKS[self._key][url]
             response = _json.dumps(data).encode("utf-8")
             status = 200
             return AiohttpClientMockResponse("GET", url, status, response)
 
-    mock.get = CoroutineMock(side_effect=EffectWhenGet(mock))
+    mock.get = AsyncMock(side_effect=EffectWhenGet(mock))
 
 
 def json_post_expect(mock, url, **kwargs):
@@ -109,7 +107,7 @@ def json_post_expect(mock, url, **kwargs):
 
     # TODO: check
     # headers = kwargs.get("headers")
-
+    # print("json_post_expect", mock, url, json, "\nend:json_post_expect")
     if mock not in HTTP_MOCKS:
         HTTP_MOCKS[mock] = {}
     if url not in HTTP_MOCKS[mock]:
@@ -124,14 +122,15 @@ def json_post_expect(mock, url, **kwargs):
         def __call__(self, url, **kwargs):
             # TODO: timeout
             params = kwargs.get("data")
-
+            print("HTTP_MOCKS:\n", HTTP_MOCKS)
+            print(f"{kwargs=}")
             # TODO: better checking of params (content vs raw json)
             data = HTTP_MOCKS[self._key][url][params]
             response = _json.dumps(data).encode("utf-8")
             status = 200
             return AiohttpClientMockResponse("POST", url, status, response)
 
-    mock.post = CoroutineMock(side_effect=EffectWhenPost(mock))
+    mock.post = AsyncMock(side_effect=EffectWhenPost(mock))
 
 
 class DefaultBoxTest:
@@ -147,7 +146,7 @@ class DefaultBoxTest:
         port = 80
         timeout = 2
         api_host = ApiHost(host, port, timeout, session, None, self.LOGGER)
-        product = await Products.async_from_host(api_host)
+        product = await Box.async_from_host(api_host)
         return [
             self.ENTITY_CLASS(feature) for feature in product.features[self.DEVCLASS]
         ]
@@ -160,9 +159,17 @@ class DefaultBoxTest:
         json_get_expect(
             aioclient_mock, f"http://{self.IP}:80/api/device/state", json=data
         )
+        if hasattr(self, "DEVICE_EXTENDED_INFO"):
+            data = self.DEVICE_EXTENDED_INFO if info is None else info
+            json_get_expect(
+                aioclient_mock,
+                f"http://{self.IP}:80{self.DEVICE_EXTENDED_INFO_PATH}",
+                json=data,
+            )
 
     def allow_get_state(self, aioclient_mock, data):
         """Stub a HTTP GET request for the product-specific state."""
+        # print("allow_get_state", self.IP, self.DEV_INFO_PATH, data)
         json_get_expect(
             aioclient_mock, f"http://{self.IP}:80/{self.DEV_INFO_PATH}", json=data
         )
@@ -174,8 +181,7 @@ class DefaultBoxTest:
         )
 
     async def allow_post(self, code, aioclient_mock, api_path, post_data, response):
-        """Stub a HTTP GET request."""
-
+        """Stub a HTTP POST request."""
         json_post_expect(
             aioclient_mock,
             f"http://{self.IP}:80/{api_path[1:]}",
@@ -203,9 +209,8 @@ class DefaultBoxTest:
         await self.allow_get_info(aioclient_mock, self.DEVICE_INFO_FUTURE)
         entity = (await self.async_entities(aioclient_mock))[0]
 
-        assert (
-            entity._feature.product._config is
-            get_latest_conf(entity._feature.product.type)
+        assert entity._feature.product._config is get_latest_conf(
+            entity._feature.product.type
         )
 
     async def test_latest_version(self, aioclient_mock):
@@ -215,9 +220,8 @@ class DefaultBoxTest:
         await self.allow_get_info(aioclient_mock, self.DEVICE_INFO_LATEST)
         entity = (await self.async_entities(aioclient_mock))[0]
 
-        assert (
-            entity._feature.product._config is
-            get_latest_conf(entity._feature.product.type)
+        assert entity._feature.product._config is get_latest_conf(
+            entity._feature.product.type
         )
 
     async def test_unsupported_version(self, aioclient_mock):
@@ -278,20 +282,16 @@ class AiohttpClientMockResponse:
     def content_type(self):
         return self._headers.get("content-type")
 
-    @asyncio.coroutine
-    def read(self):
+    async def read(self):
         return self.response
 
-    @asyncio.coroutine
-    def text(self, encoding="utf-8"):
+    async def text(self, encoding="utf-8"):
         return self.response.decode(encoding)
 
-    @asyncio.coroutine
-    def json(self, encoding="utf-8"):
+    async def json(self, encoding="utf-8"):
         return _json.loads(self.response.decode(encoding))
 
-    @asyncio.coroutine
-    def release(self):
+    async def release(self):
         pass
 
     def raise_for_status(self):

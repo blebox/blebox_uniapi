@@ -160,6 +160,7 @@ async def test_properties(mock_session, data, config):
     assert "4.56" == box.hardware_version
     assert "BleBox" == box.brand
     assert 20180403 == box.api_version
+    assert "172.1.2.3:80" == box.address
 
 
 async def test_validations(mock_session, data, config):

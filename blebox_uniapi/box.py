@@ -6,6 +6,7 @@ import time
 
 from typing import Optional, Any, Dict
 
+from .air_quality import AirQuality
 from .box_types import default_api_level, get_conf, get_conf_set
 from .button import Button
 from .climate import Climate
@@ -56,6 +57,7 @@ class Box:
         address = f"{api_session.host}:{api_session.port}"
 
         location = f"Device at {address}"
+
         # NOTE: get ID first for better error messages
         try:
             unique_id = info["id"]
@@ -139,9 +141,7 @@ class Box:
             "buttons": Button,
         }.items():
             try:
-                print(field)
                 if box_type_config := config.get(field):
-                    print("KLASA:", klass, box_type_config)
                     features[field] = klass.many_from_config(
                         self,
                         box_type_config=box_type_config,
@@ -200,7 +200,7 @@ class Box:
         return self._name
 
     @property
-    def address(self):
+    def address(self) -> str:
         return self._address
 
     @property
@@ -270,6 +270,7 @@ class Box:
 
         for chunk in results:
             with_string_value = re.compile("^\\[(.*)='(.*)'\\]$")
+
             match = with_string_value.match(chunk)
             if match:
                 name = match.group(1)
@@ -279,7 +280,6 @@ class Box:
 
                 for item in current_tree:
                     if item[name] == value:
-                        print(current_tree)
                         current_tree = item
                         found = True
                         break

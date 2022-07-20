@@ -110,6 +110,7 @@ class Box:
         self._type = type
         self._unique_id = unique_id
         self._name = name
+        self._address = address
         self._firmware_version = firmware_version
         self._hardware_version = hardware_version
         self._api_version = level
@@ -197,6 +198,10 @@ class Box:
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def address(self) -> str:
+        return self._address
 
     @property
     def last_data(self) -> Optional[Dict[Any, Any]]:

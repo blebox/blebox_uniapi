@@ -397,13 +397,9 @@ class Light(Feature):
         max_val = max(elements)
         min_val = min(elements)
         if 0 > max_val or max_val > 255:
-            raise ValueError(
-                f"Max value in normalisation was outside range {max_val}."
-            )
+            raise ValueError(f"Max value in normalisation was outside range {max_val}.")
         elif min_val < 0:
-            raise ValueError(
-                f"Min value in normalisation was outside range {min_val}."
-            )
+            raise ValueError(f"Min value in normalisation was outside range {min_val}.")
         elif max_val == 0:
             return [255] * len(elements)
         return list(map(lambda x: round(x * 255 / max_val), elements))

@@ -58,10 +58,12 @@ class Feature:
 
     @staticmethod
     def access_method_path_resolver(methods: dict, id_val: str = None) -> dict:
-        '''Return dict with resolved lambda used as data path.'''
+        """Return dict with resolved lambda used as data path."""
         new = dict()
         if not isinstance(methods, dict):
-            raise TypeError(f"Parameter methods should be dict, instead of {type(methods)}.")
+            raise TypeError(
+                f"Parameter methods should be dict, instead of {type(methods)}."
+            )
         if not isinstance(id_val, str):
             return methods
         for key, value in methods.items():

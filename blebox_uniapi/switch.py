@@ -30,8 +30,18 @@ class Switch(Feature):
             relays_in_ex = extended_state.get("relays", [])
             for relay in relays_in_ex:
                 relay_id = relay.get("relay")
-                value_method = Feature.access_method_path_resolver(methods, str(relay_id))
-                relay_list.append(cls(product, alias+"_"+str(relay_id), value_method, relay_type, relay_id))
+                value_method = Feature.access_method_path_resolver(
+                    methods, str(relay_id)
+                )
+                relay_list.append(
+                    cls(
+                        product,
+                        alias + "_" + str(relay_id),
+                        value_method,
+                        relay_type,
+                        relay_id,
+                    )
+                )
             return relay_list
         else:
             return [cls(product, *args) for args in box_type_config]

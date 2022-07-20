@@ -26,7 +26,9 @@ class Sensor(Feature):
         return self._native_value
 
     @classmethod
-    def many_from_config(cls, product, box_type_config, extended_state) -> list["Sensor"]:
+    def many_from_config(
+        cls, product, box_type_config, extended_state
+    ) -> list["Sensor"]:
         type_class_mapper = {
             "airSensor": AirQuality,
             "temperature": Temperature,
@@ -40,15 +42,23 @@ class Sensor(Feature):
                 sensor_id = sensor.get("id")
                 if type_class_mapper.get(sensor_type):
                     value_method = {sensor_type: methods[sensor_type](sensor_id)}
-                    s_li.append(type_class_mapper[sensor_type](product=product, alias=sensor_type + "_" + str(sensor_id), methods=value_method))
+                    s_li.append(
+                        type_class_mapper[sensor_type](
+                            product=product,
+                            alias=sensor_type + "_" + str(sensor_id),
+                            methods=value_method,
+                        )
+                    )
             return s_li
         else:
             alias, methods = box_type_config[0]
             if alias.endswith("air"):
                 method_li = [method for method in methods if "value" in method]
                 for method in method_li:
-                    alias = method.split('.')[0]
-                    s_li.append(AirQuality(product=product, alias=alias, methods=methods))
+                    alias = method.split(".")[0]
+                    s_li.append(
+                        AirQuality(product=product, alias=alias, methods=methods)
+                    )
                 return s_li
             if alias.endswith("temperature"):
                 return [Temperature(product=product, alias=alias, methods=methods)]
@@ -114,4 +124,4 @@ class AirQuality(Sensor):
         return None
 
     def after_update(self) -> None:
-        self._native_value = self._pm_value(self.device_class+".value")
+        self._native_value = self._pm_value(self.device_class + ".value")

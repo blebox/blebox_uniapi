@@ -207,7 +207,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 "on": lambda x=None: ("GET", f"/s/{x}/1", None),
                 "off": lambda x=None: ("GET", f"/s/{x}/0", None),
             },
-            "switches": [["relay", {"state": lambda x: f"relays/[relay={x}]/state"}, "relay"]]
+            "switches": [
+                ["relay", {"state": lambda x: f"relays/[relay={x}]/state"}, "relay"]
+            ],
         },
         20180604: {
             "model": "switchBox",
@@ -217,7 +219,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 "on": lambda x=None: ("GET", "/s/1", None),
                 "off": lambda x=None: ("GET", "/s/0", None),
             },
-            "switches": [["0.relay",  {"state": "[relay=0]/state"}, "relay"]],
+            "switches": [["0.relay", {"state": "[relay=0]/state"}, "relay"]],
         },
         20190808: {
             "api_path": "/api/relay/state",
@@ -226,13 +228,15 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 "on": lambda x=None: ("GET", "/s/1", None),
                 "off": lambda x=None: ("GET", "/s/0", None),
             },
-            "switches": [["0.relay", {"state": lambda x: f"relays/[relay={x}]/state"}, "relay"]],
+            "switches": [
+                ["0.relay", {"state": lambda x: f"relays/[relay={x}]/state"}, "relay"]
+            ],
         },
     },
     # switchBoxD
     "switchBoxD": {
         20190808: {
-            "extended_state_path": "/state/extended", # tylko dla testów do usunięcia nie w tym api
+            "extended_state_path": "/state/extended",  # tylko dla testów do usunięcia nie w tym api
             "api_path": "/api/relay/state",
             "api": {
                 "on": lambda x: ("GET", f"/s/{int(x)}/1", None),
@@ -243,7 +247,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     "0.relay",
                     {"state": lambda x: f"relays/[relay={x}]/state"},
                     "relay",
-                    0
+                    0,
                 ],
             ],
         }
@@ -369,19 +373,17 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     {
                         "temperature": lambda x: f"multiSensor/sensors/[id={x}]/value",
                         "wind": lambda x: f"multiSensor/sensors/[id={x}]/value",
-
-                    }
+                    },
                 ]
             ],
-            "binary_sensors":[
+            "binary_sensors": [
                 [
                     "multiSensor",
                     {
                         "rain": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                    }
+                    },
                 ]
-            ]
-
+            ],
         },
         20200831: {
             "api_path": "/state",
@@ -390,22 +392,19 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "multiSensor",
                     {
-                        "temperature": lambda x: f"multiSensor/sensors/[id={x}]/value",#"multiSenso/sensor/0/value",  # "temperature": lambda x: f"multiSensor/sensor/0/value",
+                        "temperature": lambda x: f"multiSensor/sensors/[id={x}]/value",  # "multiSenso/sensor/0/value",  # "temperature": lambda x: f"multiSensor/sensor/0/value",
                         "wind": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                    }
+                    },
                 ]
             ],
-            "binary_sensors":[
+            "binary_sensors": [
                 [
                     "multiSensor",
                     {
                         "rain": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                    }
+                    },
                 ]
-            ]
+            ],
         },
-
-
-
-    }
+    },
 }

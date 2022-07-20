@@ -4,12 +4,13 @@ from .feature import Feature
 
 
 class BinarySensor(Feature):
-
     def __init__(self, product: "Box", alias: str, methods: dict):
         super().__init__(product, alias, methods)
 
     @classmethod
-    def many_from_config(cls, product, box_type_config, extended_state) -> list["Feature"]:
+    def many_from_config(
+        cls, product, box_type_config, extended_state
+    ) -> list["Feature"]:
         output_list = list()
         sensors_list = extended_state.get("multiSensor").get("sensors", {})
         alias, methods = box_type_config[0]
@@ -18,13 +19,20 @@ class BinarySensor(Feature):
                 sensor_type = sensor.get("type")
                 sensor_id = sensor.get("id")
                 value_method = {sensor_type: methods[sensor_type](sensor_id)}
-                output_list.append(Rain(product=product, alias=sensor_type + "_" + str(sensor_id), methods=value_method))
+                output_list.append(
+                    Rain(
+                        product=product,
+                        alias=sensor_type + "_" + str(sensor_id),
+                        methods=value_method,
+                    )
+                )
 
         return output_list
 
 
 class Rain(BinarySensor):
     _unit = None
+
     def __init__(self, product: "Box", alias: str, methods: dict):
         self._device_class = "moisture"
         super().__init__(product, alias, methods)

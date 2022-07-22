@@ -11,7 +11,7 @@ from .button import Button
 from .climate import Climate
 from .cover import Cover
 from .light import Light
-from .sensor import Sensor
+from .sensor import SensorFactory
 from .binary_sensor import BinarySensor
 from .session import ApiHost
 from .switch import Switch
@@ -132,7 +132,7 @@ class Box:
         features = {}
         for field, klass in {
             "covers": Cover,
-            "sensors": Sensor,
+            "sensors": SensorFactory,
             "binary_sensors": BinarySensor,
             "lights": Light,
             "climates": Climate,

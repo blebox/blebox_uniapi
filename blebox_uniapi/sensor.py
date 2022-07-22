@@ -5,7 +5,7 @@ if TYPE_CHECKING:
     from .box import Box
 
 
-class Sensor(Feature):
+class BaseSensor(Feature):
     _unit: str
     _device_class: str
     _native_value: Union[float, int, str]
@@ -25,47 +25,8 @@ class Sensor(Feature):
     def native_value(self):
         return self._native_value
 
-    @classmethod
-    def many_from_config(
-        cls, product, box_type_config, extended_state
-    ) -> list["Sensor"]:
-        type_class_mapper = {
-            "airSensor": AirQuality,
-            "temperature": Temperature,
-            # "wind": Wind,
-        }
-        s_li = list()
-        if extended_state:
-            alias, methods = box_type_config[0]
-            sensor_list = extended_state.get("multiSensor", {}).get("sensors", [])
-            for sensor in sensor_list:
-                sensor_type = sensor.get("type")
-                sensor_id = sensor.get("id")
-                if type_class_mapper.get(sensor_type):
-                    value_method = {sensor_type: methods[sensor_type](sensor_id)}
-                    s_li.append(
-                        type_class_mapper[sensor_type](
-                            product=product,
-                            alias=sensor_type + "_" + str(sensor_id),
-                            methods=value_method,
-                        )
-                    )
-            return s_li
-        else:
-            alias, methods = box_type_config[0]
-            if alias.endswith("air"):
-                method_li = [method for method in methods if "value" in method]
-                for method in method_li:
-                    alias = method.split(".")[0]
-                    s_li.append(
-                        AirQuality(product=product, alias=alias, methods=methods)
-                    )
-                return s_li
-            if alias.endswith("temperature"):
-                return [Temperature(product=product, alias=alias, methods=methods)]
-            else:
-                return []
-        # todo add  _read_state_value(self)
+    def many_from_config(cls, product, box_type_config, extended_state):
+        raise NotImplementedError("Please use SensorFactory")
 
     def read_value(self, field: str) -> Union[float, int, None]:
         product = self._product
@@ -73,14 +34,15 @@ class Sensor(Feature):
             raw = self.raw_value(field)
             if raw is not None:
                 alias = self._alias
+                # 12500, -5500 is a representation of temperature range possible to be received from device
                 return round(product.expect_int(alias, raw, 12500, -5500) / 100.0, 1)
         return None
 
     def after_update(self) -> None:
-        self._native_value = self.read_value(self._device_class + ".value")
+        self._native_value = self.read_value(f"{self._device_class}.value")
 
 
-class Temperature(Sensor):
+class Temperature(BaseSensor):
     _current: Union[float, int, None]
 
     def __init__(self, product: "Box", alias: str, methods: dict):
@@ -99,6 +61,7 @@ class Temperature(Sensor):
             raw = self.raw_value(field)
             if raw is not None:
                 alias = self._alias
+                # 12500, -5500 is a representation of temperature range in millidegree Celsius
                 return round(product.expect_int(alias, raw, 12500, -5500) / 100.0, 1)
         return None
 
@@ -107,7 +70,7 @@ class Temperature(Sensor):
         self._native_value = self._read_temperature("temperature")
 
 
-class AirQuality(Sensor):
+class AirQuality(BaseSensor):
     _pm: Optional[int]
 
     def __init__(self, product: "Box", alias: str, methods: dict):
@@ -125,15 +88,42 @@ class AirQuality(Sensor):
         return None
 
     def after_update(self) -> None:
-        self._native_value = self._pm_value(self.device_class + ".value")
+        self._native_value = self._pm_value(f"{self.device_class}.value")
 
 
-class Wind(Sensor):
-    def __init__(self, product: "Box", alias: str, methods: dict):
-        self._unit = "m/s"
-        self._device_class = "wind"
-        super().__init__(product, alias, methods)
-
-    def after_update(self) -> None:
-        self._current = self.raw_value("wind")
-
+class SensorFactory:
+    @classmethod
+    def many_from_config(
+        cls, product, box_type_config, extended_state
+    ) -> list["BaseSensor"]:
+        type_class_mapper = {
+            "airSensor": AirQuality,
+            "temperature": Temperature,
+        }
+        if extended_state:
+            object_list = list()
+            alias, methods = box_type_config[0]
+            sensor_list = extended_state.get("multiSensor", {}).get("sensors", [])
+            for sensor in sensor_list:
+                sensor_type = sensor.get("type")
+                sensor_id = sensor.get("id")
+                if type_class_mapper.get(sensor_type):
+                    value_method = {sensor_type: methods[sensor_type](sensor_id)}
+                    object_list.append(
+                        type_class_mapper[sensor_type](
+                            product=product,
+                            alias=f"{sensor_type}_{str(sensor_id)}",
+                            methods=value_method,
+                        )
+                    )
+            return object_list
+        else:
+            alias, methods = box_type_config[0]
+            if alias.endswith("air"):
+                method_list = [method for method in methods if "value" in method]
+                return [AirQuality(product=product, alias=method.split(".")[0], methods=methods) for method in
+                        method_list]
+            if alias.endswith("temperature"):
+                return [Temperature(product=product, alias=alias, methods=methods)]
+            else:
+                return []

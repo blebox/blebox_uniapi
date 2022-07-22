@@ -1,5 +1,5 @@
 from .feature import Feature
-from typing import TYPE_CHECKING, Optional, Any
+from typing import TYPE_CHECKING, Optional, Any, Union
 
 if TYPE_CHECKING:
     from .box import Box
@@ -16,32 +16,56 @@ class Switch(Feature):
         dev_class: str,
         unit_id: Optional[str] = None,
     ):
+        methods = self.resolve_access_method_paths(
+            methods, str(unit_id)
+        )
         super().__init__(product, alias, methods)
         self._device_class = dev_class
         self._unit_id = unit_id
 
+    @staticmethod
+    def resolve_access_method_paths(methods: dict[str, Union[str, callable]], id_val: str = None) -> dict[str, str]:
+        """Return dict with resolved callable used as data path."""
+        new = dict()
+        if not isinstance(methods, dict):
+            raise TypeError(
+                f"Parameter methods should be dict, instead of {type(methods)}."
+            )
+        for key, value in methods.items():
+            if callable(value):
+                new[key] = value(id_val)
+            else:
+                new[key] = value
+        return new
+
     @classmethod
     def many_from_config(
         cls, product, box_type_config, extended_state
-    ) -> list["Feature"]:
-        relay_list = list()
+    ) -> list["Switch"]:
+        '''
+        :param product: Object hosting device with specific feature.
+        :param box_type_config: Default configuration providing following data
+        [
+            [feature_alias, {method_name: method_path_or_method_path_callable}, relay_type, unit_id]
+        ]
+        :param extended_state: Object hosting extended state recieved from device
+        :return: List of class objects instances
+        '''
         if extended_state:
-            alias, methods, relay_type, *_ = box_type_config[0]
-            relays_in_ex = extended_state.get("relays", [])
-            for relay in relays_in_ex:
+            relay_list = list()
+            alias, methods, relay_type, *rest = box_type_config[0]
+            for relay in extended_state.get("relays", []):
                 relay_id = relay.get("relay")
-                value_method = Feature.access_method_path_resolver(
-                    methods, str(relay_id)
-                )
                 relay_list.append(
                     cls(
                         product,
                         alias + "_" + str(relay_id),
-                        value_method,
+                        methods,
                         relay_type,
                         relay_id,
                     )
                 )
+
             return relay_list
         else:
             return [cls(product, *args) for args in box_type_config]

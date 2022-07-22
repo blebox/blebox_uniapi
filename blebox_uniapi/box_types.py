@@ -392,7 +392,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "multiSensor",
                     {
-                        "temperature": lambda x: f"multiSensor/sensors/[id={x}]/value",  # "multiSenso/sensor/0/value",  # "temperature": lambda x: f"multiSensor/sensor/0/value",
+                        "temperature": lambda x: f"multiSensor/sensors/[id={x}]/value",
                         "wind": lambda x: f"multiSensor/sensors/[id={x}]/value",
                     },
                 ]

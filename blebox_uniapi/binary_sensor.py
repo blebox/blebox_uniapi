@@ -47,7 +47,6 @@ class Rain(BinarySensor):
 
     def _read_rain(self, field: str) -> Union[float, int, None]:
         product = self._product
-        print("_read_rain:", product.last_data)
         if product.last_data is not None:
             raw = self.raw_value(field)
             if raw is not None:  # no reading

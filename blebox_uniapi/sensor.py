@@ -32,6 +32,7 @@ class Sensor(Feature):
         type_class_mapper = {
             "airSensor": AirQuality,
             "temperature": Temperature,
+            # "wind": Wind,
         }
         s_li = list()
         if extended_state:
@@ -125,3 +126,14 @@ class AirQuality(Sensor):
 
     def after_update(self) -> None:
         self._native_value = self._pm_value(self.device_class + ".value")
+
+
+class Wind(Sensor):
+    def __init__(self, product: "Box", alias: str, methods: dict):
+        self._unit = "m/s"
+        self._device_class = "wind"
+        super().__init__(product, alias, methods)
+
+    def after_update(self) -> None:
+        self._current = self.raw_value("wind")
+

@@ -6,7 +6,6 @@ import time
 
 from typing import Optional, Any, Dict
 
-from .air_quality import AirQuality
 from .box_types import default_api_level, get_conf, get_conf_set
 from .button import Button
 from .climate import Climate

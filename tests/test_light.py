@@ -155,7 +155,6 @@ class BleBoxLightEntity(CommonEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
-        print("async_turn_on:", kwargs)
         rgbw = kwargs.get(ATTR_RGBW_COLOR)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         effect = kwargs.get(ATTR_EFFECT)
@@ -535,8 +534,6 @@ class TestWLightBoxS(DefaultBoxTest):
 
         assert entity.name == "My wLightBoxS (wLightBoxS#brightness_mono1)"
         assert entity.unique_id == "BleBox-wLightBoxS-1afe34e750b8-brightness_mono1"
-        print(entity.color_mode)
-        # assert entity.color_mode & SUPPORT_BRIGHTNESS this assertion needs to be refactored, after extended state will be mockable
         assert entity.brightness is None
 
         assert entity.is_on is None
@@ -563,13 +560,11 @@ class TestWLightBoxS(DefaultBoxTest):
         """Test light updating."""
 
         entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
-        print("TU:", entity.color_mode)
         assert entity.brightness == 0xAB
         assert entity.is_on is True
 
     async def allow_set_brightness(self, code, aioclient_mock, value, response):
         """Set up mock for HTTP POST simulating color change."""
-        print("allow_set_brightness", response)
         raw = "{:02x}".format(value)
         await self.allow_post(
             code,
@@ -584,7 +579,6 @@ class TestWLightBoxS(DefaultBoxTest):
     async def test_on(self, aioclient_mock):
         """Test light on."""
         entity = await self.updated(aioclient_mock, self.STATE_OFF)
-        print("Ent: ", entity)
         assert entity.is_on is False
 
         async def turn_on():
@@ -886,7 +880,6 @@ class TestWLightBox(DefaultBoxTest):
 
     async def allow_set_color(self, code, aioclient_mock, value, response):
         """Set up mock for HTTP POST simulating color change."""
-        print("allow_set_color", response)
         await self.allow_post(
             code,
             aioclient_mock,
@@ -971,8 +964,6 @@ class TestWLightBox(DefaultBoxTest):
         assert "_cct2" in entity.name
         assert entity.brightness
 
-    async def test_many_from_config_check_empty(self, aioclient_mock):
-        pass
 
     async def test_effect_list_return_list(self, aioclient_mock):
         self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_5
@@ -1015,7 +1006,6 @@ class TestWLightBox(DefaultBoxTest):
         )
 
         await self.allow_get_info(aioclient_mock)
-        print("INTEST:\n", self.DEVICE_EXTENDED_INFO, "\nEntity:\n")
         entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
 
         async def turn_on():
@@ -1040,7 +1030,6 @@ class TestWLightBox(DefaultBoxTest):
         )
 
         await self.allow_get_info(aioclient_mock)
-        print("INTEST:\n", self.DEVICE_EXTENDED_INFO, "\nEntity:\n")
         entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
 
         async def turn_on():
@@ -1090,8 +1079,6 @@ class TestWLightBox(DefaultBoxTest):
         self.STATE_DEFAULT["colorMode"] = 5
         entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
 
-        print("INTEST:\n", entity.name, "\nEntity:\n")
-
         async def turn_on():
             await entity.async_turn_on()
 
@@ -1107,8 +1094,6 @@ class TestWLightBox(DefaultBoxTest):
         await self.allow_get_info(aioclient_mock)
         self.STATE_DEFAULT["colorMode"] = 5
         entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
-
-        print("INTEST:\n", entity.name, "\nEntity:\n")
 
         async def turn_on():
             await entity.async_turn_on(color_temp=1)

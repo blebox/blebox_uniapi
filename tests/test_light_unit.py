@@ -2,7 +2,6 @@ from unittest.mock import Mock
 from blebox_uniapi.box_types import BOX_TYPE_CONF
 import pytest
 
-from blebox_uniapi.error import BadOnValueError
 from blebox_uniapi.light import Light
 from blebox_uniapi.box import Box
 

@@ -249,6 +249,13 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     "relay",
                     0,
                 ],
+                [
+                    "1.relay",
+                    {"state": lambda x: f"relays/[relay={x}]/state"},
+                    "relay",
+                    1,
+                ]
+
             ],
         }
     },

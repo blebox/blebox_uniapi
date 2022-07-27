@@ -28,19 +28,6 @@ class BaseSensor(Feature):
     def many_from_config(cls, product, box_type_config, extended_state):
         raise NotImplementedError("Please use SensorFactory")
 
-    def read_value(self, field: str) -> Union[float, int, None]:
-        product = self._product
-        if product.last_data is not None:
-            raw = self.raw_value(field)
-            if raw is not None:
-                alias = self._alias
-                # 12500, -5500 is a representation of temperature range possible to be received from device
-                return round(product.expect_int(alias, raw, 12500, -5500) / 100.0, 1)
-        return None
-
-    def after_update(self) -> None:
-        self._native_value = self.read_value(f"{self._device_class}.value")
-
 
 class Temperature(BaseSensor):
     _current: Union[float, int, None]

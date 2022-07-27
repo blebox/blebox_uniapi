@@ -14,7 +14,7 @@ class Switch(Feature):
         alias: str,
         methods: dict,
         dev_class: str,
-        unit_id: Optional[str] = 0,
+        unit_id: Union[str, int, None] = 0,
     ):
         methods = self.resolve_access_method_paths(
             methods, str(unit_id)

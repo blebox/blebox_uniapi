@@ -1,6 +1,13 @@
 =======
 History
 =======
+2.1.0 (2022-08-05)
+------------------
+* added support for multiSensor API:
+   * :code:`airQuality` moved to sensor module
+   * new binary_sensor module, introducing :code:`Rain` class
+
+
 2.0.2 (2022-07-06)
 ------------------
 * added :code:`query_string` property in :code:`Button` class

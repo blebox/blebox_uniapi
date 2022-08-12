@@ -70,7 +70,7 @@ class Climate(Temperature):
             args = [alias, methods]
             mode = extended_state.get("thermo", {}).get("mode", 1)
             return [cls(product, *args, mode)]
-        return [cls(product, *args) for args in box_type_config]
+        return [cls(product, *args, 1) for args in box_type_config]
 
     async def async_on(self) -> None:
         await self.async_api_command("on")

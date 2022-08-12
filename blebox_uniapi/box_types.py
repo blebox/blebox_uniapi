@@ -150,6 +150,33 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
         }
     },
     # saunaBox
+    "thermoBox": {
+        20200229: {
+            "api_path": "/state/extended",
+            "extended_state_path": "/state/extended",
+            "api": {
+                "on": lambda x=None: ("GET", "/s/1", None),
+                "off": lambda x=None: ("GET", "/s/0", None),
+                "set": lambda x=None: ("GET", "/s/t/" + str(x), None),
+            },
+            "climates": [
+                [
+                    "thermostat",
+                    {
+                        "desired": "thermo/desiredTemp",
+                        "minimum": "thermo/minimumTemp",
+                        "maximum": "thermo/maximumTemp",
+                        "temperature": lambda x: f"sensors/[id={x}]/value",
+                        "state": "thermo/state",
+                        "mode": "thermo/mode",
+                        "safetySensorId": "thermo/safetyTempSensor/sensorId",
+                        "operatingState": "thermo/operatingState"
+                    }
+                ]
+            ]
+        }
+
+    },
     "saunaBox": {
         20180604: {
             # TODO: read extended state only once on startup

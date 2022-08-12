@@ -23,20 +23,7 @@ class Switch(Feature):
         self._device_class = dev_class
         self._unit_id = unit_id
 
-    @staticmethod
-    def resolve_access_method_paths(methods: dict[str, Union[str, callable]], id_val: str = None) -> dict[str, str]:
-        """Return dict with resolved callable used as data path."""
-        new = dict()
-        if not isinstance(methods, dict):
-            raise TypeError(
-                f"Parameter methods should be dict, instead of {type(methods)}."
-            )
-        for key, value in methods.items():
-            if callable(value):
-                new[key] = value(id_val)
-            else:
-                new[key] = value
-        return new
+
 
     @classmethod
     def many_from_config(

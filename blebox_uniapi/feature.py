@@ -1,5 +1,5 @@
 from .error import DeviceStateNotAvailable
-from typing import Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
     from .box import Box
@@ -56,3 +56,17 @@ class Feature:
     async def async_api_command(self, *args: Any, **kwargs: Any) -> None:
         await self._product.async_api_command(*args, **kwargs)
 
+    @staticmethod
+    def resolve_access_method_paths(methods: dict[str, Union[str, callable]], id_val: str = None) -> dict[str, str]:
+        """Return dict with resolved callable used as data path."""
+        new = dict()
+        if not isinstance(methods, dict):
+            raise TypeError(
+                f"Parameter methods should be dict, instead of {type(methods)}."
+            )
+        for key, value in methods.items():
+            if callable(value):
+                new[key] = value(id_val)
+            else:
+                new[key] = value
+        return new

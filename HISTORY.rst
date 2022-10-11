@@ -1,6 +1,14 @@
 =======
 History
 =======
+2.1.1 (2022-10-11)
+------------------
+* added support for thermoBox devices:
+   * added thermoBox config to :code:`BOX_TYPE_CONFIG`
+   * :code:`Climate` uses factory method implementation
+   * added test coverage
+
+
 2.1.0 (2022-08-05)
 ------------------
 * added support for multiSensor API:

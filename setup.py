@@ -23,7 +23,7 @@ test_requirements = [
 ]
 
 setup(
-    version="2.1.0",
+    version="2.1.1",
     author="BleBox",
     author_email="opensource@blebox.eu",
     python_requires=">=3.9",

@@ -5,8 +5,9 @@ from typing import TYPE_CHECKING, Optional, Dict, Any, Union, Sequence
 if TYPE_CHECKING:
     from .box import Box
 
-
-ctx2 = {"cct1": lambda x: f"{x}------", "cct2": lambda x: f"----{x}--"}
+# V3 onwards used while device is operating on 5 channels, refactor if new versions occurs
+ctx2_v3 = {"cct1": lambda x: f"{x}------", "cct2": lambda x: f"----{x}--"}
+ctx2 = {"cct1": lambda x: f"{x}----", "cct2": lambda x: f"----{x}"}
 
 mono = {
     "mono1": lambda x: f"{x}------",
@@ -195,11 +196,16 @@ class Light(Feature):
 
             if BleboxColorMode(color_mode).name == "CT":
                 mask = ctx2["cct1"]
+                if len(desired_color) > 8:
+                    mask = ctx2_v3["cct1"]
                 return [cls(product, alias=alias + "_cct", mask=mask, **const_kwargs)]
 
             if BleboxColorMode(color_mode).name == "CTx2":
                 object_list = []
-                for indicator, mask in ctx2.items():
+                ct = ctx2
+                if len(desired_color) > 8:
+                    ct = ctx2_v3
+                for indicator, mask in ct.items():
                     object_list.append(
                         cls(
                             product,

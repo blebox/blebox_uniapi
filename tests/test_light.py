@@ -1083,7 +1083,7 @@ class TestWLightBox(DefaultBoxTest):
             await entity.async_turn_on()
 
         self.STATE_ON = jmerge(self.STATE_ON, self.patch_state("ffffffff", "ffffffff"))
-        await self.allow_set_color(turn_on, aioclient_mock, "ffff------", self.STATE_ON)
+        await self.allow_set_color(turn_on, aioclient_mock, "ffff----", self.STATE_ON)
 
         assert entity.color_temp == 128
 
@@ -1100,7 +1100,7 @@ class TestWLightBox(DefaultBoxTest):
 
         self.STATE_ON = jmerge(self.STATE_ON, self.patch_state("02ffffff", "02ffffff"))
 
-        await self.allow_set_color(turn_on, aioclient_mock, "02fa------", self.STATE_ON)
+        await self.allow_set_color(turn_on, aioclient_mock, "02fa----", self.STATE_ON)
 
         assert entity.color_temp == 1
 
@@ -1117,7 +1117,7 @@ class TestWLightBox(DefaultBoxTest):
 
         self.STATE_ON = jmerge(self.STATE_ON, self.patch_state("fa00ffff", "fa02ffff"))
 
-        await self.allow_set_color(turn_on, aioclient_mock, "fa00------", self.STATE_ON)
+        await self.allow_set_color(turn_on, aioclient_mock, "fa00----", self.STATE_ON)
 
         assert entity.color_temp == 255
 
@@ -1134,7 +1134,7 @@ class TestWLightBox(DefaultBoxTest):
 
         self.STATE_ON = jmerge(self.STATE_ON, self.patch_state("fa00ffff", "fa02ffff"))
 
-        await self.allow_set_color(turn_on, aioclient_mock, "fa00------", self.STATE_ON)
+        await self.allow_set_color(turn_on, aioclient_mock, "fa00----", self.STATE_ON)
 
         assert entity.color_temp == 255
 

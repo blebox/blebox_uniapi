@@ -1,6 +1,11 @@
 =======
 History
 =======
+2.1.2 (2022-10-17)
+------------------
+
+* fixed CCT, CCTx2 modes for wLightBox v1 & v2
+
 2.1.1 (2022-10-11)
 ------------------
 * added support for thermoBox devices:

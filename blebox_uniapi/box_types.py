@@ -149,11 +149,10 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
             ],
         }
     },
-    # saunaBox
     "thermoBox": {
         20200229: {
-            "api_path": "/state/extended",
-            "extended_state_path": "/state/extended",
+            "api_path": "/api/thermo/state",
+            "extended_state_path": "/api/thermo/extended/state",
             "api": {
                 "on": lambda x=None: ("GET", "/s/1", None),
                 "off": lambda x=None: ("GET", "/s/0", None),
@@ -170,17 +169,16 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                         "state": "thermo/state",
                         "mode": "thermo/mode",
                         "safetySensorId": "thermo/safetyTempSensor/sensorId",
-                        "operatingState": "thermo/operatingState"
-                    }
+                        "operatingState": "thermo/operatingState",
+                    },
                 ]
-            ]
+            ],
         }
-
     },
     "saunaBox": {
         20180604: {
             # TODO: read extended state only once on startup
-            "api_path": "/api/heat/extended/state",
+            "api_path": "/api/heat/state",
             "extended_state_path": "/api/heat/extended/state",
             # TODO: use an api map (map to semver)? Or constraints?
             "api": {

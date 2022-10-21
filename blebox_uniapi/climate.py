@@ -87,7 +87,7 @@ class Climate(Temperature):
             raw = self.raw_value("state")
             if raw is not None:  # no reading
                 alias = self._alias
-                return 1 == product.expect_int(alias, raw, 1, 0)
+                return product.expect_int(alias, raw, 3, 0) in (1, 3)  # 1: On, 3: Boost(thermoBox max temp of mode)
         return None
 
     def _read_operating_state(self) -> Optional[int]:
@@ -144,7 +144,7 @@ class Climate(Temperature):
         self._max_temp = self._read_temperature("maximum")
 
     @staticmethod
-    def get_temp_sensor_id(safety_sensor_id: int, sensor_list):
+    def get_temp_sensor_id(safety_sensor_id: int, sensor_list) -> Optional[int]:
         """Return ID of first sensor which is not safety sensor."""
         li_sensor_id = list()
         for sensor in sensor_list:

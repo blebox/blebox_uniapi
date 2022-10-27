@@ -82,7 +82,7 @@ class Humidity(BaseSensor):
     def __init__(self, product: "Box", alias: str, methods: dict):
         super().__init__(product, alias, methods)
         self._unit = "percentage"
-        self._device_class = alias
+        self._device_class = "humidity"
 
     def _read_humidity(self, field: str) -> Optional[int]:
         product = self._product
@@ -90,11 +90,11 @@ class Humidity(BaseSensor):
             raw = self.raw_value(field)
             if raw is not None:
                 alias = self._alias
-                return product.expect_int(alias, raw, 10000, 0)
+                return round(product.expect_int(alias, raw, 10000, 0) / 100.0, 1)
         return None
 
     def after_update(self) -> None:
-        self._native_value = self._pm_value(f"{self.device_class}.value")
+        self._native_value = self._read_humidity(f"{self.device_class}")
 
 
 class SensorFactory:

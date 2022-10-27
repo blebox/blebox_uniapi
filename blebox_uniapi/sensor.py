@@ -78,6 +78,25 @@ class AirQuality(BaseSensor):
         self._native_value = self._pm_value(f"{self.device_class}.value")
 
 
+class Humidity(BaseSensor):
+    def __init__(self, product: "Box", alias: str, methods: dict):
+        super().__init__(product, alias, methods)
+        self._unit = "percentage"
+        self._device_class = alias
+
+    def _read_humidity(self, field: str) -> Optional[int]:
+        product = self._product
+        if product.last_data is not None:
+            raw = self.raw_value(field)
+            if raw is not None:
+                alias = self._alias
+                return product.expect_int(alias, raw, 10000, 0)
+        return None
+
+    def after_update(self) -> None:
+        self._native_value = self._pm_value(f"{self.device_class}.value")
+
+
 class SensorFactory:
     @classmethod
     def many_from_config(
@@ -86,6 +105,7 @@ class SensorFactory:
         type_class_mapper = {
             "airSensor": AirQuality,
             "temperature": Temperature,
+            "humidity": Humidity,
         }
         if extended_state:
             object_list = list()

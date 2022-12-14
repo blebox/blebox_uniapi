@@ -245,7 +245,7 @@ class TestDimmer(DefaultBoxTest):
     DEVICE_INFO_LATEST = jmerge(
         DEVICE_INFO, patch_version(get_latest_api_level("dimmerBox"))
     )
-    DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20170828))
+    DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20140828)) # fake version, default_api_level implemented
 
     DEVICE_INFO_UNSPECIFIED_API = json.loads(
         """
@@ -390,6 +390,11 @@ class TestDimmer(DefaultBoxTest):
         assert entity.is_on is False
         assert entity.brightness == 0
 
+    async def test_unspecified_version(self, aioclient_mock):
+        """
+        As default_api_level implemented for this class of devices, test method shall be omitted.
+        """
+        pass
 
 class TestWLightBoxS(DefaultBoxTest):
     """Tests for BleBox wLightBoxS."""

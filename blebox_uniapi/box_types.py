@@ -70,6 +70,17 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     },
     # dimmerBox
     "dimmerBox": {
+        default_api_level: {
+            "api_path": "/api/dimmer/state",
+            "api": {
+                "set": lambda x: (
+                    "POST",
+                    "/api/dimmer/set",
+                    '{"dimmer":{"desiredBrightness": ' + str(x) + "}}",
+                ),
+            },
+            "lights": [["brightness", {"desired": "dimmer/desiredBrightness"}]],
+        },
         20170829: {
             "api_path": "/api/dimmer/state",
             "api": {
@@ -170,12 +181,11 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                         "state": "thermo/state",
                         "mode": "thermo/mode",
                         "safetySensorId": "thermo/safetyTempSensor/sensorId",
-                        "operatingState": "thermo/operatingState"
-                    }
+                        "operatingState": "thermo/operatingState",
+                    },
                 ]
-            ]
+            ],
         }
-
     },
     "saunaBox": {
         20180604: {
@@ -281,8 +291,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     {"state": lambda x: f"relays/[relay={x}]/state"},
                     "relay",
                     1,
-                ]
-
+                ],
             ],
         }
     },

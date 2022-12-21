@@ -221,6 +221,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 "close": lambda x=None: ("GET", "/s/d", None),
                 "position": lambda x: ("GET", "/s/p/" + str(x), None),
                 "stop": lambda x=None: ("GET", "/s/s", None),
+                "tilt": lambda x=None: ("GET", "/s/t/" + str(x), None),
             },
             "covers": [
                 [
@@ -228,6 +229,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     {
                         "desired": "shutter/desiredPos/position",
                         # "current": "shutter/currentPos/position",
+                        "tilt": "shutter/desiredPos/tilt",
                         "state": "shutter/state",
                     },
                     "shutter",

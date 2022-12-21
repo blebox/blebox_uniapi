@@ -16,6 +16,11 @@ class Gate:
         min_position = self.min_position
         return product.expect_int(alias, raw, 100, min_position)
 
+    def read_tilt(self, alias: str, raw_value: Any, product: "Box") -> int:
+        raw = raw_value("tilt")
+        min_position = self.min_position
+        return product.expect_int(alias, raw, 100, min_position)
+
     @property
     def min_position(self) -> int:
         return 0
@@ -23,6 +28,10 @@ class Gate:
     @property
     def is_slider(self) -> bool:
         return True
+
+    @property
+    def has_tilt(self) -> bool:
+        return False
 
     @property
     def open_command(self) -> str:
@@ -43,6 +52,10 @@ class Shutter(Gate):
     @property
     def min_position(self) -> int:
         return -1  # "unknown"
+
+    @property
+    def has_tilt(self) -> bool:
+        return True
 
 
 class GateBox(Gate):
@@ -129,12 +142,21 @@ class Cover(Feature):
         methods: dict,
         dev_class: str,
         subclass: Type[GateT],
+        extended_state: dict,
     ) -> None:
+        self._control_type = extended_state.get("shutter", {}).get("controlType", {})
 
         self._device_class = dev_class
         self._attributes: GateT = subclass()
 
         super().__init__(product, alias, methods)
+
+    @classmethod
+    def many_from_config(
+        cls, product, box_type_config, extended_state
+    ) -> list["Feature"]:
+
+        return [cls(product, *args, extended_state) for args in box_type_config]
 
     @property
     def current(self) -> Any:
@@ -145,8 +167,16 @@ class Cover(Feature):
         return self._state
 
     @property
+    def tilt_current(self):
+        return self._tilt_current
+
+    @property
     def is_slider(self) -> Any:
         return self._attributes.is_slider
+
+    @property
+    def has_tilt(self) -> bool:
+        return self._attributes.has_tilt
 
     @property
     def has_stop(self) -> bool:
@@ -167,6 +197,12 @@ class Cover(Feature):
 
         await self.async_api_command("position", value)
 
+    async def async_set_tilt_position(self, value: Any) -> None:
+        if self.has_tilt and self._control_type == 3:
+            await self.async_api_command("tilt", value)
+        else:
+            raise NotImplementedError
+
     def _read_desired(self) -> Any:
         product = self._product
         if not product.last_data:
@@ -184,6 +220,14 @@ class Cover(Feature):
         alias = self._alias
         return self._attributes.read_state(alias, self.raw_value, self._product)
 
+    def _read_tilt(self) -> Any:
+        product = self._product
+        if not product.last_data:
+            return None
+
+        alias = self._alias
+        return self._attributes.read_tilt(alias, self.raw_value, self._product)
+
     def _read_has_stop(self) -> bool:
         return self._attributes.read_has_stop(
             self._alias, self.raw_value, self._product
@@ -193,3 +237,4 @@ class Cover(Feature):
         self._desired = self._read_desired()
         self._state = self._read_state()
         self._has_stop = self._read_has_stop()
+        self._tilt_current = self._read_tilt()

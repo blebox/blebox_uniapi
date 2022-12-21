@@ -7,6 +7,10 @@ if TYPE_CHECKING:
 
 
 class Gate:
+    _control_type: int
+    def __init__(self, control_type: int):
+        self._control_type = control_type
+
     def read_state(self, alias: str, raw_value: Any, product: "Box") -> int:
         raw = raw_value("state")
         return product.expect_int(alias, raw, 4, 0)
@@ -55,8 +59,9 @@ class Shutter(Gate):
 
     @property
     def has_tilt(self) -> bool:
-        return True
-
+        if self._control_type == 3:
+            return True
+        return False
 
 class GateBox(Gate):
     @property
@@ -144,11 +149,14 @@ class Cover(Feature):
         subclass: Type[GateT],
         extended_state: dict,
     ) -> None:
-        self._control_type = extended_state.get("shutter", {}).get("controlType", {})
+
+        self._control_type = None
+        if extended_state not in [None, {}]:
+            self._control_type = extended_state.get("shutter", {}).get("controlType", {})
 
         self._device_class = dev_class
-        self._attributes: GateT = subclass()
-
+        self._attributes: GateT = subclass(self._control_type)
+        self._tilt_current = None
         super().__init__(product, alias, methods)
 
     @classmethod
@@ -237,4 +245,5 @@ class Cover(Feature):
         self._desired = self._read_desired()
         self._state = self._read_state()
         self._has_stop = self._read_has_stop()
-        self._tilt_current = self._read_tilt()
+        if self._control_type == 3 and self._attributes.has_tilt:
+            self._tilt_current = self._read_tilt()

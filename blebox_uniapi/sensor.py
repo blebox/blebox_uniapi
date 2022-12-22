@@ -96,6 +96,21 @@ class Humidity(BaseSensor):
     def after_update(self) -> None:
         self._native_value = self._read_humidity(f"{self.device_class}")
 
+class Energy(BaseSensor):
+    def __init__(self, product: "Box", alias: str, methods: dict):
+        super().__init__(product, alias, methods)
+        self._unit = "kWh"
+        self._device_class = "powerMeasurement"
+    def _read_power_measurement(self):
+        product = self._product
+        if product.last_data is not None:
+            raw = self.raw_value("energy")
+            if raw is not None:
+                alias = self._alias
+                return round(product.expect_int(alias, raw, 10000, 0) / 100.0, 1)
+        return None
+    def after_update(self) -> None:
+        self._native_value = self._read_power_measurement()
 
 class SensorFactory:
     @classmethod
@@ -123,6 +138,13 @@ class SensorFactory:
                             methods=value_method,
                         )
                     )
+            ### power consumption
+            if "powerConsumption" in str(extended_state):
+                consumption_meters = extended_state.get("powerMeasuring", {}).get("powerConsumption", [])
+                for _ in consumption_meters:
+                    method = methods["energy"]
+                    Energy(product=product, alias="powerConsumption", methods=method)
+
             return object_list
         else:
             alias, methods = box_type_config[0]
@@ -132,5 +154,7 @@ class SensorFactory:
                         method_list]
             if alias.endswith("temperature"):
                 return [Temperature(product=product, alias=alias, methods=methods)]
+            if alias == "switchBox.energy":
+                return [Energy(product=product, alias=alias, methods=methods)]
             else:
                 return []

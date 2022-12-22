@@ -261,7 +261,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
             "switches": [["0.relay", {"state": "[relay=0]/state"}, "relay"]],
         },
         20190808: {
-            "api_path": "/api/relay/state",
+            "api_path": "/api/relay/extended/state",
             "extended_state_path": "/api/relay/extended/state",
             "api": {
                 "on": lambda x=None: ("GET", "/s/1", None),
@@ -270,6 +270,10 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
             "switches": [
                 ["0.relay", {"state": lambda x: f"relays/[relay={x}]/state"}, "relay"]
             ],
+            "sensors": [
+                ["switchBox.energy", {"energy": "powerMeasuring/powerConsumption/[0]/value",
+                              "measurment_enabled": "powerMeasuring/enabled"}]
+            ]
         },
     },
     # switchBoxD

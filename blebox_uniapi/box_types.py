@@ -320,6 +320,27 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     },
     # wLightBox
     "wLightBox": {
+        default_api_level: {
+            "api_path": "/api/device/state",
+            "api": {
+                "set": lambda x: (
+                    "POST",
+                    "/api/rgbw/set",
+                    f'{{"rgbw":{{"desiredColor": "{str(x)}"}}}}',
+                ),
+            },
+            "lights": [
+                [
+                    "color",
+                    {
+                        "desired": "rgbw/desiredColor",
+                        "last_color": "rgbw/lastOnColor",
+                        "currentEffect": "rgbw/effectID",
+                        "colorMode": "rgbw/colorMode",
+                    },
+                ]
+            ],
+        },
         20190808: {
             "api_path": "/api/rgbw/state",
             "extended_state_path": "/api/rgbw/extended/state",
@@ -369,6 +390,24 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     },
     # wLightBoxS
     "wLightBoxS": {
+        default_api_level:{
+            "api_path": "/api/device/state",
+            "api": {
+                "set": lambda x: (
+                    "POST",
+                    "/api/light/set",
+                    f'{{"light": {{"desiredColor": "{x}"}}}}',
+                ),
+            },
+            "lights": [
+                [
+                    "brightness",
+                    {
+                        "desired": "light/desiredColor",
+                    },
+                ]
+            ],
+        },
         20180718: {
             "api_path": "/api/light/state",
             "api": {

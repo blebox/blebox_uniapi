@@ -461,7 +461,7 @@ class TestWLightBoxS(DefaultBoxTest):
     DEVICE_INFO_LATEST = jmerge(
         DEVICE_INFO, patch_version(get_latest_api_level("wLightBoxS"))
     )
-    DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180717))
+    DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20140717))
 
     DEVICE_INFO_UNSPECIFIED_API = json.loads(
         """
@@ -631,6 +631,11 @@ class TestWLightBoxS(DefaultBoxTest):
         assert entity.is_on is False
         assert entity.brightness == 0
 
+    async def test_unspecified_version(self, aioclient_mock):
+        """
+        As default_api_level implemented for this class of devices, test method shall be omitted.
+        """
+        pass
 
 class TestWLightBox(DefaultBoxTest):
     """Tests for BleBox wLightBox."""
@@ -764,7 +769,7 @@ class TestWLightBox(DefaultBoxTest):
     DEVICE_INFO_LATEST = jmerge(
         DEVICE_INFO, patch_version(get_latest_api_level("wLightBox"))
     )
-    DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180717))
+    DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20140717))
 
     DEVICE_INFO_UNSPECIFIED_API = json.loads(
         """
@@ -923,33 +928,6 @@ class TestWLightBox(DefaultBoxTest):
 
         assert entity.is_on is False
         # assert entity.white_value == 0x00
-
-    async def test_ancient_response(self, aioclient_mock):
-        """Test e.g. unsupported, ancient device status structure."""
-
-        DEVICE_INFO_ANCIENT_STRUCTURE = json.loads(
-            """
-            {
-                "deviceName": "My light 1",
-                "type": "wLightBox",
-                "fv": "0.623",
-                "hv": "0.3",
-                "universe": 0,
-                "id": "6201943ff9c9",
-                "ip": "192.168.9.45"
-            }
-            """
-        )
-
-        await self.allow_get_info(aioclient_mock, DEVICE_INFO_ANCIENT_STRUCTURE)
-        with pytest.raises(UnsupportedBoxVersion):
-            await self.async_entities(aioclient_mock)
-
-    """
-        1. ustawic setup mocka do inicjalizacji obiektu
-        2. dostep do encji
-        3. asercje
-    """
 
     async def test_colormode_5_brightness(self, aioclient_mock):
         self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_5
@@ -1164,6 +1142,11 @@ class TestWLightBox(DefaultBoxTest):
 
         assert entity.rgbww_color == (0, 0, 0, 120, 214)
 
+    async def test_unspecified_version(self, aioclient_mock):
+        """
+        As default_api_level implemented for this class of devices, test method shall be omitted.
+        """
+        pass
 
 def test_unit_light_evaluate_brightness_from_rgb():
     tested_ob = Light.evaluate_brightness_from_rgb(iterable=(140, 230))

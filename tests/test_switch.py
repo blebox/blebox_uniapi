@@ -152,8 +152,7 @@ class TestSwitchBox(DefaultBoxTest):
     DEVCLASS = "switches"
     ENTITY_CLASS = BleBoxSwitchEntity
 
-    DEV_INFO_PATH = "api/relay/state"
-
+    DEV_INFO_PATH = "api/relay/extended/state"
     DEVICE_INFO = json.loads(
         """
     {

@@ -154,7 +154,5 @@ class SensorFactory:
                         method_list]
             if alias.endswith("temperature"):
                 return [Temperature(product=product, alias=alias, methods=methods)]
-            if alias == "switchBox.energy":
-                return [Energy(product=product, alias=alias, methods=methods)]
             else:
                 return []

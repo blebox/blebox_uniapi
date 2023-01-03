@@ -112,6 +112,19 @@ class Energy(BaseSensor):
     def after_update(self) -> None:
         self._native_value = self._read_power_measurement()
 
+class Wind(BaseSensor):
+    def __init__(self, product: "Box", alias: str, methods: dict):
+        super().__init__(product, alias, methods)
+        self._unit = "m/s"
+        self._device_class = "wind_speed"
+
+    def _read_wind_speed(self):
+        product = self._product
+        if product.last_data is not None:
+            return self.raw_value("wind")
+
+    def after_update(self) -> None:
+        self._native_value = self._read_wind_speed()
 class SensorFactory:
     @classmethod
     def many_from_config(
@@ -121,6 +134,7 @@ class SensorFactory:
             "airSensor": AirQuality,
             "temperature": Temperature,
             "humidity": Humidity,
+            "wind": Wind,
         }
         if extended_state:
             object_list = list()

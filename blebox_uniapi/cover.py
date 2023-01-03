@@ -1,3 +1,4 @@
+import blebox_uniapi.error
 from .error import MisconfiguredDevice
 from .feature import Feature
 from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar
@@ -109,8 +110,10 @@ class GateBox(Gate):
     def read_has_stop(self, alias: str, raw_value: Any, product: "Box") -> bool:
         if product.last_data is None:
             return False
-
-        raw = raw_value("extraButtonType")
+        try:
+            raw = raw_value("extraButtonType")
+        except blebox_uniapi.error.JPathFailed:
+            return False
         return 1 == product.expect_int(alias, raw, 3, 0)
 
 

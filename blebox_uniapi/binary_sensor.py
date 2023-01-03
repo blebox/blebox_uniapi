@@ -16,17 +16,18 @@ class BinarySensor(Feature):
         sensors_list = extended_state.get("multiSensor").get("sensors", {})
         alias, methods = box_type_config[0]
         for sensor in sensors_list:
-            if sensor.get("type") == "rain":
-                sensor_type = sensor.get("type")
-                sensor_id = sensor.get("id")
-                value_method = {sensor_type: methods[sensor_type](sensor_id)}
-                output_list.append(
-                    Rain(
-                        product=product,
-                        alias=sensor_type + "_" + str(sensor_id),
-                        methods=value_method,
+            sensor_type = sensor.get("type")
+            sensor_id = sensor.get("id")
+            if sensor.get("type") in ("rain", "flood"):
+                if methods.get(sensor_type) is not None:
+                    value_method = {sensor_type: methods[sensor_type](sensor_id)}
+                    output_list.append(
+                        Rain(
+                            product=product,
+                            alias=sensor_type + "_" + str(sensor_id),
+                            methods=value_method,
+                        )
                     )
-                )
 
         return output_list
 

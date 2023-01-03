@@ -2,6 +2,16 @@
 History
 =======
 
+2.1.4 (2023-01-03)
+------------------
+* added tilt position support for :code:`cover.Shutter`
+* added :code:`Wind` for wind sensor of multisensors
+* added :code:`Energy` sensor class for power consumption tracking
+* implementing :code:`default_api_level` for
+   * dimmerBox
+   * wLightBox
+   * wLightBoxS
+
 2.1.3 (2022-10-27)
 ------------------
 * thermoBox boost mode doesn't corrupt state

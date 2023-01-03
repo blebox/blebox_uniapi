@@ -57,7 +57,9 @@ class Feature:
         await self._product.async_api_command(*args, **kwargs)
 
     @staticmethod
-    def resolve_access_method_paths(methods: dict[str, Union[str, callable]], id_val: str = None) -> dict[str, str]:
+    def resolve_access_method_paths(
+        methods: dict[str, Union[str, callable]], id_val: str = None
+    ) -> dict[str, str]:
         """Return dict with resolved callable used as data path."""
         new = dict()
         if not isinstance(methods, dict):

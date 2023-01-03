@@ -271,9 +271,14 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 ["0.relay", {"state": lambda x: f"relays/[relay={x}]/state"}, "relay"]
             ],
             "sensors": [
-                ["switchBox.energy", {"energy": "powerMeasuring/powerConsumption/[0]/value",
-                              "measurment_enabled": "powerMeasuring/enabled"}]
-            ]
+                [
+                    "switchBox.energy",
+                    {
+                        "energy": "powerMeasuring/powerConsumption/[0]/value",
+                        "measurment_enabled": "powerMeasuring/enabled",
+                    },
+                ]
+            ],
         },
     },
     # switchBoxD
@@ -390,7 +395,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     },
     # wLightBoxS
     "wLightBoxS": {
-        default_api_level:{
+        default_api_level: {
             "api_path": "/api/device/state",
             "api": {
                 "set": lambda x: (

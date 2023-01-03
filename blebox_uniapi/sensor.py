@@ -96,11 +96,13 @@ class Humidity(BaseSensor):
     def after_update(self) -> None:
         self._native_value = self._read_humidity(f"{self.device_class}")
 
+
 class Energy(BaseSensor):
     def __init__(self, product: "Box", alias: str, methods: dict):
         super().__init__(product, alias, methods)
         self._unit = "kWh"
         self._device_class = "powerMeasurement"
+
     def _read_power_measurement(self):
         product = self._product
         if product.last_data is not None:
@@ -109,8 +111,10 @@ class Energy(BaseSensor):
                 alias = self._alias
                 return round(product.expect_int(alias, raw, 10000, 0) / 100.0, 1)
         return None
+
     def after_update(self) -> None:
         self._native_value = self._read_power_measurement()
+
 
 class Wind(BaseSensor):
     def __init__(self, product: "Box", alias: str, methods: dict):
@@ -125,6 +129,8 @@ class Wind(BaseSensor):
 
     def after_update(self) -> None:
         self._native_value = self._read_wind_speed()
+
+
 class SensorFactory:
     @classmethod
     def many_from_config(
@@ -154,7 +160,9 @@ class SensorFactory:
                     )
             ### power consumption
             if "powerConsumption" in str(extended_state):
-                consumption_meters = extended_state.get("powerMeasuring", {}).get("powerConsumption", [])
+                consumption_meters = extended_state.get("powerMeasuring", {}).get(
+                    "powerConsumption", []
+                )
                 for _ in consumption_meters:
                     method = methods["energy"]
                     Energy(product=product, alias="powerConsumption", methods=method)
@@ -164,8 +172,12 @@ class SensorFactory:
             alias, methods = box_type_config[0]
             if alias.endswith("air"):
                 method_list = [method for method in methods if "value" in method]
-                return [AirQuality(product=product, alias=method.split(".")[0], methods=methods) for method in
-                        method_list]
+                return [
+                    AirQuality(
+                        product=product, alias=method.split(".")[0], methods=methods
+                    )
+                    for method in method_list
+                ]
             if alias.endswith("temperature"):
                 return [Temperature(product=product, alias=alias, methods=methods)]
             else:

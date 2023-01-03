@@ -139,7 +139,9 @@ async def test_without_api_level(mock_session, data, config):
 
 async def test_with_init_failure(mock_session, data, config):
     with patch(
-        "blebox_uniapi.sensor.SensorFactory.many_from_config", spec_set=True, autospec=True
+        "blebox_uniapi.sensor.SensorFactory.many_from_config",
+        spec_set=True,
+        autospec=True,
     ) as mock_sensor:
         mock_sensor.side_effect = KeyError
         with pytest.raises(

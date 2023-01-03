@@ -154,7 +154,7 @@ class TestSauna(DefaultBoxTest):
         """
     )
     DEVICE_EXTENDED_INFO_THERMO = json.loads(
-    """
+        """
     {
       "thermo": {
         "state": 0,
@@ -190,6 +190,7 @@ class TestSauna(DefaultBoxTest):
     }
     """
     )
+
     def patch_version(apiLevel):
         """Generate a patch for a JSON state fixture."""
         return f"""
@@ -286,7 +287,9 @@ class TestSauna(DefaultBoxTest):
         """Test initialisation with device state"""
         self.DEVICE_INFO = self.DEVICE_INFO_THERMO
         self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_THERMO
-        await self.allow_get_info(aioclient_mock, )
+        await self.allow_get_info(
+            aioclient_mock,
+        )
         entity = (await self.async_entities(aioclient_mock))[0]
         assert entity.device_info["name"] == "My ThermoBox"
 

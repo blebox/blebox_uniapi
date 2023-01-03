@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 
 class Gate:
     _control_type: int
+
     def __init__(self, control_type: int):
         self._control_type = control_type
 
@@ -62,6 +63,7 @@ class Shutter(Gate):
         if self._control_type == 3:
             return True
         return False
+
 
 class GateBox(Gate):
     @property
@@ -152,7 +154,9 @@ class Cover(Feature):
 
         self._control_type = None
         if extended_state not in [None, {}]:
-            self._control_type = extended_state.get("shutter", {}).get("controlType", {})
+            self._control_type = extended_state.get("shutter", {}).get(
+                "controlType", {}
+            )
 
         self._device_class = dev_class
         self._attributes: GateT = subclass(self._control_type)

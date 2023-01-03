@@ -34,6 +34,7 @@ class BleBoxSensorEntity(CommonEntity):
         """Return the state."""
         return self._feature.native_value
 
+
 class TestTempSensor(DefaultBoxTest):
     """Tests for sensors representing BleBox tempSensor."""
 
@@ -229,7 +230,6 @@ class TestTempSensor(DefaultBoxTest):
         assert entity.state is None
         # assert entity.outdated is False
 
-
     async def test_device_info(self, aioclient_mock):
         await self.allow_get_info(aioclient_mock, self.DEVICE_INFO)
         entity = (await self.async_entities(aioclient_mock))[0]
@@ -252,7 +252,6 @@ class TestTempSensor(DefaultBoxTest):
         assert entity.name == "My tempSensor (tempSensor#0.temperature)"
         assert entity.state == 25.2
 
-
     async def test_sensor_factory(self, aioclient_mock):
         """Test sensor factory method class."""
 
@@ -261,7 +260,7 @@ class TestTempSensor(DefaultBoxTest):
         self.DEVICE_INFO = self.DEVICE_INFO_MULTISENSOR
         await self.allow_get_info(aioclient_mock)
 
-        entity = (await self.async_entities(aioclient_mock))
+        entity = await self.async_entities(aioclient_mock)
 
         assert len(entity) == 3
 
@@ -298,8 +297,6 @@ class TestAirSensor(DefaultBoxTest):
     }
     """
     )
-
-
 
     def patch_version(apiLevel):
         """Generate a patch for a JSON state fixture."""
@@ -383,7 +380,6 @@ class TestAirSensor(DefaultBoxTest):
         assert entity.device_info["model"] == "airSensor"
         assert entity.device_info["sw_version"] == "0.973"
 
-
     @pytest.mark.parametrize("io_param", [(0, 49), (1, 222), (2, 333)])
     async def test_update(self, aioclient_mock, io_param):
         """Test air quality sensor state after update."""
@@ -400,7 +396,6 @@ class TestAirSensor(DefaultBoxTest):
         """Test air sensor init from config."""
         await self.allow_get_info(aioclient_mock)
 
-        entity = (await self.async_entities(aioclient_mock))
+        entity = await self.async_entities(aioclient_mock)
 
         assert len(entity) == 3
-

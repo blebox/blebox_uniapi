@@ -3,6 +3,7 @@ from .error import JPathFailed
 from typing import Optional, Any, Union
 from .feature import Feature
 
+
 class Climate(Temperature):
     _is_on: Optional[bool]
     _desired: Union[float, int, None]
@@ -64,7 +65,9 @@ class Climate(Temperature):
             safetyIdPath = box_type_config[0][1].get("safetySensorId")
             if safetyIdPath:
                 safety_sensor_id = product.follow(extended_state, safetyIdPath)
-                temp_sensor_id = cls.get_temp_sensor_id(safety_sensor_id, extended_state['sensors'])
+                temp_sensor_id = cls.get_temp_sensor_id(
+                    safety_sensor_id, extended_state["sensors"]
+                )
                 methods = Feature.resolve_access_method_paths(methods, temp_sensor_id)
 
             args = [alias, methods]
@@ -87,7 +90,10 @@ class Climate(Temperature):
             raw = self.raw_value("state")
             if raw is not None:  # no reading
                 alias = self._alias
-                return product.expect_int(alias, raw, 3, 0) in (1, 3)  # 1: On, 3: Boost(thermoBox max temp of mode)
+                return product.expect_int(alias, raw, 3, 0) in (
+                    1,
+                    3,
+                )  # 1: On, 3: Boost(thermoBox max temp of mode)
         return None
 
     def _read_operating_state(self) -> Optional[int]:
@@ -157,4 +163,3 @@ class Climate(Temperature):
             return None
 
         return li_sensor_id[0]
-

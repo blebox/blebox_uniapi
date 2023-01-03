@@ -5,6 +5,7 @@ from .feature import Feature
 
 class BinarySensor(Feature):
     """Class representing sensor with bool state."""
+
     def __init__(self, product: "Box", alias: str, methods: dict):
         super().__init__(product, alias, methods)
 
@@ -33,7 +34,6 @@ class BinarySensor(Feature):
 
 
 class Rain(BinarySensor):
-
     def __init__(self, product: "Box", alias: str, methods: dict):
         self._device_class = "moisture"
         super().__init__(product, alias, methods)

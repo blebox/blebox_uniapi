@@ -245,7 +245,9 @@ class TestDimmer(DefaultBoxTest):
     DEVICE_INFO_LATEST = jmerge(
         DEVICE_INFO, patch_version(get_latest_api_level("dimmerBox"))
     )
-    DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20140828)) # fake version, default_api_level implemented
+    DEVICE_INFO_UNSUPPORTED = jmerge(
+        DEVICE_INFO, patch_version(20140828)
+    )  # fake version, default_api_level implemented
 
     DEVICE_INFO_UNSPECIFIED_API = json.loads(
         """
@@ -395,6 +397,7 @@ class TestDimmer(DefaultBoxTest):
         As default_api_level implemented for this class of devices, test method shall be omitted.
         """
         pass
+
 
 class TestWLightBoxS(DefaultBoxTest):
     """Tests for BleBox wLightBoxS."""
@@ -636,6 +639,7 @@ class TestWLightBoxS(DefaultBoxTest):
         As default_api_level implemented for this class of devices, test method shall be omitted.
         """
         pass
+
 
 class TestWLightBox(DefaultBoxTest):
     """Tests for BleBox wLightBox."""
@@ -947,7 +951,6 @@ class TestWLightBox(DefaultBoxTest):
         assert "_cct2" in entity.name
         assert entity.brightness
 
-
     async def test_effect_list_return_list(self, aioclient_mock):
         self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_5
         await self.allow_get_info(aioclient_mock)
@@ -1147,6 +1150,7 @@ class TestWLightBox(DefaultBoxTest):
         As default_api_level implemented for this class of devices, test method shall be omitted.
         """
         pass
+
 
 def test_unit_light_evaluate_brightness_from_rgb():
     tested_ob = Light.evaluate_brightness_from_rgb(iterable=(140, 230))

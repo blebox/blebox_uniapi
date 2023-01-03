@@ -16,20 +16,16 @@ class Switch(Feature):
         dev_class: str,
         unit_id: Union[str, int, None] = 0,
     ):
-        methods = self.resolve_access_method_paths(
-            methods, str(unit_id)
-        )
+        methods = self.resolve_access_method_paths(methods, str(unit_id))
         super().__init__(product, alias, methods)
         self._device_class = dev_class
         self._unit_id = unit_id
-
-
 
     @classmethod
     def many_from_config(
         cls, product, box_type_config, extended_state
     ) -> list["Switch"]:
-        '''
+        """
         :param product: Object hosting device with specific feature.
         :param box_type_config: Default configuration providing following data
         [
@@ -37,7 +33,7 @@ class Switch(Feature):
         ]
         :param extended_state: Object hosting extended state recieved from device
         :return: List of class objects instances
-        '''
+        """
         if extended_state:
             relay_list = list()
             alias, methods, relay_type, *rest = box_type_config[0]

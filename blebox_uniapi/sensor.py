@@ -1,3 +1,5 @@
+import datetime
+
 from .feature import Feature
 from typing import TYPE_CHECKING, Union, Optional
 
@@ -102,14 +104,24 @@ class Energy(BaseSensor):
         super().__init__(product, alias, methods)
         self._unit = "kWh"
         self._device_class = "powerMeasurement"
+    @property
+    def last_reset(self):
+        return datetime.datetime.now() - datetime.timedelta(seconds=self._read_period_of_measurement())
+
+    def _read_period_of_measurement(self) -> int:
+        product = self._product
+        if product.last_data is not None:
+            raw = self.raw_value("periodS")
+            if raw is not None:
+                alias = self._alias
+                return product.expect_int(alias, raw, 3600, 0)
+        return 0
 
     def _read_power_measurement(self):
         product = self._product
         if product.last_data is not None:
-            raw = self.raw_value("energy")
-            if raw is not None:
-                alias = self._alias
-                return round(product.expect_int(alias, raw, 10000, 0) / 100.0, 1)
+            raw = float(self.raw_value("energy"))
+            return raw
         return None
 
     def after_update(self) -> None:
@@ -164,8 +176,8 @@ class SensorFactory:
                     "powerConsumption", []
                 )
                 for _ in consumption_meters:
-                    method = methods["energy"]
-                    Energy(product=product, alias="powerConsumption", methods=method)
+                    # method = methods
+                    object_list.append(Energy(product=product, alias="powerConsumption", methods=methods))
 
             return object_list
         else:

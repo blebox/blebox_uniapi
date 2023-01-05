@@ -275,6 +275,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     "switchBox.energy",
                     {
                         "energy": "powerMeasuring/powerConsumption/[0]/value",
+                        "periodS": "powerMeasuring/powerConsumption/[0]/periodS",
                         "measurment_enabled": "powerMeasuring/enabled",
                     },
                 ]
@@ -285,7 +286,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     "switchBoxD": {
         20190808: {
             "extended_state_path": "/state/extended",  # tylko dla testów do usunięcia nie w tym api
-            "api_path": "/api/relay/state",
+            "api_path": "/state/extended",
             "api": {
                 "on": lambda x: ("GET", f"/s/{int(x)}/1", None),
                 "off": lambda x=None: ("GET", f"/s/{int(x)}/0", None),
@@ -303,6 +304,16 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     "relay",
                     1,
                 ],
+            ],
+            "sensors": [
+                [
+                    "switchBox.energy",
+                    {
+                        "energy": "powerMeasuring/powerConsumption/[0]/value",
+                        "periodS": "powerMeasuring/powerConsumption/[0]/periodS",
+                        "measurment_enabled": "powerMeasuring/enabled",
+                    },
+                ]
             ],
         }
     },

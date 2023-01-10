@@ -104,9 +104,12 @@ class Energy(BaseSensor):
         super().__init__(product, alias, methods)
         self._unit = "kWh"
         self._device_class = "powerMeasurement"
+
     @property
     def last_reset(self):
-        return datetime.datetime.now() - datetime.timedelta(seconds=self._read_period_of_measurement())
+        return datetime.datetime.now() - datetime.timedelta(
+            seconds=self._read_period_of_measurement()
+        )
 
     def _read_period_of_measurement(self) -> int:
         product = self._product
@@ -177,7 +180,11 @@ class SensorFactory:
                 )
                 for _ in consumption_meters:
                     # method = methods
-                    object_list.append(Energy(product=product, alias="powerConsumption", methods=methods))
+                    object_list.append(
+                        Energy(
+                            product=product, alias="powerConsumption", methods=methods
+                        )
+                    )
 
             return object_list
         else:

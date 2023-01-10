@@ -365,6 +365,7 @@ class TestGateBox(CoverTest):
     )
 
     STATE_OPENING_NO_STOP = jmerge(STATE_OPENING, '{ "extraButtonType": 3}')
+    STATE_UNKNOWN = jmerge(STATE_DEFAULT, '{ "currentPos": -1, "desiredPos": 50 }')
 
     async def test_init(self, aioclient_mock):
         """Test cover default state."""
@@ -469,6 +470,11 @@ class TestGateBox(CoverTest):
         with pytest.raises(NotImplementedError):
             await entity.async_set_cover_position(**{ATTR_POSITION: 1})  # almost closed
 
+    async def test_unkown_position(self, aioclient_mock):
+        """Test handling cover at unknown position."""
+        entity = await self.updated(aioclient_mock, self.STATE_UNKNOWN)
+        self.assert_state(entity, None)
+
 
 class TestGateBoxB(CoverTest):
     """Tests for cover devices representing a BleBox gateBoxB subgroup."""
@@ -557,6 +563,11 @@ class TestGateBoxB(CoverTest):
 
         entity = await self.updated(aioclient_mock, self.STATE_CLOSED)
         self.assert_state(entity, STATE_CLOSED)
+
+    async def test_unkown_position(self, aioclient_mock):
+        """Test handling cover at unknown position."""
+        entity = await self.updated(aioclient_mock, self.STATE_UNKNOWN)
+        self.assert_state(entity, None)
 
 
 class TestGateController(CoverTest):

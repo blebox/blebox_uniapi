@@ -520,6 +520,14 @@ class TestGateBoxB(CoverTest):
     STATE_STOPPED = jmerge(STATE_DEFAULT, '{"gate": {"currentPos": 50 }}')
     STATE_FULLY_OPENED = jmerge(STATE_DEFAULT, '{"gate": {"currentPos": 100 }}')
 
+    STATE_UNKNOWN = json.loads(
+        """
+        {
+            "gate": {"currentPos": -1}
+        }
+        """
+    )
+
     async def test_init(self, aioclient_mock):
         """Test cover default state."""
 

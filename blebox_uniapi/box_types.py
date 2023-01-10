@@ -41,15 +41,21 @@ def get_latest_api_level(product_type: str) -> Union[dict, int]:
 # Configuration for all box types
 
 BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
-    # airSensor
-    "tvLiftBox": {
-        20200518: {
-            "api_path": "/api/device/state",
-            "extended_state_path": "/state/extended",
-            "api": {"set": lambda command: ("GET", f"/s/c/{command}")},
-            "buttons": ["tvLift", {"lift": ""}],
+    # tvLiftBox; in comments api level config description
+    "tvLiftBox": {  # apiType to match devices apiType
+        20200518: {  # apiLevel to match integration level
+            "api_path": "/api/device/state",  # path to devices state
+            "extended_state_path": "/state/extended",  # path to devices extended state
+            "api": {
+                "set": lambda command: ("GET", f"/s/c/{command}")
+            },  # dictionary with interaction methods
+            "buttons": [
+                "tvLift",
+                {"lift": ""},
+            ],  # key used to set platform, list elements used in cls init, e.g. [<alias>, {"path": "state_value"}]
         }
     },
+    # airSensor
     "airSensor": {
         20180403: {
             "api_path": "/api/air/state",

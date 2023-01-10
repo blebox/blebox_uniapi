@@ -87,6 +87,8 @@ class GateBox(Gate):
 
         # gate with gateBox visualized:
         #  (0) [   <#####] (100)
+        if current == -1:
+            return None
 
         if desired < current:
             return 0  # closing
@@ -123,8 +125,12 @@ class GateBoxB(GateBox):
 
         # gate with gateBox visualized:
         #  (0) [   <#####] (100)
+        if current == -1:
+            return None
 
-        if current == 0:  # closed
+        elif 0 < current < 100:
+            return 2  # manually stopped
+        elif current == 0:  # closed
             return 3  # closed (lower/left limit)
 
         return 4  # open (upper/right limit)

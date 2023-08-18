@@ -2,6 +2,70 @@
 History
 =======
 
+2.1.4 (2023-01-03)
+------------------
+* added tilt position support for :code:`cover.Shutter`
+* added :code:`Wind` for wind sensor of multisensors
+* added :code:`Energy` sensor class for power consumption tracking
+* implementing :code:`default_api_level` for
+   * dimmerBox
+   * wLightBox
+   * wLightBoxS
+
+2.1.3 (2022-10-27)
+------------------
+* thermoBox boost mode doesn't corrupt state
+
+2.1.2 (2022-10-17)
+------------------
+
+* fixed CCT, CCTx2 modes for wLightBox v1 & v2
+
+2.1.1 (2022-10-11)
+------------------
+* added support for thermoBox devices:
+   * added thermoBox config to :code:`BOX_TYPE_CONFIG`
+   * :code:`Climate` uses factory method implementation
+   * added test coverage
+
+
+2.1.0 (2022-08-05)
+------------------
+* added support for multiSensor API:
+   * :code:`airQuality` moved to sensor module
+   * new binary_sensor module, introducing :code:`Rain` class
+
+
+2.0.2 (2022-07-06)
+------------------
+* added :code:`query_string` property in :code:`Button` class
+* fixed test assertions after changes in error raised ValueError
+
+2.0.1 (2022-06-01)
+------------------
+* used :code:`ValueError` type instead of :code:`BadOnValueError` in methods:
+
+  * evaluate_brightness_from_rgb
+  * apply_brightness
+  * normalise_elements_of_rgb
+  * _set_last_on_value
+  * async_on
+
+2.0.0 (2022-06-21)
+------------------
+
+* extended support for color modes in wLightBox devices
+* initial support for tvLiftBox device
+* major backward-incompatible architectural changes to enable dynamic configuration of devices
+* removed products.py module and replaced with factory method on Box class
+* general overhaul of public interfaces
+
+1.3.3 (2021-05-12)
+------------------
+
+* fix support for wLightBoxS with wLightBox API
+* fix state detection in gateBox
+
 1.3.2 (2020-04-2)
 ------------------
 

@@ -1,7 +1,9 @@
 """BleBox climate entities tests."""
 import json
 
-from .conftest import DefaultBoxTest, jmerge, CommonEntity
+from blebox_uniapi.box_types import get_latest_api_level
+
+from .conftest import CommonEntity, DefaultBoxTest, future_date, jmerge
 
 # TODO: remove
 SUPPORT_TARGET_TEMPERATURE = 1
@@ -112,6 +114,7 @@ class TestSauna(DefaultBoxTest):
     ENTITY_CLASS = BleBoxClimateEntity
 
     DEV_INFO_PATH = "api/heat/extended/state"
+    DEVICE_EXTENDED_INFO_PATH = "/state/extended"
 
     DEVICE_INFO = json.loads(
         """
@@ -128,6 +131,65 @@ class TestSauna(DefaultBoxTest):
     }
     """
     )
+    DEVICE_INFO_THERMO = json.loads(
+        """
+        {
+          "device": {
+            "deviceName": "My ThermoBox",
+            "type": "thermoBox",
+            "product": "thermoBox",
+            "hv": "thB.1.0",
+            "fv": "0.1031",
+            "universe": 0,
+            "apiLevel": "20200229",
+            "iconSet": 43,
+            "categories": [
+              7
+            ],
+            "id": "f6cfa2f11cd3",
+            "ip": "192.168.49.183",
+            "availableFv": null
+          }
+        }
+        """
+    )
+    DEVICE_EXTENDED_INFO_THERMO = json.loads(
+        """
+    {
+      "thermo": {
+        "state": 0,
+        "operatingState": 3,
+        "desiredTemp": -70,
+        "mode": 2,
+        "minimumTemp": -1230,
+        "maximumTemp": 6000,
+        "safety": {
+          "eventReason": 0,
+          "triggered": [
+
+          ]
+        },
+        "safetyTempSensor": {
+          "sensorId": 1
+        }
+      },
+      "sensors": [
+        {
+          "id": 0,
+          "type": "temperature",
+          "value": 2098,
+          "state": 2
+        },
+        {
+          "id": 1,
+          "type": "temperature",
+          "value": 2775,
+          "state": 2
+        }
+      ]
+    }
+    """
+    )
 
     def patch_version(apiLevel):
         """Generate a patch for a JSON state fixture."""
@@ -135,10 +197,10 @@ class TestSauna(DefaultBoxTest):
         {{ "device": {{ "apiLevel": {apiLevel} }} }}
         """
 
-    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(20180605))
-    DEVICE_INFO_LATEST = jmerge(DEVICE_INFO, patch_version(20180604))
-    DEVICE_INFO_OUTDATED = jmerge(DEVICE_INFO, patch_version(20180604))
-    DEVICE_INFO_MINIMUM = jmerge(DEVICE_INFO, patch_version(20180604))
+    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(future_date()))
+    DEVICE_INFO_LATEST = jmerge(
+        DEVICE_INFO, patch_version(get_latest_api_level("saunaBox"))
+    )
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180603))
 
     DEVICE_INFO_UNSPECIFIED_API = json.loads(
@@ -220,6 +282,16 @@ class TestSauna(DefaultBoxTest):
         assert entity.state is None
         assert entity.max_temp is None
         assert entity.min_temp is None
+
+    async def test_thermo_init(self, aioclient_mock):
+        """Test initialisation with device state"""
+        self.DEVICE_INFO = self.DEVICE_INFO_THERMO
+        self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_THERMO
+        await self.allow_get_info(
+            aioclient_mock,
+        )
+        entity = (await self.async_entities(aioclient_mock))[0]
+        assert entity.device_info["name"] == "My ThermoBox"
 
     async def test_device_info(self, aioclient_mock):
         await self.allow_get_info(aioclient_mock, self.DEVICE_INFO)

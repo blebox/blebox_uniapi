@@ -3,9 +3,10 @@ import json
 
 import pytest
 
+from blebox_uniapi.box_types import get_latest_api_level
 from blebox_uniapi import error
 
-from .conftest import DefaultBoxTest, jmerge, CommonEntity
+from .conftest import CommonEntity, DefaultBoxTest, future_date, jmerge
 
 # TODO: remove
 ATTR_POSITION = "ATTR_POSITION"
@@ -20,6 +21,11 @@ SUPPORT_OPEN = 1
 SUPPORT_CLOSE = 2
 SUPPORT_SET_POSITION = 4
 SUPPORT_STOP = 8
+
+
+def patch_version(apiLevel):
+    """Helper function for generate a patch for a JSON state fixture."""
+    return f"""{{ "device": {{ "apiLevel": {apiLevel} }} }}"""
 
 
 class BleBoxCoverEntity(CommonEntity):
@@ -50,6 +56,7 @@ class BleBoxCoverEntity(CommonEntity):
         types = {
             "shutter": DEVICE_CLASS_SHUTTER,
             "gatebox": DEVICE_CLASS_DOOR,
+            # "gateboxB": DEVICE_CLASS_DOOR,
             "gate": DEVICE_CLASS_DOOR,
         }
         return types[self._feature.device_class]
@@ -155,15 +162,10 @@ class TestShutter(CoverTest):
     """
     )
 
-    def patch_version(apiLevel):
-        """Generate a patch for a JSON state fixture."""
-        return f"""{{ "device": {{ "apiLevel": {apiLevel} }} }}"""
-
-    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(20190912))
-    DEVICE_INFO_LATEST = jmerge(DEVICE_INFO, patch_version(20190911))
-    DEVICE_INFO_OUTDATED = jmerge(DEVICE_INFO, patch_version(20190910))
-
-    DEVICE_INFO_MINIMUM = jmerge(DEVICE_INFO, patch_version(20180604))
+    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(future_date()))
+    DEVICE_INFO_LATEST = jmerge(
+        DEVICE_INFO, patch_version(get_latest_api_level("shutterBox"))
+    )
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180603))
 
     DEVICE_INFO_UNSPECIFIED_API = json.loads(
@@ -313,7 +315,6 @@ class TestGateBox(CoverTest):
 
     DEV_INFO_PATH = "api/gate/state"
 
-    # TODO: does gateBox have an api level currently?
     DEVICE_INFO = json.loads(
         """
         {
@@ -327,10 +328,10 @@ class TestGateBox(CoverTest):
         """
     )
 
-    DEVICE_INFO_FUTURE = DEVICE_INFO
-    DEVICE_INFO_LATEST = DEVICE_INFO
-    DEVICE_INFO_OUTDATED = DEVICE_INFO
-    DEVICE_INFO_MINIMUM = DEVICE_INFO
+    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, f'{{ "apiLevel":"{future_date()}" }}')
+    DEVICE_INFO_LATEST = jmerge(
+        DEVICE_INFO, f'{{ "apiLevel":"{get_latest_api_level("gateBox")}" }}'
+    )
     DEVICE_INFO_UNSUPPORTED = DEVICE_INFO
 
     DEVICE_INFO_UNSPECIFIED_API = None  # already handled as default case
@@ -364,6 +365,7 @@ class TestGateBox(CoverTest):
     )
 
     STATE_OPENING_NO_STOP = jmerge(STATE_OPENING, '{ "extraButtonType": 3}')
+    STATE_UNKNOWN = jmerge(STATE_DEFAULT, '{ "currentPos": -1, "desiredPos": 50 }')
 
     async def test_init(self, aioclient_mock):
         """Test cover default state."""
@@ -468,6 +470,113 @@ class TestGateBox(CoverTest):
         with pytest.raises(NotImplementedError):
             await entity.async_set_cover_position(**{ATTR_POSITION: 1})  # almost closed
 
+    async def test_unkown_position(self, aioclient_mock):
+        """Test handling cover at unknown position."""
+        entity = await self.updated(aioclient_mock, self.STATE_UNKNOWN)
+        self.assert_state(entity, None)
+
+
+class TestGateBoxB(CoverTest):
+    """Tests for cover devices representing a BleBox gateBoxB subgroup."""
+
+    DEV_INFO_PATH = "state"
+
+    DEVICE_INFO = json.loads(
+        """
+        {
+            "device": {
+                "deviceName":"My gateBox 1",
+                "type":"gateBox",
+                "product":"gateBox",
+                "hv":"9.1d",
+                "fv":"0.1010",
+                "universe":0,
+                "apiLevel":"20200831",
+                "id":"1afe34d27e4f",
+                "ip":"192.168.4.1",
+                "availableFv":null
+            }
+        }
+        """
+    )
+
+    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(future_date()))
+    DEVICE_INFO_LATEST = jmerge(
+        DEVICE_INFO, patch_version(get_latest_api_level("gateBox"))
+    )
+    DEVICE_INFO_UNSUPPORTED = DEVICE_INFO
+
+    DEVICE_INFO_UNSPECIFIED_API = None  # already handled as default case
+
+    STATE_DEFAULT = json.loads(
+        """
+        {
+            "gate": {"currentPos": 0}
+        }
+        """
+    )
+
+    STATE_CLOSED = STATE_DEFAULT
+    STATE_STOPPED = jmerge(STATE_DEFAULT, '{"gate": {"currentPos": 50 }}')
+    STATE_FULLY_OPENED = jmerge(STATE_DEFAULT, '{"gate": {"currentPos": 100 }}')
+
+    STATE_UNKNOWN = json.loads(
+        """
+        {
+            "gate": {"currentPos": -1}
+        }
+        """
+    )
+
+    async def test_init(self, aioclient_mock):
+        """Test cover default state."""
+
+        await self.allow_get_info(aioclient_mock)
+        entity = (await self.async_entities(aioclient_mock))[0]
+
+        assert entity.name == "My gateBox 1 (gateBox#position)"
+        assert entity.unique_id == "BleBox-gateBox-1afe34d27e4f-position"
+        assert entity.device_class == DEVICE_CLASS_DOOR
+        assert entity.supported_features & SUPPORT_OPEN
+        assert entity.supported_features & SUPPORT_CLOSE
+        assert entity.current_cover_position is None
+        self.assert_state(entity, None)
+
+    async def test_device_info(self, aioclient_mock):
+        """Test device info state."""
+
+        await self.allow_get_info(aioclient_mock, self.DEVICE_INFO)
+        entity = (await self.async_entities(aioclient_mock))[0]
+        # import pdb;pdb.set_trace()
+        assert entity.device_info["name"] == "My gateBox 1"
+        assert entity.device_info["mac"] == "1afe34d27e4f"
+        assert entity.device_info["manufacturer"] == "BleBox"
+        assert entity.device_info["model"] == "gateBox"
+        assert entity.device_info["sw_version"] == "0.1010"
+
+    async def test_fully_opened(self, aioclient_mock):
+        """Test cover fully opened."""
+
+        entity = await self.updated(aioclient_mock, self.STATE_FULLY_OPENED)
+        assert entity.state == STATE_OPEN
+
+    async def test_stop(self, aioclient_mock):
+        """Test cover stopped."""
+
+        entity = await self.updated(aioclient_mock, self.STATE_STOPPED)
+        self.assert_state(entity, STATE_OPEN)
+
+    async def test_closed(self, aioclient_mock):
+        """Test cover closed."""
+
+        entity = await self.updated(aioclient_mock, self.STATE_CLOSED)
+        self.assert_state(entity, STATE_CLOSED)
+
+    async def test_unkown_position(self, aioclient_mock):
+        """Test handling cover at unknown position."""
+        entity = await self.updated(aioclient_mock, self.STATE_UNKNOWN)
+        self.assert_state(entity, None)
+
 
 class TestGateController(CoverTest):
     """Tests for cover devices representing a BleBox gateController."""
@@ -490,17 +599,10 @@ class TestGateController(CoverTest):
     """
     )
 
-    def patch_version(apiLevel):
-        """Generate a patch for a JSON state fixture."""
-        return f"""
-        {{ "device": {{ "apiLevel": {apiLevel} }} }}
-        """
-
-    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(20190912))
-    DEVICE_INFO_LATEST = jmerge(DEVICE_INFO, patch_version(20190911))
-    DEVICE_INFO_OUTDATED = jmerge(DEVICE_INFO, patch_version(20190910))
-
-    DEVICE_INFO_MINIMUM = jmerge(DEVICE_INFO, patch_version(20180604))
+    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(future_date()))
+    DEVICE_INFO_LATEST = jmerge(
+        DEVICE_INFO, patch_version(get_latest_api_level("gateController"))
+    )
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180603))
 
     # NOTE: can't happen with a real device

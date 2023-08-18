@@ -2,7 +2,9 @@
 
 import json
 
-from .conftest import DefaultBoxTest, jmerge, CommonEntity
+from blebox_uniapi.box_types import get_latest_api_level
+
+from .conftest import CommonEntity, DefaultBoxTest, future_date, jmerge
 
 DEVICE_CLASS_SWITCH = "switch"
 
@@ -54,11 +56,10 @@ class TestSwitchBox0(DefaultBoxTest):
         {{ "device": {{ "apiLevel": {apiLevel} }} }}
         """
 
-    # TODO: make future far off to make tests less brittle?
-    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(20190809))
-    DEVICE_INFO_LATEST = jmerge(DEVICE_INFO, patch_version(20190808))
-    DEVICE_INFO_OUTDATED = jmerge(DEVICE_INFO, patch_version(20190807))
-    DEVICE_INFO_MINIMUM = jmerge(DEVICE_INFO, patch_version(20180604))
+    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(future_date()))
+    DEVICE_INFO_LATEST = jmerge(
+        DEVICE_INFO, patch_version(get_latest_api_level("switchBox"))
+    )
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180603))
 
     DEVICE_INFO_UNSPECIFIED_API = json.loads(
@@ -100,8 +101,8 @@ class TestSwitchBox0(DefaultBoxTest):
 
         entity = (await self.async_entities(aioclient_mock))[0]
 
-        assert entity.name == "My switchBox (switchBox0#0.relay)"
-        assert entity.unique_id == "BleBox-switchBox0-1afe34e750b8-0.relay"
+        assert entity.name == "My switchBox (switchBox#0.relay)"
+        assert entity.unique_id == "BleBox-switchBox-1afe34e750b8-0.relay"
 
         assert entity.device_class == DEVICE_CLASS_SWITCH
 
@@ -151,8 +152,7 @@ class TestSwitchBox(DefaultBoxTest):
     DEVCLASS = "switches"
     ENTITY_CLASS = BleBoxSwitchEntity
 
-    DEV_INFO_PATH = "api/relay/state"
-
+    DEV_INFO_PATH = "api/relay/extended/state"
     DEVICE_INFO = json.loads(
         """
     {
@@ -175,11 +175,10 @@ class TestSwitchBox(DefaultBoxTest):
         {{ "device": {{ "apiLevel": {apiLevel} }} }}
         """
 
-    # TODO: make future far off to make tests less brittle?
-    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(20190808 + 1))
-    DEVICE_INFO_LATEST = jmerge(DEVICE_INFO, patch_version(20190808))
-    DEVICE_INFO_OUTDATED = jmerge(DEVICE_INFO, patch_version(20190808))
-    DEVICE_INFO_MINIMUM = jmerge(DEVICE_INFO, patch_version(20190808))
+    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(future_date()))
+    DEVICE_INFO_LATEST = jmerge(
+        DEVICE_INFO, patch_version(get_latest_api_level("switchBox"))
+    )
 
     # since below it 20180808 it switches to switchBox0
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180604 - 1))
@@ -276,7 +275,7 @@ class TestSwitchBoxD(DefaultBoxTest):
     DEVCLASS = "switches"
     ENTITY_CLASS = BleBoxSwitchEntity
 
-    DEV_INFO_PATH = "api/relay/state"
+    DEV_INFO_PATH = "state/extended"
 
     DEVICE_INFO = json.loads(
         """
@@ -320,10 +319,10 @@ class TestSwitchBoxD(DefaultBoxTest):
         {{ "device": {{ "apiLevel": {apiLevel} }} }}
         """
 
-    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(20190809))
-    DEVICE_INFO_LATEST = jmerge(DEVICE_INFO, patch_version(20190808))
-    DEVICE_INFO_OUTDATED = jmerge(DEVICE_INFO, patch_version(20190808))
-    DEVICE_INFO_MINIMUM = jmerge(DEVICE_INFO, patch_version(20190808))
+    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(future_date()))
+    DEVICE_INFO_LATEST = jmerge(
+        DEVICE_INFO, patch_version(get_latest_api_level("switchBoxD"))
+    )
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20190807))
 
     DEVICE_INFO_UNSPECIFIED_API = json.loads(

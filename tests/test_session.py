@@ -4,7 +4,7 @@ import pytest
 import logging
 import aiohttp
 
-from asynctest import patch, Mock, CoroutineMock
+from unittest.mock import patch, Mock, AsyncMock
 
 from blebox_uniapi.session import ApiHost as Session
 from blebox_uniapi import error
@@ -29,8 +29,8 @@ def client():
 def valid_response():
     response = Mock(spec_set=aiohttp.ClientResponse)
     response.status = 200
-    response.text = CoroutineMock(return_value="foobar")
-    response.json = CoroutineMock(return_value=123)
+    response.text = AsyncMock(return_value="foobar")
+    response.json = AsyncMock(return_value=123)
     return response
 
 
@@ -53,7 +53,7 @@ def bad_http_response(spec_set=aiohttp.ClientResponse):
 
 
 async def test_session_api_get(logger, client):
-    client.get = CoroutineMock(return_value=valid_response())
+    client.get = AsyncMock(return_value=valid_response())
     api_session = Session("127.0.0.4", "88", 2, client, None, logger)
 
     result = await api_session.async_api_get("/api/foo")
@@ -64,7 +64,7 @@ async def test_session_api_get(logger, client):
 
 
 async def test_session_default_client_created(mocked_client, logger):
-    mocked_client.get = CoroutineMock(return_value=valid_response())
+    mocked_client.get = AsyncMock(return_value=valid_response())
     api_session = Session("127.0.0.4", "88", 2, None, None, logger)
 
     result = await api_session.async_api_get("/api/foo")
@@ -74,7 +74,7 @@ async def test_session_default_client_created(mocked_client, logger):
 
 
 async def test_session_default_timeout_used(mocked_client, logger):
-    mocked_client.get = CoroutineMock(return_value=valid_response())
+    mocked_client.get = AsyncMock(return_value=valid_response())
     api_session = Session("127.0.0.4", "88", None, None, None, logger)
 
     await api_session.async_api_get("/api/foo")
@@ -88,7 +88,7 @@ async def test_session_default_timeout_used(mocked_client, logger):
 
 
 async def test_session_api_get_timeout(logger, client):
-    client.get = CoroutineMock(side_effect=timeout_error)
+    client.get = AsyncMock(side_effect=timeout_error)
     api_session = Session("127.0.0.4", "88", 2, client, None, logger)
 
     with pytest.raises(error.TimeoutError):
@@ -99,7 +99,7 @@ async def test_session_api_post_timeout(logger, client):
     def post_timeout_error(connection, **kwargs):
         timeout_error(connection, timeout=kwargs.get("timeout"))
 
-    client.post = CoroutineMock(side_effect=post_timeout_error)
+    client.post = AsyncMock(side_effect=post_timeout_error)
     api_session = Session("127.0.0.4", "88", 2, client, None, logger)
 
     with pytest.raises(error.TimeoutError):
@@ -107,16 +107,17 @@ async def test_session_api_post_timeout(logger, client):
 
 
 async def test_session_api_get_client_error(logger, client):
-    client.get = CoroutineMock(side_effect=client_error)
+    client.get = AsyncMock(side_effect=client_error)
     api_session = Session("127.0.0.4", "88", 2, client, None, logger)
     with pytest.raises(
-        error.ClientError, match=r"API request http://127\.0\.0\.4:88/api/foo failed: client err"
+        error.ClientError,
+        match=r"API request http://127\.0\.0\.4:88/api/foo failed: client err",
     ):
         await api_session.async_api_get("/api/foo")
 
 
 async def test_session_always_show_address_details(logger, client):
-    client.get = CoroutineMock(side_effect=os_error)
+    client.get = AsyncMock(side_effect=os_error)
     api_session = Session("127.0.0.4", "88", 2, client, None, logger)
     with pytest.raises(
         error.ConnectionError, match=r"Failed to connect to 127\.0\.0\.4:88: os error"
@@ -128,21 +129,21 @@ async def test_session_api_post_client_error(logger, client):
     def post_client_error(connection, **kwargs):
         client_error(connection, timeout=kwargs.get("timeout"))
 
-    client.post = CoroutineMock(side_effect=post_client_error)
+    client.post = AsyncMock(side_effect=post_client_error)
     api_session = Session("127.0.0.4", "88", 2, client, None, logger)
     with pytest.raises(error.ClientError):
         await api_session.async_api_post("/api/foo", {})
 
 
 async def test_session_api_get_http_error(logger, client):
-    client.get = CoroutineMock(return_value=bad_http_response())
+    client.get = AsyncMock(return_value=bad_http_response())
     api_session = Session("127.0.0.4", "88", 2, client, None, logger)
     with pytest.raises(error.HttpError):
         await api_session.async_api_get("/api/foo")
 
 
 async def test_session_api_post_http_error(logger, client):
-    client.post = CoroutineMock(return_value=bad_http_response())
+    client.post = AsyncMock(return_value=bad_http_response())
     api_session = Session("127.0.0.4", "88", 2, client, None, logger)
     with pytest.raises(error.HttpError):
         await api_session.async_api_post("/api/foo", {})

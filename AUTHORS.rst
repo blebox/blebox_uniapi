@@ -5,7 +5,7 @@ Credits
 Development Lead
 ----------------
 
-* Gadget Mobile <the_gadget_mobile@yahoo.com>
+* riokuu <michalhuryn@blebox.eu>
 
 Contributors
 ------------

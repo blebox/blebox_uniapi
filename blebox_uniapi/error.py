@@ -1,3 +1,6 @@
+from typing import Optional
+
+
 class Error(RuntimeError):
     """Generic blebox_uniapi error."""
 
@@ -55,75 +58,75 @@ class UnsupportedAppVersion(BoxError):
 
 
 class JPathFailed(BoxError):
-    def __init__(self, message, path, data):
+    def __init__(self, message: str, path: str, data: Optional[dict]):
         self._message = message
         self._path = path
         self._data = data
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self._message} at '{self._path}' within '''{self._data}'''"
 
 
 class BadFieldExceedsMax(BoxError):
-    def __init__(self, dev_name, field, value, max_value):
+    def __init__(self, dev_name: str, field: str, value: int, max_value: int):
         self._dev_name = dev_name
         self._field = field
         self._value = value
         self._max_value = max_value
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self._dev_name}.{self._field} is {self._value} which exceeds max ({self._max_value})"
 
 
 class BadFieldLessThanMin(BoxError):
-    def __init__(self, dev_name, field, value, min_value):
+    def __init__(self, dev_name: str, field: str, value: int, min_value: int):
         self._dev_name = dev_name
         self._field = field
         self._value = value
         self._min_value = min_value
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self._dev_name}.{self._field} is {self._value} which is less than minimum ({self._min_value})"
 
 
 class BadFieldMissing(BoxError):
-    def __init__(self, dev_name, field):
+    def __init__(self, dev_name: str, field: str):
         self._dev_name = dev_name
         self._field = field
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self._dev_name}.{self._field} is missing"
 
 
 class BadFieldNotANumber(BoxError):
-    def __init__(self, dev_name, field, value):
+    def __init__(self, dev_name: str, field: str, value: int):
         self._dev_name = dev_name
         self._field = field
         self._value = value
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f"{self._dev_name}.{self._field} is '{self._value}' which is not a number"
         )
 
 
 class BadFieldNotAString(BoxError):
-    def __init__(self, dev_name, field, value):
+    def __init__(self, dev_name: str, field: str, value: int):
         self._dev_name = dev_name
         self._field = field
         self._value = value
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self._dev_name}.{self._field} is {self._value} which is not a string"
 
 
 class BadFieldNotRGBW(BoxError):
-    def __init__(self, dev_name, field, value):
+    def __init__(self, dev_name: str, field: str, value: int):
         self._dev_name = dev_name
         self._field = field
         self._value = value
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self._dev_name}.{self._field} is {self._value} which is not a rgbw string"
 
 
@@ -145,5 +148,5 @@ class MisconfiguredDevice(BoxError):
 
 
 class DeviceStateNotAvailable(BoxError):
-    def __str__(self):
+    def __str__(self) -> str:
         return "device state not available yet"  # pragma: no cover

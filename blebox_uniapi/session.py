@@ -21,10 +21,12 @@ class ApiHost:
         session: Any,
         loop: Any,
         logger: logging.Logger = logger,
+        **auth,
     ):
         self._host = host
         self._port = port
-
+        self._username = auth.get("username")
+        self._password = auth.get("password")
         # TODO: handle empty logger?
         self._logger = logger
 
@@ -32,8 +34,13 @@ class ApiHost:
 
         self._session = session
 
+        auth = None
+
+        if any(data != None for data in [self._username, self._password]):
+            auth = aiohttp.BasicAuth(login=self._username, password=self._password)
+
         if not self._session:
-            self._session = aiohttp.ClientSession(loop=loop, timeout=timeout)
+            self._session = aiohttp.ClientSession(loop=loop, timeout=timeout, auth=auth)
 
         # TODO: remove?
         self._loop = loop
@@ -51,6 +58,10 @@ class ApiHost:
                 response = await async_method(url, timeout=client_timeout)
 
             if response.status != 200:
+                if response.status == 401:
+                    raise error.UnauthorizedRequest(
+                        f"Request to {url} failed with HTTP {response.status}, UNAUTHORISED"
+                    )
                 raise error.HttpError(
                     f"Request to {url} failed with HTTP {response.status}"
                 )
@@ -71,7 +82,11 @@ class ApiHost:
             raise error.ClientError(f"API request {url} failed: {ex}") from ex
 
     async def async_api_get(self, path: str) -> Optional[dict]:
-        return await self.async_request(path, self._session.get)
+        try:
+            return await self.async_request(path, self._session.get)
+        except Exception as ex:
+            logger.error(f"EXCEPTION DURING API CALL: {ex}")
+            raise ex
 
     async def async_api_post(
         self, path: str, data: Union[dict, str, None]

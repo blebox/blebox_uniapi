@@ -1,6 +1,10 @@
 =======
 History
 =======
+2.2.0 (2023-08-29)
+------------------
+* added last_reset to energy sensor class
+* added BasicAuth support to http client
 
 2.1.4 (2023-01-03)
 ------------------

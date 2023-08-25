@@ -48,7 +48,7 @@ def os_error(connection, timeout):
 
 def bad_http_response(spec_set=aiohttp.ClientResponse):
     response = Mock(spec_set=aiohttp.ClientResponse)
-    response.status = 401
+    response.status = 400
     return response
 
 

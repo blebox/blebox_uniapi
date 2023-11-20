@@ -145,7 +145,7 @@ class Wind(BaseSensor):
                 alias = self._alias
                 # wind value unit in API is "0.1 m/s" so to get m/s we need to divide by 10
                 # min value = 0, max value for sure not bigger than 200km/h so about 60m/s so 600 in API
-                return (product.expect_int(alias, raw, 600, 0) / 10.0)
+                return round( (product.expect_int(alias, raw, 600, 0) / 10.0), 1)
         return None
 
     def after_update(self) -> None:

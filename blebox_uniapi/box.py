@@ -255,7 +255,7 @@ class Box:
 
     def follow(self, data: dict, path: str) -> Any:
         """
-        Return payloadu from device response json.
+        Return payload from device response json.
         :param self:
         :param data:
         :param path:

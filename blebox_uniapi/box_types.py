@@ -280,8 +280,8 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
-                        "energy": "powerMeasuring/powerConsumption/[0]/value",
-                        "periodS": "powerMeasuring/powerConsumption/[0]/periodS",
+                        "energy": "powerMeasuring/powerConsumption/value",
+                        "periodS": "powerMeasuring/powerConsumption/periodS",
                         "measurment_enabled": "powerMeasuring/enabled",
                     },
                 ]
@@ -315,8 +315,8 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
-                        "energy": "powerMeasuring/powerConsumption/[0]/value",
-                        "periodS": "powerMeasuring/powerConsumption/[0]/periodS",
+                        "energy": "powerMeasuring/powerConsumption/value",
+                        "periodS": "powerMeasuring/powerConsumption/periodS",
                         "measurment_enabled": "powerMeasuring/enabled",
                     },
                 ]

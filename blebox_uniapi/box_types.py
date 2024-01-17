@@ -290,9 +290,55 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     },
     # switchBoxD
     "switchBoxD": {
-        20190808: {
-            "extended_state_path": "/state/extended",  # tylko dla testów do usunięcia nie w tym api
+        20200831: {
+            "extended_state_path": "/state/extended",
             "api_path": "/state/extended",
+            "api": {
+                "on": lambda x: ("GET", f"/s/{int(x)}/1", None),
+                "off": lambda x=None: ("GET", f"/s/{int(x)}/0", None),
+            },
+            "switches": [
+                [
+                    "0.relay",
+                    {"state": lambda x: f"relays/[relay={x}]/state"},
+                    "relay",
+                    0,
+                ],
+                [
+                    "1.relay",
+                    {"state": lambda x: f"relays/[relay={x}]/state"},
+                    "relay",
+                    1,
+                ],
+            ],
+        },
+
+        20200229: {
+            "extended_state_path": "/state/extended",
+            "api_path": "/state/extended",
+            "api": {
+                "on": lambda x: ("GET", f"/s/{int(x)}/1", None),
+                "off": lambda x=None: ("GET", f"/s/{int(x)}/0", None),
+            },
+            "switches": [
+                [
+                    "0.relay",
+                    {"state": lambda x: f"relays/[relay={x}]/state"},
+                    "relay",
+                    0,
+                ],
+                [
+                    "1.relay",
+                    {"state": lambda x: f"relays/[relay={x}]/state"},
+                    "relay",
+                    1,
+                ],
+            ],
+        },
+
+        20190808: {
+            "extended_state_path": "/api/relay/extended/state",
+            "api_path": "/api/relay/state",
             "api": {
                 "on": lambda x: ("GET", f"/s/{int(x)}/1", None),
                 "off": lambda x=None: ("GET", f"/s/{int(x)}/0", None),
@@ -315,8 +361,8 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
-                        "energy": "powerMeasuring/powerConsumption/value",
-                        "periodS": "powerMeasuring/powerConsumption/periodS",
+                        "energy": "powerMeasuring/powerConsumption/[0]/value",
+                        "periodS": "powerMeasuring/powerConsumption/[0]/periodS",
                         "measurment_enabled": "powerMeasuring/enabled",
                     },
                 ]

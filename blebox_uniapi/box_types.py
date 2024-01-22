@@ -292,7 +292,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     "switchBoxD": {
         20190808: {
             "extended_state_path": "/api/relay/extended/state",
-            "api_path": "/api/relay/state",
+            "api_path": "/api/relay/extended/state",
             "api": {
                 "on": lambda x: ("GET", f"/s/{int(x)}/1", None),
                 "off": lambda x=None: ("GET", f"/s/{int(x)}/0", None),

@@ -290,9 +290,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     },
     # switchBoxD
     "switchBoxD": {
-        20200831: {
-            "extended_state_path": "/state/extended",
-            "api_path": "/state/extended",
+        20190808: {
+            "extended_state_path": "/api/relay/extended/state",
+            "api_path": "/api/relay/state",
             "api": {
                 "on": lambda x: ("GET", f"/s/{int(x)}/1", None),
                 "off": lambda x=None: ("GET", f"/s/{int(x)}/0", None),
@@ -312,7 +312,6 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 ],
             ],
         },
-
         20200229: {
             "extended_state_path": "/state/extended",
             "api_path": "/state/extended",
@@ -335,10 +334,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 ],
             ],
         },
-
-        20190808: {
-            "extended_state_path": "/api/relay/extended/state",
-            "api_path": "/api/relay/state",
+        20200831: {
+            "extended_state_path": "/state/extended",
+            "api_path": "/state/extended",
             "api": {
                 "on": lambda x: ("GET", f"/s/{int(x)}/1", None),
                 "off": lambda x=None: ("GET", f"/s/{int(x)}/0", None),
@@ -367,7 +365,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     },
                 ]
             ],
-        }
+        },
     },
     # tempSensor
     "tempSensor": {

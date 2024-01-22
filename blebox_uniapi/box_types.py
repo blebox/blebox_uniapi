@@ -311,6 +311,16 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     1,
                 ],
             ],
+            "sensors": [
+                [
+                    "switchBox.energy",
+                    {
+                        "energy": "powerMeasuring/powerConsumption/[0]/value",
+                        "periodS": "powerMeasuring/powerConsumption/[0]/periodS",
+                        "measurment_enabled": "powerMeasuring/enabled",
+                    },
+                ]
+            ],
         },
         20200229: {
             "extended_state_path": "/state/extended",

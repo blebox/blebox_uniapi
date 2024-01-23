@@ -245,6 +245,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
         }
     },
     "switchBox": {
+        # XXX (swistakm): not listed on https://technical.blebox.eu. Where does it come from?!
         20220114: {
             "api_path": "/state",
             "extended_state_path": "/state/extended",
@@ -269,6 +270,48 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
         20190808: {
             "api_path": "/api/relay/extended/state",
             "extended_state_path": "/api/relay/extended/state",
+            "api": {
+                "on": lambda x=None: ("GET", "/s/1", None),
+                "off": lambda x=None: ("GET", "/s/0", None),
+            },
+            "switches": [
+                ["0.relay", {"state": lambda x: f"relays/[relay={x}]/state"}, "relay"]
+            ],
+            "sensors": [
+                [
+                    "switchBox.energy",
+                    {
+                        "energy": "powerMeasuring/powerConsumption/[0]/value",
+                        "periodS": "powerMeasuring/powerConsumption/[0]/periodS",
+                        "measurment_enabled": "powerMeasuring/enabled",
+                    },
+                ]
+            ],
+        },
+        20200229: {
+            "extended_state_path": "/state/extended",
+            "api_path": "/state/extended",
+            "api": {
+                "on": lambda x=None: ("GET", "/s/1", None),
+                "off": lambda x=None: ("GET", "/s/0", None),
+            },
+            "switches": [
+                ["0.relay", {"state": lambda x: f"relays/[relay={x}]/state"}, "relay"]
+            ],
+            "sensors": [
+                [
+                    "switchBox.energy",
+                    {
+                        "energy": "powerMeasuring/powerConsumption/[0]/value",
+                        "periodS": "powerMeasuring/powerConsumption/[0]/periodS",
+                        "measurment_enabled": "powerMeasuring/enabled",
+                    },
+                ]
+            ],
+        },
+        20200831: {
+            "extended_state_path": "/state/extended",
+            "api_path": "/state/extended",
             "api": {
                 "on": lambda x=None: ("GET", "/s/1", None),
                 "off": lambda x=None: ("GET", "/s/0", None),

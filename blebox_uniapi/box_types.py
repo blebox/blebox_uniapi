@@ -246,7 +246,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     },
     "switchBox": {
         20180604: {
-            "model": "switcxhBox",
+            "model": "switchBox",
             "api_path": "/api/relay/state",
             "extended_state_path": "/api/relay/extended/state",
             "api": {

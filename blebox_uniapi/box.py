@@ -37,6 +37,8 @@ class Box:
     _name: str
     _data_path: str
     _last_real_update: Optional[float]
+    _last_data: Optional[Any]
+
     api_session: ApiHost
     info: dict
     config: dict
@@ -49,6 +51,7 @@ class Box:
         config,
         extended_state,
     ) -> None:
+        self._last_data = None
         self._last_real_update = None
         self._sem = asyncio.BoundedSemaphore()
         self._session = api_session
@@ -243,6 +246,38 @@ class Box:
         await self._async_api(True, "GET", self._data_path)
 
     def _update_last_data(self, new_data: Optional[dict]) -> None:
+        # Note: on certain more complex devices that inlcude multiple features
+        # like switches and sensors (e.g. SwitchboxD) it may happen that activating
+        # single feature would result only in partial update of the self._last_data.
+        # We can know that by comparing keys of both states.
+        #
+        # Notable example of device exhibiting this behavior is SwitchboxD (20200831)
+        # It has two relays (switches) and power measurement capabilities (sensor).
+        # Toggling the relay does return state of all relays, but does not return
+        # sensor information (partial state). Accepting the new state as-is would
+        # break the update of sensory information.
+        #
+        # Note that SwitchboxD is just an example. It is possible that APIs of other
+        # box types also exhibit this kind of behavior.
+        if (
+            isinstance(self._last_data, dict) and
+            isinstance(new_data, dict) and
+            self._last_data.keys() != new_data.keys()
+        ):
+            # ... In such a case we need to merge both states instead of overwriting
+            # the old one as-is.
+            #
+            # The only risk is that if certain features are somehow coupled inside
+            # the device, we will have inconsistent information about the device.
+            # However, this should be eventually consistent as new updates arrive.
+            # In the end, it is better to have an inconsistent state, rather than
+            # have broken one (e.g. missing keys) that results in broken features.
+            #
+            # Refs:
+            # - https://github.com/blebox/blebox_uniapi/pull/152
+            # - https://github.com/blebox/blebox_uniapi/issues/137
+            new_data = {**self._last_data, **new_data}
+
         self._last_data = new_data
         for feature_set in self._features.values():
             for feature in feature_set:
@@ -255,7 +290,7 @@ class Box:
 
     def follow(self, data: dict, path: str) -> Any:
         """
-        Return payloadu from device response json.
+        Return payload from device response json.
         :param self:
         :param data:
         :param path:
@@ -268,8 +303,7 @@ class Box:
         current_tree = data
 
         for chunk in results:
-            with_string_value = re.compile("^\\[(.*)='(.*)'\\]$")
-
+            with_string_value = re.compile(r"^\[(.*)='(.*)']$")
             match = with_string_value.match(chunk)
             if match:
                 name = match.group(1)
@@ -288,7 +322,7 @@ class Box:
 
                 continue  # pragma: no cover
 
-            with_int_value = re.compile("^\\[(.*)=(\\d+)\\]$")
+            with_int_value = re.compile(r"^\[(.*)=(\d+)]$")
             match = with_int_value.match(chunk)
             if match:
                 name = match.group(1)
@@ -311,7 +345,7 @@ class Box:
                     raise JPathFailed(f"with: {name}={value}", path, data)
                 continue  # pragma: no cover
 
-            with_index = re.compile("^\\[(\\d+)\\]$")
+            with_index = re.compile(r"^\[(\d+)]$")
             match = with_index.match(chunk)
             if match:
                 index = int(match.group(1))

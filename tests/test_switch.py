@@ -286,7 +286,7 @@ class TestSwitchBoxD(DefaultBoxTest):
             "fv": "0.200",
             "hv": "0.7",
             "id": "1afe34e750b8",
-            "apiLevel": "20190808"
+            "apiLevel": "20200831"
         }
     }
     """

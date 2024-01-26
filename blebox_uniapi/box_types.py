@@ -245,18 +245,6 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
         }
     },
     "switchBox": {
-        # XXX (swistakm): not listed on https://technical.blebox.eu. Where does it come from?!
-        20220114: {
-            "api_path": "/state",
-            "extended_state_path": "/state/extended",
-            "api": {
-                "on": lambda x=None: ("GET", f"/s/{x}/1", None),
-                "off": lambda x=None: ("GET", f"/s/{x}/0", None),
-            },
-            "switches": [
-                ["relay", {"state": lambda x: f"relays/[relay={x}]/state"}, "relay"]
-            ],
-        },
         20180604: {
             "model": "switchBox",
             "api_path": "/api/relay/state",
@@ -266,6 +254,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 "off": lambda x=None: ("GET", "/s/0", None),
             },
             "switches": [["0.relay", {"state": "[relay=0]/state"}, "relay"]],
+            # note: does not support power measurement
         },
         20190808: {
             "api_path": "/api/relay/extended/state",
@@ -330,8 +319,30 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 ]
             ],
         },
+        20220114: {
+            "api_path": "/state/extended",
+            "extended_state_path": "/state/extended",
+            "api": {
+                # note: old control api (i.e. /s/0, /s/1, /s/2) still supported but
+                # now deprecated. switchBox has now API consistent with switchBoxD
+                "on": lambda x=None: ("GET", f"/s/{x}/1", None),
+                "off": lambda x=None: ("GET", f"/s/{x}/0", None),
+            },
+            "switches": [
+                ["relay", {"state": lambda x: f"relays/[relay={x}]/state"}, "relay"]
+            ],
+            "sensors": [
+                [
+                    "switchBox.energy",
+                    {
+                        "energy": "powerMeasuring/powerConsumption/[0]/value",
+                        "periodS": "powerMeasuring/powerConsumption/[0]/periodS",
+                        "measurment_enabled": "powerMeasuring/enabled",
+                    },
+                ]
+            ],
+        },
     },
-    # switchBoxD
     "switchBoxD": {
         20190808: {
             "extended_state_path": "/api/relay/extended/state",

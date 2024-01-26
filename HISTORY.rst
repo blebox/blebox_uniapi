@@ -1,6 +1,10 @@
 =======
 History
 =======
+2.2.1 (2024-01-26)
+------------------
+* fixed support for power measurement capabilities of switchBox and switchBoxD devices
+
 2.2.0 (2023-08-29)
 ------------------
 * added last_reset to energy sensor class

@@ -140,7 +140,13 @@ class Wind(BaseSensor):
     def _read_wind_speed(self):
         product = self._product
         if product.last_data is not None:
-            return self.raw_value("wind")
+            raw = self.raw_value("wind")
+            if raw is not None:
+                alias = self._alias
+                # wind value unit in API is "0.1 m/s" so to get m/s we need to divide by 10
+                # min value = 0, max value for sure not bigger than 200km/h so about 60m/s so 600 in API
+                return round(product.expect_int(alias, raw, 600, 0) / 10.0, 1)
+        return None
 
     def after_update(self) -> None:
         self._native_value = self._read_wind_speed()

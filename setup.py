@@ -39,6 +39,7 @@ setup(
     install_requires=requirements,
     license="Apache Software License 2.0",
     long_description=readme + "\n\n" + history,
+    long_description_content_type="text/x-rst",
     include_package_data=False,
     keywords="blebox_uniapi",
     name="blebox_uniapi",

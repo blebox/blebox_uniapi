@@ -1,6 +1,11 @@
 =======
 History
 =======
+2.2.2 (2024-02-07)
+------------------
+* fixed wind reading units to get proper raw m/s value (division by 10, see PR #150)
+
+
 2.2.1 (2024-01-26)
 ------------------
 * fixed support for power measurement capabilities of switchBox and switchBoxD devices

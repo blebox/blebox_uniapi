@@ -112,7 +112,7 @@ class Gate:
     def read_cover_type(
         self, alias: str, raw_value: Any, product: "Box"
     ) -> UnifiedCoverType:
-        return raw_value("gateType", UnifiedCoverType.DOOR)
+        return UnifiedCoverType.GATE
 
     @property
     def min_position(self) -> int:

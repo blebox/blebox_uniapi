@@ -154,11 +154,14 @@ class DefaultBoxTest:
         json_get_expect(
             aioclient_mock, f"http://{self.IP}:80/api/device/state", json=data
         )
-        if hasattr(self, "DEVICE_EXTENDED_INFO"):
-            data = self.DEVICE_EXTENDED_INFO if info is None else info
+        if (
+            (hasattr(self, "DEVICE_EXTENDED_INFO")) and
+            (path := getattr(self, "DEVICE_EXTENDED_INFO_PATH"))
+        ):
+            data = self.DEVICE_EXTENDED_INFO or info
             json_get_expect(
                 aioclient_mock,
-                f"http://{self.IP}:80{self.DEVICE_EXTENDED_INFO_PATH}",
+            f"http://{self.IP}:80/{path.lstrip('/')}",
                 json=data,
             )
 

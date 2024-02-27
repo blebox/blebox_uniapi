@@ -480,7 +480,7 @@ class TestGateBox(CoverTest):
 class TestGateBoxB(CoverTest):
     """Tests for cover devices representing a BleBox gateBoxB subgroup."""
 
-    DEV_INFO_PATH = "state"
+    DEV_INFO_PATH = "state/extended"
 
     DEVICE_INFO = json.loads(
         """
@@ -512,7 +512,17 @@ class TestGateBoxB(CoverTest):
     STATE_DEFAULT = json.loads(
         """
         {
-            "gate": {"currentPos": 0}
+            "gate": {
+                "currentPos": 0,
+                "openCloseMode": 0,
+                "gateType": 1,
+                "gatePulseTimeMs": 1500,
+                "gateOutputState": 0,
+                "extraButtonType": 1,
+                "extraButtonPulseTimeMs": 1500,
+                "extraButtonOutputState": 0,
+                "inputsType": 0
+            }
         }
         """
     )
@@ -524,7 +534,17 @@ class TestGateBoxB(CoverTest):
     STATE_UNKNOWN = json.loads(
         """
         {
-            "gate": {"currentPos": -1}
+            "gate": {
+                "currentPos": -1,
+                "openCloseMode": 0,
+                "gateType": 1,
+                "gatePulseTimeMs": 1500,
+                "gateOutputState": 0,
+                "extraButtonType": 1,
+                "extraButtonPulseTimeMs": 1500,
+                "extraButtonOutputState": 0,
+                "inputsType": 0
+            }
         }
         """
     )

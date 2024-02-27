@@ -126,7 +126,7 @@ class Box:
 
         self._config = config
 
-        self._update_last_data(None)
+        self._update_last_data(extended_state)
 
     def create_features(
         self, config: dict, info: dict, extended_state: Optional[dict]

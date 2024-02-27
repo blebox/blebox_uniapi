@@ -1,3 +1,5 @@
+from enum import IntEnum
+
 import blebox_uniapi.error
 from .error import MisconfiguredDevice
 from .feature import Feature
@@ -5,6 +7,18 @@ from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar
 
 if TYPE_CHECKING:
     from .box import Box
+
+
+class BleboxCoverState(IntEnum):
+    MOVING_DOWN = 0
+    MOVING_UP = 1
+    MANUALLY_STOPPED = 2
+    LOWER_LIMIT_REACHED = 3
+    UPPER_LIMIT_REACHED = 4
+    OVERLOAD = 5
+    MOTOR_FAILURE = 6
+    UNUSED = 7
+    SAFETY_STOP = 8
 
 
 class Gate:
@@ -15,7 +29,7 @@ class Gate:
 
     def read_state(self, alias: str, raw_value: Any, product: "Box") -> int:
         raw = raw_value("state")
-        return product.expect_int(alias, raw, 4, 0)
+        return product.expect_int(alias, raw, max(BleboxCoverState).value, 0)
 
     def read_desired(self, alias: str, raw_value: Any, product: "Box") -> Optional[int]:
         raw = raw_value("desired")
@@ -223,6 +237,12 @@ class Cover(Feature):
             await self.async_api_command("tilt", value)
         else:
             raise NotImplementedError
+
+    async def async_close_tilt(self, **kwargs: Any) -> None:
+        await self.async_api_command("tilt", 100)
+
+    async def async_open_tilt(self, **kwargs: Any) -> None:
+        await self.async_api_command("tilt", 0)
 
     def _read_desired(self) -> Any:
         product = self._product

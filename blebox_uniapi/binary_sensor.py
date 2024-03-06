@@ -2,8 +2,9 @@ from typing import Union
 
 from .feature import Feature
 
-from blebox_uniapi.box import Box
-
+# Forward declaration to resolve the circular import
+class Box:
+    pass
 
 class BinarySensor(Feature):
     """Class representing sensor with bool state."""
@@ -12,9 +13,7 @@ class BinarySensor(Feature):
         super().__init__(product, alias, methods)
 
     @classmethod
-    def many_from_config(
-        cls, product, box_type_config, extended_state
-    ) -> list["Feature"]:
+    def many_from_config(cls, product, box_type_config, extended_state) -> list["Feature"]:
         type_class_map = {
             "rain": Rain,
             "flood": Flood,

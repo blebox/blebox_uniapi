@@ -30,4 +30,5 @@ tomli==2.0.1
 urllib3==1.26.12
 yarg==0.1.9
 yarl==1.8.1
-
+ruff==0.3.0
+pre-commit==3.6.2

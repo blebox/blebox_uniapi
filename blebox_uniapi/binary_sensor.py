@@ -2,6 +2,8 @@ from typing import Union
 
 from .feature import Feature
 
+from .box import Box
+
 
 class BinarySensor(Feature):
     """Class representing sensor with bool state."""

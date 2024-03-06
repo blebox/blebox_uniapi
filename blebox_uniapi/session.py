@@ -36,7 +36,7 @@ class ApiHost:
 
         auth = None
 
-        if any(data != None for data in [self._username, self._password]):
+        if any(data is not None for data in [self._username, self._password]):
             auth = aiohttp.BasicAuth(login=self._username, password=self._password)
 
         if not self._session:

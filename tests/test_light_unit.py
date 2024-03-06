@@ -103,7 +103,7 @@ def test_dimmer_box_normalise_elements_of_rgb(dimmer_box: Light, io_params):
     assert dimmer_box.normalise_elements_of_rgb(io_params[0]) == io_params[1]
 
 
-def test_dimmer_box_normalise_elements_of_rgb(dimmer_box: Light):
+def test_dimmer_box_normalise_elements_of_rgb_invalid_values(dimmer_box: Light):
     with pytest.raises(ValueError):
         dimmer_box.normalise_elements_of_rgb([-10])
 

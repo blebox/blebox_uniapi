@@ -141,7 +141,6 @@ class Light(Feature):
     def many_from_config(
         cls, product, box_type_config, extended_state
     ) -> list["Light"]:
-
         if isinstance(extended_state, dict) and extended_state is not None:
             desired_color = extended_state.get("rgbw", {}).get("desiredColor")
             color_mode = extended_state.get("rgbw", {}).get("colorMode")
@@ -165,7 +164,11 @@ class Light(Feature):
         if extended_state is not None and color_mode is not None:
             if BleboxColorMode(color_mode).name == "RGBW":
                 if len(desired_color) == 10:
-                    mask = lambda x: f"{x}--"
+
+                    def generate_mask(x):
+                        return f"{x}--"
+
+                    mask = generate_mask
                 else:
                     mask = None
                 return [cls(product, alias=alias + "_RGBW", mask=mask, **const_kwargs)]

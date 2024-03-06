@@ -1,4 +1,5 @@
 """BleBox cover entities tests."""
+
 import json
 
 import pytest

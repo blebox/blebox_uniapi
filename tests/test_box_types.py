@@ -10,7 +10,6 @@ from blebox_uniapi.box_types import (
 
 
 class TestBoxTypes:
-
     box_types = tuple(BOX_TYPE_CONF.keys())
     simple_conf_set = {5: {"tag": "first_entry"}, 10: {"tag": "second_entry"}}
 

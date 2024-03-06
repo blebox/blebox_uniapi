@@ -1,0 +1,6 @@
+{
+  "extends": ["ruff/configurations/eslint", "ruff/configurations/prettier"],
+  "rules": {
+
+  }
+}

@@ -174,7 +174,6 @@ class Cover(Feature):
         subclass: Type[GateT],
         extended_state: dict,
     ) -> None:
-
         self._control_type = None
         if extended_state not in [None, {}]:
             self._control_type = extended_state.get("shutter", {}).get(
@@ -190,7 +189,6 @@ class Cover(Feature):
     def many_from_config(
         cls, product, box_type_config, extended_state
     ) -> list["Feature"]:
-
         return [cls(product, *args, extended_state) for args in box_type_config]
 
     @property

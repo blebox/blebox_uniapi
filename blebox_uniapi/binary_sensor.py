@@ -2,7 +2,7 @@ from typing import Union
 
 from .feature import Feature
 
-from .box import Box
+from blebox_uniapi.box import Box
 
 
 class BinarySensor(Feature):

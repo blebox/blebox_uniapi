@@ -2,7 +2,7 @@ from typing import Union, TYPE_CHECKING
 
 from .feature import Feature
 
-if TYPE_CHECKING
+if TYPE_CHECKING:
     from .box import Box
 
 

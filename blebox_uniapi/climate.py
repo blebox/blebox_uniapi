@@ -151,15 +151,15 @@ class Climate(Temperature):
 
     @staticmethod
     def get_temp_sensor_id(safety_sensor_id: int, sensor_list) -> Optional[int]:
-        """Return ID of first sensor which is not safety sensor."""
-        li_sensor_id = list()
-        for sensor in sensor_list:
-            id = sensor.get("id")
-            if id is not None and id != safety_sensor_id:
-                li_sensor_id.append(sensor["id"])
+        """Return ID of the first sensor which is not a safety sensor."""
+        li_sensor_id = [
+            sensor.get("id")
+            for sensor in sensor_list
+            if sensor.get("id") is not None and sensor.get("id") != safety_sensor_id
+        ]
         li_sensor_id.sort()
 
-        if len(li_sensor_id) == False:
+        if not li_sensor_id:
             return None
 
         return li_sensor_id[0]

@@ -1,10 +1,10 @@
 """BleBox light entities tests."""
+
 import json
 
 from .conftest import CommonEntity, DefaultBoxTest, future_date, jmerge
 
 from blebox_uniapi.box_types import get_latest_api_level
-from blebox_uniapi.error import BadOnValueError, UnsupportedBoxVersion
 from blebox_uniapi.light import Light
 
 # TODO: remove
@@ -1027,7 +1027,6 @@ class TestWLightBox(DefaultBoxTest):
         assert max(entity.rgb_color) == 255
 
     async def test_sensible_on_value_for_color_mode_1(self, aioclient_mock):
-
         self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_1
         self.DEVICE_EXTENDED_INFO = jmerge(
             self.DEVICE_EXTENDED_INFO, self.patch_state("00000000", "00000000")

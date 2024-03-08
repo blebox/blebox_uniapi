@@ -1,4 +1,5 @@
 """BleBox climate entities tests."""
+
 import json
 
 from blebox_uniapi.box_types import get_latest_api_level

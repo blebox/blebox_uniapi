@@ -131,7 +131,6 @@ class Box:
     def create_features(
         self, config: dict, info: dict, extended_state: Optional[dict]
     ) -> dict:
-
         features = {}
         for field, klass in {
             "covers": Cover,
@@ -260,9 +259,9 @@ class Box:
         # Note that SwitchboxD is just an example. It is possible that APIs of other
         # box types also exhibit this kind of behavior.
         if (
-            isinstance(self._last_data, dict) and
-            isinstance(new_data, dict) and
-            self._last_data.keys() != new_data.keys()
+            isinstance(self._last_data, dict)
+            and isinstance(new_data, dict)
+            and self._last_data.keys() != new_data.keys()
         ):
             # ... In such a case we need to merge both states instead of overwriting
             # the old one as-is.
@@ -398,7 +397,7 @@ class Box:
         if value is None:
             raise BadFieldMissing(self.name, field)
 
-        if not type(value) is int:
+        if not isinstance(value, int):
             raise BadFieldNotANumber(self.name, field, value)
 
         return self.check_int_range(value, field, max_value, min_value)

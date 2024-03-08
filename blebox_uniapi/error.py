@@ -32,8 +32,10 @@ class ClientError(Error):
 class HttpError(ClientError):
     pass
 
+
 class UnauthorizedRequest(ClientError):
     pass
+
 
 # API errors
 

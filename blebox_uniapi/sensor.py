@@ -31,6 +31,26 @@ class BaseSensor(Feature):
         raise NotImplementedError("Please use SensorFactory")
 
 
+class Illuminance(BaseSensor):
+    def __init__(self, product: "Box", alias: str, methods: dict):
+        super().__init__(product, alias, methods)
+        self._unit = "lx"
+        self._device_class = "illuminance"
+
+    def _read_illuminance(self):
+        product = self._product
+        if product.last_data is not None:
+            raw = self.raw_value("illuminance")
+            if raw is not None:
+                alias = self._alias
+                return round(product.expect_int(alias, raw, 10000000, 0) / 100.0, 1)
+                # 100000, 0 is a representation of illuminance range in lx in mili (it should be devided by 100 like temprature)
+        return None
+
+    def after_update(self) -> None:
+        self._native_value = self._read_illuminance()
+
+
 class Temperature(BaseSensor):
     _current: Union[float, int, None]
 
@@ -93,6 +113,7 @@ class Humidity(BaseSensor):
             if raw is not None:
                 alias = self._alias
                 return round(product.expect_int(alias, raw, 10000, 0) / 100.0, 1)
+
         return None
 
     def after_update(self) -> None:
@@ -162,6 +183,7 @@ class SensorFactory:
             "temperature": Temperature,
             "humidity": Humidity,
             "wind": Wind,
+            "illuminance": Illuminance,
         }
         if extended_state:
             object_list = list()

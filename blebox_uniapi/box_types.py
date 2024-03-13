@@ -593,6 +593,30 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
         },
     },
     "multiSensor": {
+        20220114: {
+            "api_path": "/state",
+            "extended_state_path": "/state/extended",
+            "sensors": [
+                [
+                    "multiSensor",
+                    {
+                        "illuminance": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "temperature": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "wind": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "humidity": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                    },
+                ]
+            ],
+            "binary_sensors": [
+                [
+                    "multiSensor",
+                    {
+                        "rain": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "flood": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                    },
+                ]
+            ],
+        },
         20210413: {
             "api_path": "/state",
             "extended_state_path": "/state/extended",

@@ -542,7 +542,7 @@ class TestWLightBoxS(DefaultBoxTest):
 
         assert entity.name == "My wLightBoxS (wLightBoxS#brightness_mono1)"
         assert entity.unique_id == "BleBox-wLightBoxS-1afe34e750b8-brightness_mono1"
-        assert entity.brightness == 0xf5
+        assert entity.brightness == 0xF5
         assert entity.is_on
 
     async def test_device_info(self, aioclient_mock):

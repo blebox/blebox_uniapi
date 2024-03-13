@@ -77,6 +77,7 @@ class UnifiedCoverType(IntEnum):
     can be infered from internal device information end exposed to library user.
 
     """
+
     AWNING = auto()
     BLIND = auto()
     CURTAIN = auto()

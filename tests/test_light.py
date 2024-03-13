@@ -444,7 +444,7 @@ class TestWLightBoxS(DefaultBoxTest):
     DEVICE_EXTENDED_INFO = {
         "rgbw": {
             "desiredColor": "f5",
-            "currentColor": "f5",
+            "currentColor": "f5",  # 245 in decimal
             "lastOnColor": "f5",
             "durationsMs": {"colorFade": 1000, "effectFade": 1000, "effectStep": 1000},
             "effectID": 0,
@@ -542,9 +542,8 @@ class TestWLightBoxS(DefaultBoxTest):
 
         assert entity.name == "My wLightBoxS (wLightBoxS#brightness_mono1)"
         assert entity.unique_id == "BleBox-wLightBoxS-1afe34e750b8-brightness_mono1"
-        assert entity.brightness is None
-
-        assert entity.is_on is None
+        assert entity.brightness == 0xf5
+        assert entity.is_on
 
     async def test_device_info(self, aioclient_mock):
         await self.allow_get_info(aioclient_mock, self.DEVICE_INFO)
@@ -863,16 +862,12 @@ class TestWLightBox(DefaultBoxTest):
         assert entity.name == "My light 1 (wLightBox#color_RGBorW)"
         assert entity.unique_id == "BleBox-wLightBox-1afe34e750b8-color_RGBorW"
         # In current state of master branch white_value is not property of BleBoxLightEntity, fake test... dissapointing
-        # assert entity.supported_features & SUPPORT_WHITE_VALUE
-        # assert entity.white_value is None
+        assert entity._feature.supports_white
+        assert entity._feature.white_value == 0x3A
 
-        # assert entity.supported_features & SUPPORT_COLOR
-        # assert entity.hs_color is None
-        # assert entity.white_value is None
-
-        # assert entity.supported_features & SUPPORT_BRIGHTNESS
-        # assert entity.brightness == 123
-        assert entity.is_on is None
+        assert entity._feature.supports_color
+        assert entity.brightness == 0xFA
+        assert entity.is_on is True
 
     async def test_device_info(self, aioclient_mock):
         await self.allow_get_info(aioclient_mock, self.DEVICE_INFO)

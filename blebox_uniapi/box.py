@@ -117,16 +117,11 @@ class Box:
         self._firmware_version = firmware_version
         self._hardware_version = hardware_version
         self._api_version = level
-
         self._model = config.get("model", type)
-
         self._api = config.get("api", {})
-
         self._features = self.create_features(config, info, extended_state)
-
         self._config = config
-
-        self._update_last_data(None)
+        self._update_last_data(extended_state)
 
     def create_features(
         self, config: dict, info: dict, extended_state: Optional[dict]

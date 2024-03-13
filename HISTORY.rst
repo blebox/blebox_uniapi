@@ -1,6 +1,14 @@
 =======
 History
 =======
+2.3.0 (2024-03-13)
+------------------
+* feat: add new methods to cover feature enabling handling of tilt open/close actions by @swistakm in https://github.com/blebox/blebox_uniapi/pull/154
+* add support for flood sensing for multisensors as binary moisture sensor by @swistakm in https://github.com/blebox/blebox_uniapi/pull/153
+* feat/fix: Add Ruff and Pre-commit Configuration, Resolve Undefined Name by @Pastucha in https://github.com/blebox/blebox_uniapi/pull/158
+* gatebox and shutterbox improvements: by @swistakm in https://github.com/blebox/blebox_uniapi/pull/156
+
+
 2.2.2 (2024-02-07)
 ------------------
 * fixed wind reading units to get proper raw m/s value (division by 10, see PR #150)

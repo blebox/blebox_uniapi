@@ -7,7 +7,7 @@ History
 * add support for flood sensing for multisensors as binary moisture sensor by @swistakm in https://github.com/blebox/blebox_uniapi/pull/153
 * feat/fix: Add Ruff and Pre-commit Configuration, Resolve Undefined Name by @Pastucha in https://github.com/blebox/blebox_uniapi/pull/158
 * gatebox and shutterbox improvements: by @swistakm in https://github.com/blebox/blebox_uniapi/pull/156
-
+* BleBox Multisensor Illuminance Integration by @Pastucha in https://github.com/blebox/blebox_uniapi/pull/161
 
 2.2.2 (2024-02-07)
 ------------------

@@ -121,7 +121,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
             ],
         },
         20200831: {
-            "api_path": "/state",
+            "api_path": "/state/extended",
             "extended_state_path": "/state/extended",
             "api": {
                 "primary": lambda x=None: ("GET", "/s/p", None),
@@ -132,6 +132,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     "position",
                     {
                         "position": "gate/currentPos",
+                        "gate_type": "gate/gateType",
                     },
                     "gatebox",
                     GateBoxB,

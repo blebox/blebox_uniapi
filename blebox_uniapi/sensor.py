@@ -1,17 +1,19 @@
 import datetime
-
 from .feature import Feature
 from typing import TYPE_CHECKING, Union, Optional
 
 if TYPE_CHECKING:
     from .box import Box
 
+class SensorRegistry:
+    type_class_mapper = {}
 
 class BaseSensor(Feature):
     _unit: str
     _device_class: str
     _native_value: Union[float, int, str]
 
+    type_class_mapper = {}
     def __init__(self, product: "Box", alias: str, methods: dict):
         super().__init__(product, alias, methods)
 
@@ -27,15 +29,31 @@ class BaseSensor(Feature):
     def native_value(self):
         return self._native_value
 
+    @classmethod
+    def register(cls, sensor_type):
+        def decorator(subclass):
+            BaseSensor.type_class_mapper[sensor_type] = subclass
+            return subclass
+        return decorator
+
+
+    @classmethod
     def many_from_config(cls, product, box_type_config, extended_state):
         raise NotImplementedError("Please use SensorFactory")
 
 
+@BaseSensor.register("illuminance")
 class Illuminance(BaseSensor):
+    _current: Union[float, int, None]
+
     def __init__(self, product: "Box", alias: str, methods: dict):
         super().__init__(product, alias, methods)
         self._unit = "lx"
         self._device_class = "illuminance"
+
+    @property
+    def current(self) -> Union[float, int, None]:
+        return self._current
 
     def _read_illuminance(self):
         product = self._product
@@ -44,33 +62,31 @@ class Illuminance(BaseSensor):
             if raw is not None:
                 alias = self._alias
                 return round(product.expect_int(alias, raw, 10000000, 0) / 100.0, 1)
-                # 100000, 0 is a representation of illuminance range in lx in mili (it should be devided by 100 like temprature)
         return None
 
     def after_update(self) -> None:
         self._native_value = self._read_illuminance()
 
 
+@BaseSensor.register("temperature")
 class Temperature(BaseSensor):
     _current: Union[float, int, None]
 
     def __init__(self, product: "Box", alias: str, methods: dict):
+        super().__init__(product, alias, methods)
         self._unit = "celsius"
         self._device_class = "temperature"
-        super().__init__(product, alias, methods)
 
     @property
     def current(self) -> Union[float, int, None]:
         return self._current
 
-    # TODO: use as attribute in product config
     def _read_temperature(self, field: str) -> Union[float, int, None]:
         product = self._product
         if product.last_data is not None:
             raw = self.raw_value(field)
             if raw is not None:
                 alias = self._alias
-                # 12500, -5500 is a representation of temperature range in millidegree Celsius
                 return round(product.expect_int(alias, raw, 12500, -5500) / 100.0, 1)
         return None
 
@@ -79,6 +95,7 @@ class Temperature(BaseSensor):
         self._native_value = self._read_temperature("temperature")
 
 
+@BaseSensor.register("airSensor")
 class AirQuality(BaseSensor):
     _pm: Optional[int]
 
@@ -99,7 +116,7 @@ class AirQuality(BaseSensor):
     def after_update(self) -> None:
         self._native_value = self._pm_value(f"{self.device_class}.value")
 
-
+@BaseSensor.register("humidity")
 class Humidity(BaseSensor):
     def __init__(self, product: "Box", alias: str, methods: dict):
         super().__init__(product, alias, methods)
@@ -151,7 +168,7 @@ class Energy(BaseSensor):
     def after_update(self) -> None:
         self._native_value = self._read_power_measurement()
 
-
+@BaseSensor.register("wind")
 class Wind(BaseSensor):
     def __init__(self, product: "Box", alias: str, methods: dict):
         super().__init__(product, alias, methods)
@@ -175,18 +192,10 @@ class Wind(BaseSensor):
 
 class SensorFactory:
     @classmethod
-    def many_from_config(
-        cls, product, box_type_config, extended_state
-    ) -> list["BaseSensor"]:
-        type_class_mapper = {
-            "airSensor": AirQuality,
-            "temperature": Temperature,
-            "humidity": Humidity,
-            "wind": Wind,
-            "illuminance": Illuminance,
-        }
+    def many_from_config(cls, product, box_type_config, extended_state):
+        type_class_mapper = BaseSensor.type_class_mapper
         if extended_state:
-            object_list = list()
+            object_list = []
             alias, methods = box_type_config[0]
             sensor_list = extended_state.get("multiSensor", {}).get("sensors", [])
             for sensor in sensor_list:
@@ -201,13 +210,12 @@ class SensorFactory:
                             methods=value_method,
                         )
                     )
-            ### power consumption
+
             if "powerConsumption" in str(extended_state):
                 consumption_meters = extended_state.get("powerMeasuring", {}).get(
                     "powerConsumption", []
                 )
                 for _ in consumption_meters:
-                    # method = methods
                     object_list.append(
                         Energy(
                             product=product, alias="powerConsumption", methods=methods

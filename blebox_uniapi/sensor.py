@@ -19,7 +19,7 @@ class SensorFactory:
 
     @classmethod
     def many_from_config(cls, product, box_type_config, extended_state):
-        type_class_mapper = BaseSensor.type_class_mapper
+        type_class_mapper = cls.type_class_mapper
         if extended_state:
             object_list = []
             alias, methods = box_type_config[0]
@@ -69,8 +69,6 @@ class BaseSensor(Feature):
     _unit: str
     _device_class: str
     _native_value: Union[float, int, str]
-
-    type_class_mapper = {}
 
     def __init__(self, product: "Box", alias: str, methods: dict):
         super().__init__(product, alias, methods)

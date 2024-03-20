@@ -221,9 +221,7 @@ class Energy(BaseSensor):
         self._native_value = self._read_power_measurement()
 
 
-SensorFactory.register("wind")
-
-
+@SensorFactory.register("wind")
 class Wind(BaseSensor):
     def __init__(self, product: "Box", alias: str, methods: dict):
         super().__init__(product, alias, methods)

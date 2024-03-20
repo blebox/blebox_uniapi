@@ -5,15 +5,71 @@ from typing import TYPE_CHECKING, Union, Optional
 if TYPE_CHECKING:
     from .box import Box
 
-class SensorRegistry:
-    type_class_mapper = {}
+
+class SensorFactory:
+    type_class_mapper: dict[str, type] = {}
+
+    @classmethod
+    def register(cls, sensor_type: str):
+        def decorator(subclass: type):
+            cls.type_class_mapper[sensor_type] = subclass
+            return subclass
+
+        return decorator
+
+    @classmethod
+    def many_from_config(cls, product, box_type_config, extended_state):
+        type_class_mapper = cls.type_class_mapper
+        if extended_state:
+            object_list = []
+            alias, methods = box_type_config[0]
+            sensor_list = extended_state.get("multiSensor", {}).get("sensors", [])
+            for sensor in sensor_list:
+                sensor_type = sensor.get("type")
+                sensor_id = sensor.get("id")
+                if type_class_mapper.get(sensor_type):
+                    value_method = {sensor_type: methods[sensor_type](sensor_id)}
+                    object_list.append(
+                        type_class_mapper[sensor_type](
+                            product=product,
+                            alias=f"{sensor_type}_{str(sensor_id)}",
+                            methods=value_method,
+                        )
+                    )
+
+            if "powerConsumption" in str(extended_state):
+                consumption_meters = extended_state.get("powerMeasuring", {}).get(
+                    "powerConsumption", []
+                )
+                for _ in consumption_meters:
+                    object_list.append(
+                        Energy(
+                            product=product, alias="powerConsumption", methods=methods
+                        )
+                    )
+
+            return object_list
+        else:
+            alias, methods = box_type_config[0]
+            if alias.endswith("air"):
+                method_list = [method for method in methods if "value" in method]
+                return [
+                    AirQuality(
+                        product=product, alias=method.split(".")[0], methods=methods
+                    )
+                    for method in method_list
+                ]
+            if alias.endswith("temperature"):
+                return [Temperature(product=product, alias=alias, methods=methods)]
+            else:
+                return []
+
 
 class BaseSensor(Feature):
     _unit: str
     _device_class: str
     _native_value: Union[float, int, str]
 
-    type_class_mapper = {}
     def __init__(self, product: "Box", alias: str, methods: dict):
         super().__init__(product, alias, methods)
 
@@ -30,19 +86,11 @@ class BaseSensor(Feature):
         return self._native_value
 
     @classmethod
-    def register(cls, sensor_type):
-        def decorator(subclass):
-            BaseSensor.type_class_mapper[sensor_type] = subclass
-            return subclass
-        return decorator
-
-
-    @classmethod
     def many_from_config(cls, product, box_type_config, extended_state):
         raise NotImplementedError("Please use SensorFactory")
 
 
-@BaseSensor.register("illuminance")
+@SensorFactory.register("illuminance")
 class Illuminance(BaseSensor):
     _current: Union[float, int, None]
 
@@ -66,9 +114,10 @@ class Illuminance(BaseSensor):
 
     def after_update(self) -> None:
         self._native_value = self._read_illuminance()
+        self._current = self._read_illuminance()
 
 
-@BaseSensor.register("temperature")
+@SensorFactory.register("temperature")
 class Temperature(BaseSensor):
     _current: Union[float, int, None]
 
@@ -95,7 +144,7 @@ class Temperature(BaseSensor):
         self._native_value = self._read_temperature("temperature")
 
 
-@BaseSensor.register("airSensor")
+@SensorFactory.register("airSensor")
 class AirQuality(BaseSensor):
     _pm: Optional[int]
 
@@ -116,7 +165,8 @@ class AirQuality(BaseSensor):
     def after_update(self) -> None:
         self._native_value = self._pm_value(f"{self.device_class}.value")
 
-@BaseSensor.register("humidity")
+
+@SensorFactory.register("humidity")
 class Humidity(BaseSensor):
     def __init__(self, product: "Box", alias: str, methods: dict):
         super().__init__(product, alias, methods)
@@ -168,7 +218,8 @@ class Energy(BaseSensor):
     def after_update(self) -> None:
         self._native_value = self._read_power_measurement()
 
-@BaseSensor.register("wind")
+
+@SensorFactory.register("wind")
 class Wind(BaseSensor):
     def __init__(self, product: "Box", alias: str, methods: dict):
         super().__init__(product, alias, methods)
@@ -188,52 +239,3 @@ class Wind(BaseSensor):
 
     def after_update(self) -> None:
         self._native_value = self._read_wind_speed()
-
-
-class SensorFactory:
-    @classmethod
-    def many_from_config(cls, product, box_type_config, extended_state):
-        type_class_mapper = BaseSensor.type_class_mapper
-        if extended_state:
-            object_list = []
-            alias, methods = box_type_config[0]
-            sensor_list = extended_state.get("multiSensor", {}).get("sensors", [])
-            for sensor in sensor_list:
-                sensor_type = sensor.get("type")
-                sensor_id = sensor.get("id")
-                if type_class_mapper.get(sensor_type):
-                    value_method = {sensor_type: methods[sensor_type](sensor_id)}
-                    object_list.append(
-                        type_class_mapper[sensor_type](
-                            product=product,
-                            alias=f"{sensor_type}_{str(sensor_id)}",
-                            methods=value_method,
-                        )
-                    )
-
-            if "powerConsumption" in str(extended_state):
-                consumption_meters = extended_state.get("powerMeasuring", {}).get(
-                    "powerConsumption", []
-                )
-                for _ in consumption_meters:
-                    object_list.append(
-                        Energy(
-                            product=product, alias="powerConsumption", methods=methods
-                        )
-                    )
-
-            return object_list
-        else:
-            alias, methods = box_type_config[0]
-            if alias.endswith("air"):
-                method_list = [method for method in methods if "value" in method]
-                return [
-                    AirQuality(
-                        product=product, alias=method.split(".")[0], methods=methods
-                    )
-                    for method in method_list
-                ]
-            if alias.endswith("temperature"):
-                return [Temperature(product=product, alias=alias, methods=methods)]
-            else:
-                return []

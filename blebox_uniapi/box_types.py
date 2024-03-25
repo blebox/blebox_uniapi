@@ -2,7 +2,7 @@ from .cover import Gate, GateBox, GateBoxB, Shutter
 from typing import Union, Any
 
 # default api level for all products that don't have one
-default_api_level = 20151206
+_DEFAULT_API_LEVEL = 20151206
 
 
 def get_conf_set(product_type: str) -> dict:
@@ -76,7 +76,8 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     },
     # dimmerBox
     "dimmerBox": {
-        default_api_level: {
+        # default_API
+        20151206: {
             "api_path": "/api/dimmer/state",
             "api": {
                 "set": lambda x: (
@@ -101,7 +102,8 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     },
     # gateBox
     "gateBox": {
-        default_api_level: {
+        # default_API
+        20151206: {
             "api_path": "/api/gate/state",
             "api": {
                 "primary": lambda x=None: ("GET", "/s/p", None),
@@ -167,7 +169,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
             ],
         }
     },
-    # saunaBox
+    # thermoBox
     "thermoBox": {
         20200229: {
             "api_path": "/state/extended",
@@ -194,6 +196,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
             ],
         }
     },
+    # saunaBox
     "saunaBox": {
         20180604: {
             # TODO: read extended state only once on startup
@@ -219,6 +222,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
             ],
         }
     },
+    # shutterBox
     "shutterBox": {
         20180604: {
             "api_path": "/api/shutter/state",
@@ -245,6 +249,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
             ],
         }
     },
+    # switchBox
     "switchBox": {
         20180604: {
             "model": "switchBox",
@@ -344,6 +349,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
             ],
         },
     },
+    # switchBoxD
     "switchBoxD": {
         20190808: {
             "extended_state_path": "/api/relay/extended/state",
@@ -461,7 +467,8 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     },
     # wLightBox
     "wLightBox": {
-        default_api_level: {
+        # default_API
+        20151206: {
             "api_path": "/api/device/state",
             "api": {
                 "set": lambda x: (
@@ -531,7 +538,8 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
     },
     # wLightBoxS
     "wLightBoxS": {
-        default_api_level: {
+        # default_API
+        20151206: {
             "api_path": "/api/device/state",
             "api": {
                 "set": lambda x: (
@@ -592,18 +600,17 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
             ],
         },
     },
+    # multiSensor
     "multiSensor": {
-        20220114: {
+        20200831: {
             "api_path": "/state",
             "extended_state_path": "/state/extended",
             "sensors": [
                 [
                     "multiSensor",
                     {
-                        "illuminance": lambda x: f"multiSensor/sensors/[id={x}]/value",
                         "temperature": lambda x: f"multiSensor/sensors/[id={x}]/value",
                         "wind": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "humidity": lambda x: f"multiSensor/sensors/[id={x}]/value",
                     },
                 ]
             ],
@@ -640,15 +647,17 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 ]
             ],
         },
-        20200831: {
+        20220114: {
             "api_path": "/state",
             "extended_state_path": "/state/extended",
             "sensors": [
                 [
                     "multiSensor",
                     {
+                        "illuminance": lambda x: f"multiSensor/sensors/[id={x}]/value",
                         "temperature": lambda x: f"multiSensor/sensors/[id={x}]/value",
                         "wind": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "humidity": lambda x: f"multiSensor/sensors/[id={x}]/value",
                     },
                 ]
             ],

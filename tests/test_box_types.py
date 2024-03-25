@@ -9,6 +9,17 @@ from blebox_uniapi.box_types import (
 )
 
 
+class TestBoxTypesOrder:
+    def test_conf_order(self):
+        for device_type, conf_set in BOX_TYPE_CONF.items():
+            api_levels = list(conf_set.keys())
+            sorted_api_levels = sorted(api_levels)
+
+            assert (
+                api_levels == sorted_api_levels
+            ), f"Entries for '{device_type}' are not ordered by API level."
+
+
 class TestBoxTypes:
     box_types = tuple(BOX_TYPE_CONF.keys())
     simple_conf_set = {5: {"tag": "first_entry"}, 10: {"tag": "second_entry"}}

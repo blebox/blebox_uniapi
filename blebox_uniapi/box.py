@@ -6,7 +6,7 @@ import time
 
 from typing import Optional, Any, Dict
 
-from .box_types import default_api_level, get_conf, get_conf_set
+from .box_types import _DEFAULT_API_LEVEL, get_conf, get_conf_set
 from .button import Button
 from .climate import Climate
 from .cover import Cover
@@ -107,7 +107,7 @@ class Box:
                 info, f"{location} has no hardware version"
             ) from ex
 
-        level = int(info.get("apiLevel", default_api_level))
+        level = int(info.get("apiLevel", _DEFAULT_API_LEVEL))
 
         self._data_path = config["api_path"]
         self._type = type
@@ -179,7 +179,7 @@ class Box:
             product = device_type
         if device_type == "wLightBox" and product == "wLightBoxS":
             device_type = "wLightBoxS"
-        level = int(info.get("apiLevel", default_api_level))
+        level = int(info.get("apiLevel", _DEFAULT_API_LEVEL))
         config_set = get_conf_set(device_type)
         if not config_set:
             raise UnsupportedBoxResponse(f"{device_type} is not a supported type")

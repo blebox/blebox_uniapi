@@ -90,6 +90,176 @@ class BaseSensor(Feature):
         raise NotImplementedError("Please use SensorFactory")
 
 
+@SensorFactory.register("frequency")
+class Frequency(BaseSensor):
+    def __init__(self, product: "Box", alias: str, methods: dict):
+        super().__init__(product, alias, methods)
+        self._unit = "Hz"
+        self._device_class = "frequency"
+
+    def _read_frequency(self):
+        product = self._product
+        if product.last_data is not None:
+            raw = self.raw_value("frequency")
+            if raw is not None:
+                alias = self._alias
+                return round(
+                    product.expect_int(alias, raw, 1000000, -100000) / 1000.0, 1
+                )
+        return None
+
+    def after_update(self) -> None:
+        self._native_value = self._read_frequency()
+        self._current = self._read_frequency()
+
+
+@SensorFactory.register("current")
+class Current(BaseSensor):
+    def __init__(self, product: "Box", alias: str, methods: dict):
+        super().__init__(product, alias, methods)
+        self._unit = "mA"
+        self._device_class = "current"
+
+    def _read_current(self):
+        product = self._product
+        if product.last_data is not None:
+            raw = self.raw_value("current")
+            if raw is not None:
+                alias = self._alias
+                return round(product.expect_int(alias, raw, 1000000, -100000) / 10.0, 2)
+        return None
+
+    def after_update(self) -> None:
+        self._native_value = self._read_current()
+        self._current = self._read_current()
+
+
+@SensorFactory.register("voltage")
+class Voltage(BaseSensor):
+    def __init__(self, product: "Box", alias: str, methods: dict):
+        super().__init__(product, alias, methods)
+        self._unit = "v"
+        self._device_class = "voltage"
+
+    def _read_voltage(self):
+        product = self._product
+        if product.last_data is not None:
+            raw = self.raw_value("voltage")
+            if raw is not None:
+                alias = self._alias
+                return round(product.expect_int(alias, raw, 1000000, -100000) / 10.0, 1)
+        return None
+
+    def after_update(self) -> None:
+        self._native_value = self._read_voltage()
+        self._current = self._read_voltage()
+
+
+@SensorFactory.register("apparentPower")
+class ApparentPower(BaseSensor):
+    def __init__(self, product: "Box", alias: str, methods: dict):
+        super().__init__(product, alias, methods)
+        self._unit = "va"
+        self._device_class = "apparentPower"
+
+    def _read_apparentPower(self):
+        product = self._product
+        if product.last_data is not None:
+            raw = self.raw_value("apparentPower")
+            if raw is not None:
+                alias = self._alias
+                return round(product.expect_int(alias, raw, 10000000, 0), 1)
+        return None
+
+    def after_update(self) -> None:
+        self._native_value = self._read_apparentPower()
+        self._current = self._read_apparentPower()
+
+
+@SensorFactory.register("reactivePower")
+class ReactivePower(BaseSensor):
+    def __init__(self, product: "Box", alias: str, methods: dict):
+        super().__init__(product, alias, methods)
+        self._unit = "var"
+        self._device_class = "reactivePower"
+
+    def _read_reactivePower(self):
+        product = self._product
+        if product.last_data is not None:
+            raw = self.raw_value("reactivePower")
+            if raw is not None:
+                alias = self._alias
+                return round(product.expect_int(alias, raw, 10000000, 0), 1)
+        return None
+
+    def after_update(self) -> None:
+        self._native_value = self._read_reactivePower()
+        self._current = self._read_reactivePower()
+
+
+@SensorFactory.register("activePower")
+class ActivePower(BaseSensor):
+    def __init__(self, product: "Box", alias: str, methods: dict):
+        super().__init__(product, alias, methods)
+        self._unit = "W"
+        self._device_class = "activePower"
+
+    def _read_activePower(self):
+        product = self._product
+        if product.last_data is not None:
+            raw = self.raw_value("activePower")
+            if raw is not None:
+                alias = self._alias
+                return round(product.expect_int(alias, raw, 10000000, 0), 1)
+        return None
+
+    def after_update(self) -> None:
+        self._native_value = self._read_activePower()
+        self._current = self._read_activePower()
+
+
+@SensorFactory.register("reverseActiveEnergy")
+class ReverseActiveEnergy(BaseSensor):
+    def __init__(self, product: "Box", alias: str, methods: dict):
+        super().__init__(product, alias, methods)
+        self._unit = "kWh"
+        self._device_class = "reverseActiveEnergy"
+
+    def _read_reverseActiveEnergy(self):
+        product = self._product
+        if product.last_data is not None:
+            raw = self.raw_value("reverseActiveEnergy")
+            if raw is not None:
+                alias = self._alias
+                return round(product.expect_int(alias, raw, 10000000, 0), 2)
+        return None
+
+    def after_update(self) -> None:
+        self._native_value = self._read_reverseActiveEnergy()
+        self._current = self._read_reverseActiveEnergy()
+
+
+@SensorFactory.register("forwardActiveEnergy")
+class ForwardActiveEnergy(BaseSensor):
+    def __init__(self, product: "Box", alias: str, methods: dict):
+        super().__init__(product, alias, methods)
+        self._unit = "kWh"
+        self._device_class = "forwardActiveEnergy"
+
+    def _read_forwardActiveEnergy(self):
+        product = self._product
+        if product.last_data is not None:
+            raw = self.raw_value("forwardActiveEnergy")
+            if raw is not None:
+                alias = self._alias
+                return round(product.expect_int(alias, raw, 10000000, 0), 2)
+        return None
+
+    def after_update(self) -> None:
+        self._native_value = self._read_forwardActiveEnergy()
+        self._current = self._read_forwardActiveEnergy()
+
+
 @SensorFactory.register("illuminance")
 class Illuminance(BaseSensor):
     _current: Union[float, int, None]

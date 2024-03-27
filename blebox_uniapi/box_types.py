@@ -671,5 +671,37 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 ]
             ],
         },
+        20230606: {
+            "api_path": "/state",
+            "extended_state_path": "/state/extended",
+            "sensors": [
+                [
+                    "multiSensor",
+                    {
+                        "frequency": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "current": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "voltage": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "apparentPower": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "activePower": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "reactivePower": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "reverseActiveEnergy": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "forwardActiveEnergy": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "illuminance": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "temperature": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "wind": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "humidity": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                    },
+                ]
+            ],
+            "binary_sensors": [
+                [
+                    "multiSensor",
+                    {
+                        "rain": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "flood": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                    },
+                ]
+            ],
+        },
     },
 }

@@ -31,11 +31,13 @@ class SensorFactory:
             return subclass
 
         return decorator
+    
     @classmethod
-    def oldregister(cls,sensor_type: str):
-        def decorator (subclass: type):
+    def oldregister(cls, sensor_type: str):
+        def decorator(subclass: type):
             cls.type_class_mapper[sensor_type] = subclass
             return subclass
+
         return decorator
 
     @classmethod
@@ -119,9 +121,7 @@ sensor_types = [
     ("activePower", "W", 1.0, 1, -(2**32)),
     ("reverseActiveEnergy", "kWh", 1.0, 2, 0),
     ("forwardActiveEnergy", "kWh", 1.0, 2, 0),
-    ("illuminance", "lx", 100.0, 1, 0),
-    ("humidity", "percentage", 100.0, 1, 0),
-    ("wind", "m/s", 10.0, 1, 0),
+    ("illuminance", "lx", 100.0, 1, 0)
 ]
 
 for sensor_type, unit, div, rnd, bottom in sensor_types:
@@ -146,6 +146,7 @@ for sensor_type, unit, div, rnd, bottom in sensor_types:
     # Dynamically create the class using type()
     globals()[class_name] = type(class_name, (BaseSensor,), attrs)
     SensorFactory.register(sensor_type, unit, div, rnd, bottom)
+
 
 
 @SensorFactory.oldregister("temperature")
@@ -195,6 +196,48 @@ class AirQuality(BaseSensor):
 
     def after_update(self) -> None:
         self._native_value = self._pm_value(f"{self.device_class}.value")
+
+
+@SensorFactory.oldregister("humidity")
+class Humidity(BaseSensor):
+    def __init__(self, product: "Box", alias: str, methods: dict):
+        super().__init__(product, alias, methods)
+        self._unit = "percentage"
+        self._device_class = "humidity"
+
+    def _read_humidity(self, field: str) -> Optional[int]:
+        product = self._product
+        if product.last_data is not None:
+            raw = self.raw_value(field)
+            if raw is not None:
+                alias = self._alias
+                return round(product.expect_int(alias, raw, 10000, 0) / 100.0, 1)
+
+        return None
+
+    def after_update(self) -> None:
+        self._native_value = self._read_humidity(f"{self.device_class}")
+
+@SensorFactory.oldregister("wind")
+class Wind(BaseSensor):
+    def __init__(self, product: "Box", alias: str, methods: dict):
+        super().__init__(product, alias, methods)
+        self._unit = "m/s"
+        self._device_class = "wind_speed"
+
+    def _read_wind_speed(self):
+        product = self._product
+        if product.last_data is not None:
+            raw = self.raw_value("wind")
+            if raw is not None:
+                alias = self._alias
+                # wind value unit in API is "0.1 m/s" so to get m/s we need to divide by 10
+                # min value = 0, max value for sure not bigger than 200km/h so about 60m/s so 600 in API
+                return round(product.expect_int(alias, raw, 600, 0) / 10.0, 1)
+        return None
+
+    def after_update(self) -> None:
+        self._native_value = self._read_wind_speed()
 
 class Energy(BaseSensor):
     def __init__(self, product: "Box", alias: str, methods: dict):

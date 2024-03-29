@@ -22,16 +22,24 @@ class SensorFactory:
                     raw = self.raw_value(sensor_type)
                     if raw is not None:
                         alias = self._alias
-                        return round(product.expect_int(alias, raw, (2**32), bottom) / div, rnd)
+                        return round(
+                            product.expect_int(alias, raw, (2**32), bottom) / div, rnd
+                        )
                 return None
 
             setattr(subclass, f"_read_{sensor_type}", read_method)
-            setattr(subclass, "after_update", lambda self: setattr(self, "_native_value", getattr(self, f"_read_{sensor_type}")()))
+            setattr(
+                subclass,
+                "after_update",
+                lambda self: setattr(
+                    self, "_native_value", getattr(self, f"_read_{sensor_type}")()
+                ),
+            )
 
             return subclass
 
         return decorator
-    
+
     @classmethod
     def oldregister(cls, sensor_type: str):
         def decorator(subclass: type):
@@ -112,6 +120,7 @@ class BaseSensor(Feature):
     def many_from_config(cls, product, box_type_config, extended_state):
         raise NotImplementedError("Please use SensorFactory")
 
+
 sensor_types = [
     ("frequency", "Hz", 1000.0, 1, -(2**32)),
     ("current", "mA", 10.0, 1, -(2**32)),
@@ -121,7 +130,7 @@ sensor_types = [
     ("activePower", "W", 1.0, 1, -(2**32)),
     ("reverseActiveEnergy", "kWh", 1.0, 2, 0),
     ("forwardActiveEnergy", "kWh", 1.0, 2, 0),
-    ("illuminance", "lx", 100.0, 1, 0)
+    ("illuminance", "lx", 100.0, 1, 0),
 ]
 
 for sensor_type, unit, div, rnd, bottom in sensor_types:
@@ -137,16 +146,17 @@ for sensor_type, unit, div, rnd, bottom in sensor_types:
         return None
 
     attrs = {
-        '_unit': unit,
-        '_device_class': sensor_type,
-        f'_read_{sensor_type}': read_method,
-        'after_update': lambda self: setattr(self, '_native_value', getattr(self, f'_read_{sensor_type}')())
+        "_unit": unit,
+        "_device_class": sensor_type,
+        f"_read_{sensor_type}": read_method,
+        "after_update": lambda self: setattr(
+            self, "_native_value", getattr(self, f"_read_{sensor_type}")()
+        ),
     }
 
     # Dynamically create the class using type()
     globals()[class_name] = type(class_name, (BaseSensor,), attrs)
     SensorFactory.register(sensor_type, unit, div, rnd, bottom)
-
 
 
 @SensorFactory.oldregister("temperature")
@@ -168,7 +178,9 @@ class Temperature(BaseSensor):
             raw = self.raw_value(field)
             if raw is not None:
                 alias = self._alias
-                return round(product.expect_int(alias, raw, (2**32) , -(2**32)) / 100.0, 1)
+                return round(
+                    product.expect_int(alias, raw, (2**32), -(2**32)) / 100.0, 1
+                )
         return None
 
     def after_update(self) -> None:
@@ -218,6 +230,7 @@ class Humidity(BaseSensor):
     def after_update(self) -> None:
         self._native_value = self._read_humidity(f"{self.device_class}")
 
+
 @SensorFactory.oldregister("wind")
 class Wind(BaseSensor):
     def __init__(self, product: "Box", alias: str, methods: dict):
@@ -238,6 +251,7 @@ class Wind(BaseSensor):
 
     def after_update(self) -> None:
         self._native_value = self._read_wind_speed()
+
 
 class Energy(BaseSensor):
     def __init__(self, product: "Box", alias: str, methods: dict):
@@ -269,4 +283,3 @@ class Energy(BaseSensor):
 
     def after_update(self) -> None:
         self._native_value = self._read_power_measurement()
-

@@ -1,4 +1,7 @@
 import datetime
+import numbers
+from functools import partial
+
 from .feature import Feature
 from typing import TYPE_CHECKING, Union, Optional
 
@@ -10,29 +13,38 @@ class SensorFactory:
     type_class_mapper: dict[str, type] = {}
 
     @classmethod
-    def register(cls, sensor_type: str):
-        def decorator(subclass: type):
-            cls.type_class_mapper[sensor_type] = subclass
-            return subclass
+    def register(cls, sensor_type: str, **kwargs):
+        if sensor_type in cls.type_class_mapper:
+            raise RuntimeError("Can't register same sensor type twice")
+
+        def decorator(registrable: type):
+            if kwargs:
+                registrable = partial(registrable, **kwargs)
+
+            cls.type_class_mapper[sensor_type] = registrable
+            return registrable
 
         return decorator
 
     @classmethod
     def many_from_config(cls, product, box_type_config, extended_state):
         type_class_mapper = cls.type_class_mapper
+
         if extended_state:
             object_list = []
             alias, methods = box_type_config[0]
             sensor_list = extended_state.get("multiSensor", {}).get("sensors", [])
+
             for sensor in sensor_list:
-                sensor_type = sensor.get("type")
+                device_class = sensor.get("type")
                 sensor_id = sensor.get("id")
-                if type_class_mapper.get(sensor_type):
-                    value_method = {sensor_type: methods[sensor_type](sensor_id)}
+
+                if type_class_mapper.get(device_class):
+                    value_method = {device_class: methods[device_class](sensor_id)}
                     object_list.append(
-                        type_class_mapper[sensor_type](
+                        type_class_mapper[device_class](
                             product=product,
-                            alias=f"{sensor_type}_{str(sensor_id)}",
+                            alias=f"{device_class}_{str(sensor_id)}",
                             methods=value_method,
                         )
                     )
@@ -49,6 +61,7 @@ class SensorFactory:
                     )
 
             return object_list
+
         else:
             alias, methods = box_type_config[0]
             if alias.endswith("air"):
@@ -70,7 +83,7 @@ class BaseSensor(Feature):
     _device_class: str
     _native_value: Union[float, int, str]
 
-    def __init__(self, product: "Box", alias: str, methods: dict):
+    def __init__(self, product: "Box", alias: str, methods: dict, sensor_type: str = None):
         super().__init__(product, alias, methods)
 
     @property
@@ -90,201 +103,59 @@ class BaseSensor(Feature):
         raise NotImplementedError("Please use SensorFactory")
 
 
-@SensorFactory.register("frequency")
-class Frequency(BaseSensor):
-    def __init__(self, product: "Box", alias: str, methods: dict):
+# todo: proxu device class in all sensor inits
+@SensorFactory.register("frequency", unit="Hz", scale=1_000)
+@SensorFactory.register("current", unit="mA", scale=10)
+@SensorFactory.register("voltage", unit="V", scale=10)
+@SensorFactory.register("apparentPower", unit="va",)
+@SensorFactory.register("reactivePower", unit="var")
+@SensorFactory.register("activePower", unit="W")
+@SensorFactory.register("reverseActiveEnergy", unit="kWh")
+@SensorFactory.register("forwardActiveEnergy", unit="kWh")
+@SensorFactory.register("illuminance", unit="lx", scale=100)
+@SensorFactory.register("humidity", unit="percentage", scale=100)
+class GenericSensor(BaseSensor):
+    def __init__(
+        # base sensor params
+        self, product: "Box", alias: str, methods: dict, *,
+        # generalization params
+        sensor_type: str,
+        unit: str,
+        scale: float = 1,
+        precision: int | None = None
+    ):
         super().__init__(product, alias, methods)
-        self._unit = "Hz"
-        self._device_class = "frequency"
-
-    def _read_frequency(self):
-        product = self._product
-        if product.last_data is not None:
-            raw = self.raw_value("frequency")
-            if raw is not None:
-                alias = self._alias
-                return round(
-                    product.expect_int(alias, raw, 1000000, -100000) / 1000.0, 1
-                )
-        return None
-
-    def after_update(self) -> None:
-        self._native_value = self._read_frequency()
-        self._current = self._read_frequency()
-
-
-@SensorFactory.register("current")
-class Current(BaseSensor):
-    def __init__(self, product: "Box", alias: str, methods: dict):
-        super().__init__(product, alias, methods)
-        self._unit = "mA"
-        self._device_class = "current"
-
-    def _read_current(self):
-        product = self._product
-        if product.last_data is not None:
-            raw = self.raw_value("current")
-            if raw is not None:
-                alias = self._alias
-                return round(product.expect_int(alias, raw, 1000000, -100000) / 10.0, 2)
-        return None
-
-    def after_update(self) -> None:
-        self._native_value = self._read_current()
-        self._current = self._read_current()
-
-
-@SensorFactory.register("voltage")
-class Voltage(BaseSensor):
-    def __init__(self, product: "Box", alias: str, methods: dict):
-        super().__init__(product, alias, methods)
-        self._unit = "v"
-        self._device_class = "voltage"
-
-    def _read_voltage(self):
-        product = self._product
-        if product.last_data is not None:
-            raw = self.raw_value("voltage")
-            if raw is not None:
-                alias = self._alias
-                return round(product.expect_int(alias, raw, 1000000, -100000) / 10.0, 1)
-        return None
-
-    def after_update(self) -> None:
-        self._native_value = self._read_voltage()
-        self._current = self._read_voltage()
-
-
-@SensorFactory.register("apparentPower")
-class ApparentPower(BaseSensor):
-    def __init__(self, product: "Box", alias: str, methods: dict):
-        super().__init__(product, alias, methods)
-        self._unit = "va"
-        self._device_class = "apparentPower"
-
-    def _read_apparentPower(self):
-        product = self._product
-        if product.last_data is not None:
-            raw = self.raw_value("apparentPower")
-            if raw is not None:
-                alias = self._alias
-                return round(product.expect_int(alias, raw, 10000000, 0), 1)
-        return None
-
-    def after_update(self) -> None:
-        self._native_value = self._read_apparentPower()
-        self._current = self._read_apparentPower()
-
-
-@SensorFactory.register("reactivePower")
-class ReactivePower(BaseSensor):
-    def __init__(self, product: "Box", alias: str, methods: dict):
-        super().__init__(product, alias, methods)
-        self._unit = "var"
-        self._device_class = "reactivePower"
-
-    def _read_reactivePower(self):
-        product = self._product
-        if product.last_data is not None:
-            raw = self.raw_value("reactivePower")
-            if raw is not None:
-                alias = self._alias
-                return round(product.expect_int(alias, raw, 10000000, 0), 1)
-        return None
-
-    def after_update(self) -> None:
-        self._native_value = self._read_reactivePower()
-        self._current = self._read_reactivePower()
-
-
-@SensorFactory.register("activePower")
-class ActivePower(BaseSensor):
-    def __init__(self, product: "Box", alias: str, methods: dict):
-        super().__init__(product, alias, methods)
-        self._unit = "W"
-        self._device_class = "activePower"
-
-    def _read_activePower(self):
-        product = self._product
-        if product.last_data is not None:
-            raw = self.raw_value("activePower")
-            if raw is not None:
-                alias = self._alias
-                return round(product.expect_int(alias, raw, 10000000, 0), 1)
-        return None
-
-    def after_update(self) -> None:
-        self._native_value = self._read_activePower()
-        self._current = self._read_activePower()
-
-
-@SensorFactory.register("reverseActiveEnergy")
-class ReverseActiveEnergy(BaseSensor):
-    def __init__(self, product: "Box", alias: str, methods: dict):
-        super().__init__(product, alias, methods)
-        self._unit = "kWh"
-        self._device_class = "reverseActiveEnergy"
-
-    def _read_reverseActiveEnergy(self):
-        product = self._product
-        if product.last_data is not None:
-            raw = self.raw_value("reverseActiveEnergy")
-            if raw is not None:
-                alias = self._alias
-                return round(product.expect_int(alias, raw, 10000000, 0), 2)
-        return None
-
-    def after_update(self) -> None:
-        self._native_value = self._read_reverseActiveEnergy()
-        self._current = self._read_reverseActiveEnergy()
-
-
-@SensorFactory.register("forwardActiveEnergy")
-class ForwardActiveEnergy(BaseSensor):
-    def __init__(self, product: "Box", alias: str, methods: dict):
-        super().__init__(product, alias, methods)
-        self._unit = "kWh"
-        self._device_class = "forwardActiveEnergy"
-
-    def _read_forwardActiveEnergy(self):
-        product = self._product
-        if product.last_data is not None:
-            raw = self.raw_value("forwardActiveEnergy")
-            if raw is not None:
-                alias = self._alias
-                return round(product.expect_int(alias, raw, 10000000, 0), 2)
-        return None
-
-    def after_update(self) -> None:
-        self._native_value = self._read_forwardActiveEnergy()
-        self._current = self._read_forwardActiveEnergy()
-
-
-@SensorFactory.register("illuminance")
-class Illuminance(BaseSensor):
-    _current: Union[float, int, None]
-
-    def __init__(self, product: "Box", alias: str, methods: dict):
-        super().__init__(product, alias, methods)
-        self._unit = "lx"
-        self._device_class = "illuminance"
+        self._device_class = sensor_type
+        self._unit = unit
+        self._scale = scale
+        self._precision = precision
 
     @property
-    def current(self) -> Union[float, int, None]:
-        return self._current
-
-    def _read_illuminance(self):
+    def after_update(self):
         product = self._product
-        if product.last_data is not None:
-            raw = self.raw_value("illuminance")
-            if raw is not None:
-                alias = self._alias
-                return round(product.expect_int(alias, raw, 10000000, 0) / 100.0, 1)
-        return None
+        if product.last_data is None:
+            return
 
-    def after_update(self) -> None:
-        self._native_value = self._read_illuminance()
-        self._current = self._read_illuminance()
+        raw = self.raw_value(self._device_class)
+        if not isinstance(raw, numbers.Number):
+            raw = float("nan")
+
+        native = raw / self._scale
+        if self._precision:
+            native = round(native, self._precision)
+
+        self._native_value = native
+
+
+# deprecated
+# TODO: add some deprecation utilities
+@SensorFactory.register("wind", scale=10)
+class Wind(GenericSensor):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # the only difference from real generic sensor is device_class value
+        # todo: check if it can be updated upstream
+        self._device_class = "wind_speed"
 
 
 @SensorFactory.register("temperature")
@@ -336,27 +207,6 @@ class AirQuality(BaseSensor):
         self._native_value = self._pm_value(f"{self.device_class}.value")
 
 
-@SensorFactory.register("humidity")
-class Humidity(BaseSensor):
-    def __init__(self, product: "Box", alias: str, methods: dict):
-        super().__init__(product, alias, methods)
-        self._unit = "percentage"
-        self._device_class = "humidity"
-
-    def _read_humidity(self, field: str) -> Optional[int]:
-        product = self._product
-        if product.last_data is not None:
-            raw = self.raw_value(field)
-            if raw is not None:
-                alias = self._alias
-                return round(product.expect_int(alias, raw, 10000, 0) / 100.0, 1)
-
-        return None
-
-    def after_update(self) -> None:
-        self._native_value = self._read_humidity(f"{self.device_class}")
-
-
 class Energy(BaseSensor):
     def __init__(self, product: "Box", alias: str, methods: dict):
         super().__init__(product, alias, methods)
@@ -387,25 +237,3 @@ class Energy(BaseSensor):
 
     def after_update(self) -> None:
         self._native_value = self._read_power_measurement()
-
-
-@SensorFactory.register("wind")
-class Wind(BaseSensor):
-    def __init__(self, product: "Box", alias: str, methods: dict):
-        super().__init__(product, alias, methods)
-        self._unit = "m/s"
-        self._device_class = "wind_speed"
-
-    def _read_wind_speed(self):
-        product = self._product
-        if product.last_data is not None:
-            raw = self.raw_value("wind")
-            if raw is not None:
-                alias = self._alias
-                # wind value unit in API is "0.1 m/s" so to get m/s we need to divide by 10
-                # min value = 0, max value for sure not bigger than 200km/h so about 60m/s so 600 in API
-                return round(product.expect_int(alias, raw, 600, 0) / 10.0, 1)
-        return None
-
-    def after_update(self) -> None:
-        self._native_value = self._read_wind_speed()

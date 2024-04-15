@@ -282,9 +282,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
-                        "powerConsumption": lambda x: "powerMeasuring/powerConsumption/[0]/value",
-                        "periodS": "powerMeasuring/powerConsumption/[0]/periodS",
-                        "measurement_enabled": "powerMeasuring/enabled",
+                        "energy": "powerMeasuring.powerConsumption|[0]|value ",
+                        "periodS": "powerMeasuring.powerConsumption|[0]|periodS",
+                        "measurment_enabled": "powerMeasuring.enabled",
                     },
                 ]
             ],
@@ -307,9 +307,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
-                        "powerConsumption": lambda x: "powerMeasuring/powerConsumption/[0]/value",
-                        "periodS": "powerMeasuring/powerConsumption/[0]/periodS",
-                        "measurement_enabled": "powerMeasuring/enabled",
+                        "energy": "powerMeasuring.powerConsumption|[0]|value ",
+                        "periodS": "powerMeasuring.powerConsumption|[0]|periodS",
+                        "measurment_enabled": "powerMeasuring.enabled",
                     },
                 ]
             ],
@@ -332,9 +332,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
-                        "powerConsumption": lambda x: "powerMeasuring/powerConsumption/[0]/value",
-                        "periodS": "powerMeasuring/powerConsumption/[0]/periodS",
-                        "measurement_enabled": "powerMeasuring/enabled",
+                        "energy": "powerMeasuring.powerConsumption|[0]|value ",
+                        "periodS": "powerMeasuring.powerConsumption|[0]|periodS",
+                        "measurment_enabled": "powerMeasuring.enabled",
                     },
                 ]
             ],
@@ -359,9 +359,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
-                        "powerConsumption": lambda x: "powerMeasuring/powerConsumption/[0]/value",
-                        "periodS": "powerMeasuring/powerConsumption/[0]/periodS",
-                        "measurement_enabled": "powerMeasuring/enabled",
+                        "energy": "powerMeasuring.powerConsumption|[0]|value ",
+                        "periodS": "powerMeasuring.powerConsumption|[0]|periodS",
+                        "measurment_enabled": "powerMeasuring.enabled",
                     },
                 ]
             ],
@@ -394,9 +394,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
-                        "powerConsumption": lambda x: "powerMeasuring/powerConsumption/[0]/value",
-                        "periodS": "powerMeasuring/powerConsumption/[0]/periodS",
-                        "measurement_enabled": "powerMeasuring/enabled",
+                        "energy": "powerMeasuring.powerConsumption|[0]|value ",
+                        "periodS": "powerMeasuring.powerConsumption|[0]|periodS",
+                        "measurment_enabled": "powerMeasuring.enabled",
                     },
                 ]
             ],
@@ -426,9 +426,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
-                        "powerConsumption": lambda x: "powerMeasuring/powerConsumption/[0]/value",
-                        "periodS": "powerMeasuring/powerConsumption/[0]/periodS",
-                        "measurement_enabled": "powerMeasuring/enabled",
+                        "energy": "powerMeasuring.powerConsumption|[0]|value ",
+                        "periodS": "powerMeasuring.powerConsumption|[0]|periodS",
+                        "measurment_enabled": "powerMeasuring.enabled",
                     },
                 ]
             ],
@@ -458,9 +458,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
-                        "powerConsumption": lambda x: "powerMeasuring/powerConsumption/[0]/value",
-                        "periodS": "powerMeasuring/powerConsumption/[0]/periodS",
-                        "measurement_enabled": "powerMeasuring/enabled",
+                        "energy": "powerMeasuring.powerConsumption|[0]|value ",
+                        "periodS": "powerMeasuring.powerConsumption|[0]|periodS",
+                        "measurment_enabled": "powerMeasuring.enabled",
                     },
                 ]
             ],
@@ -672,10 +672,10 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "multiSensor",
                     {
-                        "illuminance": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "temperature": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "wind": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "humidity": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "illuminance": lambda x: f"multiSensor.sensors[?id == `{x}`]|[0]|value",
+                        "temperature": lambda x: f"multiSensor.sensors[?id == `{x}`]|[0]|value",
+                        "wind": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'wind']|[0]|value",
+                        "humidity": lambda x: f"multiSensor.sensors[?id == `{x}`]|[0]|value",
                     },
                 ]
             ],
@@ -683,8 +683,8 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "multiSensor",
                     {
-                        "rain": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "flood": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "rain": lambda x: f"multiSensor.sensors[?id == `{x}`]|[0]|value",
+                        "flood": lambda x: f"multiSensor.sensors[?id == `{x}`]|[0]|value",
                     },
                 ]
             ],
@@ -696,18 +696,18 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "multiSensor",
                     {
-                        "frequency": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "current": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "voltage": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "apparentPower": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "activePower": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "reactivePower": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "reverseActiveEnergy": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "forwardActiveEnergy": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "illuminance": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "temperature": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "wind": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "humidity": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "frequency": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'frequency']|[0]|value",
+                        "current": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'current']|[0]|value",
+                        "voltage": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'voltage']|[0]|value",
+                        "apparentPower": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'apparentPower']|[0]|value",
+                        "activePower": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'activePower']|[0]|value",
+                        "reactivePower": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'reactivePower']|[0]|value",
+                        "reverseActiveEnergy": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'reverseActiveEnergy']|[0]|value",
+                        "forwardActiveEnergy": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'forwardActiveEnergy']|[0]|value",
+                        "illuminance": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'illuminance']|[0]|value",
+                        "temperature": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'temperature']|[0]|value",
+                        "wind": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'wind']|[0]|value",
+                        "humidity": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'humidity']|[0]|value",
                     },
                 ]
             ],
@@ -715,8 +715,8 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "multiSensor",
                     {
-                        "rain": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "flood": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "rain": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'rain']|[0]|value",
+                        "flood": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'flood']|[0]|value",
                     },
                 ]
             ],

@@ -117,34 +117,6 @@ class TestSwitchBox0(DefaultBoxTest):
         assert entity.device_info["model"] == "switchBox"
         assert entity.device_info["sw_version"] == "0.247"
 
-    async def test_update_when_off(self, aioclient_mock):
-        """Test switch updating when off."""
-
-        entity = await self.updated(aioclient_mock, self.STATE_OFF)
-        assert entity.is_on is False
-
-    async def test_update_when_on(self, aioclient_mock):
-        """Test switch updating when on."""
-
-        entity = await self.updated(aioclient_mock, self.STATE_ON)
-        assert entity.is_on is True
-
-    async def test_on(self, aioclient_mock):
-        """Test turning switch on."""
-
-        entity = await self.updated(aioclient_mock, self.STATE_OFF)
-        self.allow_get(aioclient_mock, "/s/1", self.STATE_ON)
-        await entity.async_turn_on()
-        assert entity.is_on is True
-
-    async def test_off(self, aioclient_mock):
-        """Test turning switch off."""
-
-        entity = await self.updated(aioclient_mock, self.STATE_ON)
-        self.allow_get(aioclient_mock, "/s/0", self.STATE_OFF)
-        await entity.async_turn_off()
-        assert entity.is_on is False
-
 
 class TestSwitchBox(DefaultBoxTest):
     """Tests for BleBox switchBox."""

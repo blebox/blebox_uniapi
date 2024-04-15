@@ -65,14 +65,15 @@ class SensorFactory:
                     # note: methods for sensor readings are provided as template
                     # functions (lambdas) in the box config. We need to "materialize"
                     # them to make sure they are properly indexed by sensor ID
-                    methods = {
+                    materialized_methods = {
                         **methods,
                         device_class: methods[device_class](sensor_id),
                     }
 
-                    object_list.append(
-                        constructor(product=product, alias=alias, methods=methods)
+                    feature = constructor(
+                        product=product, alias=alias, methods=materialized_methods
                     )
+                    object_list.append(feature)
 
             return object_list
 

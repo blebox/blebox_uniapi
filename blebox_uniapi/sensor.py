@@ -133,7 +133,7 @@ class BaseSensor(Feature):
 @SensorFactory.register("forwardActiveEnergy", unit="kWh")
 @SensorFactory.register("illuminance", unit="lx", scale=100)
 @SensorFactory.register("humidity", unit="percentage", scale=100)
-@SensorFactory.register("wind", scale=10)
+@SensorFactory.register("wind", unit="m/s", scale=10)
 class GenericSensor(BaseSensor):
     def __init__(
         # base sensor params

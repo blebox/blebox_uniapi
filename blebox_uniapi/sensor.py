@@ -94,8 +94,8 @@ class SensorFactory:
 class BaseSensor(Feature):
     _unit: str
     _device_class: str
-    _native_value: float | int | str
-    _sensor_type: str | None
+    _native_value: Union[float, int, str]
+    _sensor_type: Optional[str]
 
     def __init__(
         self, product: "Box", alias: str, methods: dict, sensor_type: str = None
@@ -146,7 +146,7 @@ class GenericSensor(BaseSensor):
         sensor_type: str,
         unit: str,
         scale: float = 1,
-        precision: int | None = None,
+        precision: Optional[int] = None,
     ):
         super().__init__(product, alias, methods)
         self._unit = unit

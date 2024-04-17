@@ -1,8 +1,8 @@
-import json
 from blebox_uniapi.box_types import get_latest_api_level
-from .conftest import CommonEntity, DefaultBoxTest, future_date, jmerge
+from .conftest import CommonEntity, DefaultBoxTest, future_date
 
 DEVICE_CLASS_SWITCH = "switch"
+
 
 class BleBoxSwitchEntity(CommonEntity):
     @property
@@ -18,6 +18,7 @@ class BleBoxSwitchEntity(CommonEntity):
 
     async def async_turn_off(self, **kwargs):
         return await self._feature.async_turn_off()
+
 
 class TestSwitchBox(DefaultBoxTest):
     """Tests for BleBox switchBox."""
@@ -35,27 +36,15 @@ class TestSwitchBox(DefaultBoxTest):
             "hv": "0.2",
             "id": "1afe34e750b8",
             "ip": "192.168.1.239",
-            "apiLevel": "20180604"
+            "apiLevel": "20180604",
         }
     }
 
-    DEVICE_INFO_FUTURE = {
-        "device": {
-            "apiLevel": future_date()
-        }
-    }
+    DEVICE_INFO_FUTURE = {"device": {"apiLevel": future_date()}}
 
-    DEVICE_INFO_LATEST = {
-        "device": {
-            "apiLevel": get_latest_api_level("switchBox")
-        }
-    }
+    DEVICE_INFO_LATEST = {"device": {"apiLevel": get_latest_api_level("switchBox")}}
 
-    DEVICE_INFO_UNSUPPORTED = {
-        "device": {
-            "apiLevel": 20180603
-        }
-    }
+    DEVICE_INFO_UNSUPPORTED = {"device": {"apiLevel": 20180603}}
 
     DEVICE_INFO_UNSPECIFIED_API = {
         "device": {
@@ -64,29 +53,13 @@ class TestSwitchBox(DefaultBoxTest):
             "fv": "0.247",
             "hv": "0.2",
             "id": "1afe34e750b8",
-            "ip": "192.168.1.239"
+            "ip": "192.168.1.239",
         }
     }
 
-    STATE_OFF = {
-        "relays": [
-            {
-                "relay": 0,
-                "state": 0,
-                "stateAfterRestart": 0
-            }
-        ]
-    }
+    STATE_OFF = {"relays": [{"relay": 0, "state": 0, "stateAfterRestart": 0}]}
 
-    STATE_ON = {
-        "relays": [
-            {
-                "relay": 0,
-                "state": 1,
-                "stateAfterRestart": 0
-            }
-        ]
-    }
+    STATE_ON = {"relays": [{"relay": 0, "state": 1, "stateAfterRestart": 0}]}
 
     async def test_future_version(self, aioclient_mock):
         """

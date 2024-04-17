@@ -134,7 +134,6 @@ class BaseSensor(Feature):
 @SensorFactory.register("illuminance", unit="lx", scale=100)
 @SensorFactory.register("humidity", unit="percentage", scale=100)
 @SensorFactory.register("wind", unit="m/s", scale=10)
-@SensorFactory.register("temperature", unit="celcius", scale=100)
 class GenericSensor(BaseSensor):
     def __init__(
         # base sensor params
@@ -193,6 +192,34 @@ class PowerConsumption(GenericSensor):
                 alias = self._alias
                 return product.expect_int(alias, raw, 3600, 0)
         return 0
+
+
+@SensorFactory.register("temperature")
+class Temperature(BaseSensor):
+    _current: Union[float, int, None]
+
+    def __init__(self, product: "Box", alias: str, methods: dict):
+        super().__init__(product, alias, methods)
+        self._unit = "celsius"
+        self._device_class = "temperature"
+
+    @property
+    def current(self) -> Union[float, int, None]:
+        return self._current
+
+    def _read_temperature(self, field: str) -> Union[float, int, None]:
+        product = self._product
+        if product.last_data is not None:
+            raw = self.raw_value(field)
+            if raw is not None:
+                alias = self._alias
+                return round(product.expect_int(alias, raw, 12500, -5500) / 100.0, 1)
+        return None
+
+    def after_update(self) -> None:
+        self._current = self._read_temperature("temperature")
+        self._native_value = self._read_temperature("temperature")
+
 
 @SensorFactory.register("airSensor")
 class AirQuality(BaseSensor):

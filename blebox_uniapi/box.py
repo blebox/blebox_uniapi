@@ -280,7 +280,6 @@ class Box:
         self._last_real_update = None  # force update
         return await self._async_api(False, method, *args)
 
-
     def expect_int(
         self, field: str, raw_value: int, maximum: int = -1, minimum: int = 0
     ) -> int:

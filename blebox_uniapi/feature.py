@@ -1,5 +1,6 @@
 from .error import DeviceStateNotAvailable
 from typing import Any, TYPE_CHECKING, Union
+from blebox_uniapi.jfollow import follow
 
 if TYPE_CHECKING:
     from .box import Box
@@ -50,7 +51,7 @@ class Feature:
             raise DeviceStateNotAvailable  # pragma: no cover
         methods = self._methods
         if method := methods.get(name):
-            return product.follow(product.last_data, method)
+            return follow(product.last_data, method)
         return None
 
     async def async_api_command(self, *args: Any, **kwargs: Any) -> None:

@@ -63,12 +63,12 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "0.air",
                     {
-                        "pm1.value": "air/sensors/[type='pm1']/value",
-                        "pm1.state": "air/sensors/[type='pm1']/state",
-                        "pm2_5.value": "air/sensors/[type='pm2.5']/value",
-                        "pm2_5.state": "air/sensors/[type='pm2.5']/state",
-                        "pm10.value": "air/sensors/[type='pm10']/value",
-                        "pm10.state": "air/sensors/[type='pm10']/state",
+                        "pm1.value": "air.sensors[?type == 'pm1']|[0]|value",
+                        "pm1.state": "air.sensors[?type == 'pm1']|[0]|state",
+                        "pm2_5.value": "air.sensors[?type == 'pm2.5']|[0]|value",
+                        "pm2_5.state": "air.sensors[?type == 'pm2.5']|[0]|state",
+                        "pm10.value": "air.sensors[?type == 'pm10']|[0]|value",
+                        "pm10.state": "air.sensors[?type == 'pm10']|[0]|state",
                     },
                 ]
             ],
@@ -86,7 +86,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     '{"dimmer":{"desiredBrightness": ' + str(x) + "}}",
                 ),
             },
-            "lights": [["brightness", {"desired": "dimmer/desiredBrightness"}]],
+            "lights": [["brightness", {"desired": "dimmer.desiredBrightness"}]],
         },
         20170829: {
             "api_path": "/api/dimmer/state",
@@ -97,7 +97,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     '{"dimmer":{"desiredBrightness": ' + str(x) + "}}",
                 ),
             },
-            "lights": [["brightness", {"desired": "dimmer/desiredBrightness"}]],
+            "lights": [["brightness", {"desired": "dimmer.desiredBrightness"}]],
         },
     },
     # gateBox
@@ -133,8 +133,8 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "position",
                     {
-                        "position": "gate/currentPos",
-                        "gate_type": "gate/gateType",
+                        "position": "gate.currentPos",
+                        "gate_type": "gate.gateType",
                     },
                     "gatebox",
                     GateBoxB,
@@ -159,9 +159,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "position",
                     {
-                        "desired": "gateController/desiredPos/positions/[0]",
+                        "desired": "gateController.desiredPos.positions|[0]",
                         # "current": "gateController/currentPos/positions/[0]",
-                        "state": "gateController/state",
+                        "state": "gateController.state",
                     },
                     "gate",
                     Gate,
@@ -183,14 +183,14 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "thermostat",
                     {
-                        "desired": "thermo/desiredTemp",
-                        "minimum": "thermo/minimumTemp",
-                        "maximum": "thermo/maximumTemp",
-                        "temperature": lambda x: f"sensors/[id={x}]/value",
-                        "state": "thermo/state",
-                        "mode": "thermo/mode",
-                        "safetySensorId": "thermo/safetyTempSensor/sensorId",
-                        "operatingState": "thermo/operatingState",
+                        "desired": "thermo.desiredTemp",
+                        "minimum": "thermo.minimumTemp",
+                        "maximum": "thermo.maximumTemp",
+                        "temperature": lambda x: f"sensors[?id == `{x}`]|[0]|value",
+                        "state": "thermo.state",
+                        "mode": "thermo.mode",
+                        "safetySensorId": "thermo.safetyTempSensor.sensorId",
+                        "operatingState": "thermo.operatingState",
                     },
                 ]
             ],
@@ -212,11 +212,11 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "thermostat",
                     {
-                        "desired": "heat/desiredTemp",
-                        "minimum": "heat/minimumTemp",
-                        "maximum": "heat/maximumTemp",
-                        "temperature": "heat/sensors/[id=0]/value",
-                        "state": "heat/state",
+                        "desired": "heat.desiredTemp",
+                        "minimum": "heat.minimumTemp",
+                        "maximum": "heat.maximumTemp",
+                        "temperature": "heat.sensors[?id == `0`]|[0]|value",
+                        "state": "heat.state",
                     },
                 ]
             ],
@@ -238,10 +238,10 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "position",
                     {
-                        "desired": "shutter/desiredPos/position",
+                        "desired": "shutter.desiredPos.position",
                         # "current": "shutter/currentPos/position",
-                        "tilt": "shutter/desiredPos/tilt",
-                        "state": "shutter/state",
+                        "tilt": "shutter.desiredPos.tilt",
+                        "state": "shutter.state",
                     },
                     "shutter",
                     Shutter,
@@ -259,7 +259,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 "on": lambda x=None: ("GET", "/s/1", None),
                 "off": lambda x=None: ("GET", "/s/0", None),
             },
-            "switches": [["0.relay", {"state": "[relay=0]/state"}, "relay"]],
+            "switches": [
+                ["0.relay", {"state": "relays[?relay==`0`]|[0]|state"}, "relay"]
+            ],
             # note: does not support power measurement
         },
         20190808: {
@@ -270,15 +272,19 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 "off": lambda x=None: ("GET", "/s/0", None),
             },
             "switches": [
-                ["0.relay", {"state": lambda x: f"relays/[relay={x}]/state"}, "relay"]
+                [
+                    "0.relay",
+                    {"state": lambda x: f"relays[?relay==`{x}`]|[0]|state"},
+                    "relay",
+                ]
             ],
             "sensors": [
                 [
                     "switchBox.energy",
                     {
-                        "powerConsumption": lambda x: "powerMeasuring/powerConsumption/[0]/value",
-                        "periodS": "powerMeasuring/powerConsumption/[0]/periodS",
-                        "measurement_enabled": "powerMeasuring/enabled",
+                        "energy": "powerMeasuring.powerConsumption|[0]|value ",
+                        "periodS": "powerMeasuring.powerConsumption|[0]|periodS",
+                        "measurment_enabled": "powerMeasuring.enabled",
                     },
                 ]
             ],
@@ -291,15 +297,19 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 "off": lambda x=None: ("GET", "/s/0", None),
             },
             "switches": [
-                ["0.relay", {"state": lambda x: f"relays/[relay={x}]/state"}, "relay"]
+                [
+                    "0.relay",
+                    {"state": lambda x: f"relays[?relay==`{x}`]|[0]|state"},
+                    "relay",
+                ]
             ],
             "sensors": [
                 [
                     "switchBox.energy",
                     {
-                        "powerConsumption": lambda x: "powerMeasuring/powerConsumption/[0]/value",
-                        "periodS": "powerMeasuring/powerConsumption/[0]/periodS",
-                        "measurement_enabled": "powerMeasuring/enabled",
+                        "energy": "powerMeasuring.powerConsumption|[0]|value ",
+                        "periodS": "powerMeasuring.powerConsumption|[0]|periodS",
+                        "measurment_enabled": "powerMeasuring.enabled",
                     },
                 ]
             ],
@@ -312,15 +322,19 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 "off": lambda x=None: ("GET", "/s/0", None),
             },
             "switches": [
-                ["0.relay", {"state": lambda x: f"relays/[relay={x}]/state"}, "relay"]
+                [
+                    "0.relay",
+                    {"state": lambda x: f"relays[?relay==`{x}`]|[0]|state"},
+                    "relay",
+                ]
             ],
             "sensors": [
                 [
                     "switchBox.energy",
                     {
-                        "powerConsumption": lambda x: "powerMeasuring/powerConsumption/[0]/value",
-                        "periodS": "powerMeasuring/powerConsumption/[0]/periodS",
-                        "measurement_enabled": "powerMeasuring/enabled",
+                        "energy": "powerMeasuring.powerConsumption|[0]|value ",
+                        "periodS": "powerMeasuring.powerConsumption|[0]|periodS",
+                        "measurment_enabled": "powerMeasuring.enabled",
                     },
                 ]
             ],
@@ -335,15 +349,19 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 "off": lambda x=None: ("GET", f"/s/{x}/0", None),
             },
             "switches": [
-                ["relay", {"state": lambda x: f"relays/[relay={x}]/state"}, "relay"]
+                [
+                    "relay",
+                    {"state": lambda x: f"relays[?relay==`{x}`]|[0]|state"},
+                    "relay",
+                ]
             ],
             "sensors": [
                 [
                     "switchBox.energy",
                     {
-                        "powerConsumption": lambda x: "powerMeasuring/powerConsumption/[0]/value",
-                        "periodS": "powerMeasuring/powerConsumption/[0]/periodS",
-                        "measurement_enabled": "powerMeasuring/enabled",
+                        "energy": "powerMeasuring.powerConsumption|[0]|value ",
+                        "periodS": "powerMeasuring.powerConsumption|[0]|periodS",
+                        "measurment_enabled": "powerMeasuring.enabled",
                     },
                 ]
             ],
@@ -361,13 +379,13 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
             "switches": [
                 [
                     "0.relay",
-                    {"state": lambda x: f"relays/[relay={x}]/state"},
+                    {"state": lambda x: f"relays[?relay==`{x}`]|[0]|state"},
                     "relay",
                     0,
                 ],
                 [
                     "1.relay",
-                    {"state": lambda x: f"relays/[relay={x}]/state"},
+                    {"state": lambda x: f"relays[?relay==`{x}`]|[0]|state"},
                     "relay",
                     1,
                 ],
@@ -376,9 +394,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
-                        "powerConsumption": lambda x: "powerMeasuring/powerConsumption/[0]/value",
-                        "periodS": "powerMeasuring/powerConsumption/[0]/periodS",
-                        "measurement_enabled": "powerMeasuring/enabled",
+                        "energy": "powerMeasuring.powerConsumption|[0]|value ",
+                        "periodS": "powerMeasuring.powerConsumption|[0]|periodS",
+                        "measurment_enabled": "powerMeasuring.enabled",
                     },
                 ]
             ],
@@ -393,13 +411,13 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
             "switches": [
                 [
                     "0.relay",
-                    {"state": lambda x: f"relays/[relay={x}]/state"},
+                    {"state": lambda x: f"relays[?relay==`{x}`]|[0]|state"},
                     "relay",
                     0,
                 ],
                 [
                     "1.relay",
-                    {"state": lambda x: f"relays/[relay={x}]/state"},
+                    {"state": lambda x: f"relays[?relay==`{x}`]|[0]|state"},
                     "relay",
                     1,
                 ],
@@ -408,9 +426,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
-                        "powerConsumption": lambda x: "powerMeasuring/powerConsumption/[0]/value",
-                        "periodS": "powerMeasuring/powerConsumption/[0]/periodS",
-                        "measurement_enabled": "powerMeasuring/enabled",
+                        "energy": "powerMeasuring.powerConsumption|[0]|value ",
+                        "periodS": "powerMeasuring.powerConsumption|[0]|periodS",
+                        "measurment_enabled": "powerMeasuring.enabled",
                     },
                 ]
             ],
@@ -425,13 +443,13 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
             "switches": [
                 [
                     "0.relay",
-                    {"state": lambda x: f"relays/[relay={x}]/state"},
+                    {"state": lambda x: f"relays[?relay==`{x}`]|[0]|state"},
                     "relay",
                     0,
                 ],
                 [
                     "1.relay",
-                    {"state": lambda x: f"relays/[relay={x}]/state"},
+                    {"state": lambda x: f"relays[?relay==`{x}`]|[0]|state"},
                     "relay",
                     1,
                 ],
@@ -440,9 +458,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
-                        "powerConsumption": lambda x: "powerMeasuring/powerConsumption/[0]/value",
-                        "periodS": "powerMeasuring/powerConsumption/[0]/periodS",
-                        "measurement_enabled": "powerMeasuring/enabled",
+                        "energy": "powerMeasuring.powerConsumption|[0]|value ",
+                        "periodS": "powerMeasuring.powerConsumption|[0]|periodS",
+                        "measurment_enabled": "powerMeasuring.enabled",
                     },
                 ]
             ],
@@ -456,10 +474,10 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "0.temperature",
                     {
-                        "temperature": "tempSensor/sensors/[id=0]/value",
-                        "trend": "tempSensor/sensors/[id=0]/trend",
-                        "state": "tempSensor/sensors/[id=0]/state",
-                        "elapsed": "tempSensor/sensors/[id=0]/elapsedTimeS",
+                        "temperature": "tempSensor.sensors[?id == `0`]|[0]|value",
+                        "trend": "tempSensor.sensors[?id == `0`]|[0]|trend",
+                        "state": "tempSensor.sensors[?id == `0`]|[0]|state",
+                        "elapsed": "tempSensor.sensors[?id == `0`]|[0]|elapsedTimeS",
                     },
                 ]
             ],
@@ -481,10 +499,10 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "color",
                     {
-                        "desired": "rgbw/desiredColor",
-                        "last_color": "rgbw/lastOnColor",
-                        "currentEffect": "rgbw/effectID",
-                        "colorMode": "rgbw/colorMode",
+                        "desired": "rgbw.desiredColor",
+                        "last_color": "rgbw.lastOnColor",
+                        "currentEffect": "rgbw.effectID",
+                        "colorMode": "rgbw.colorMode",
                     },
                 ]
             ],
@@ -504,10 +522,10 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "color",
                     {
-                        "desired": "rgbw/desiredColor",
-                        "last_color": "rgbw/lastOnColor",
-                        "currentEffect": "rgbw/effectID",
-                        "colorMode": "rgbw/colorMode",
+                        "desired": "rgbw.desiredColor",
+                        "last_color": "rgbw.lastOnColor",
+                        "currentEffect": "rgbw.effectID",
+                        "colorMode": "rgbw.colorMode",
                     },
                 ]
             ],
@@ -527,10 +545,10 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "color",
                     {
-                        "desired": "rgbw/desiredColor",
-                        "last_color": "rgbw/lastOnColor",
-                        "currentEffect": "rgbw/effectID",
-                        "colorMode": "rgbw/colorMode",
+                        "desired": "rgbw.desiredColor",
+                        "last_color": "rgbw.lastOnColor",
+                        "currentEffect": "rgbw.effectID",
+                        "colorMode": "rgbw.colorMode",
                     },
                 ],
             ],
@@ -552,7 +570,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "brightness",
                     {
-                        "desired": "light/desiredColor",
+                        "desired": "light.desiredColor",
                     },
                 ]
             ],
@@ -571,7 +589,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "brightness",
                     {
-                        "desired": "light/desiredColor",
+                        "desired": "light.desiredColor",
                     },
                 ]
             ],
@@ -591,10 +609,10 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "brightness",
                     {
-                        "desired": "rgbw/desiredColor",
-                        "colorMode": "rgbw/colorMode",
-                        "currentEffect": "rgbw/effectID",
-                        "last_color": "rgbw/lastOnColor",
+                        "desired": "rgbw.desiredColor",
+                        "colorMode": "rgbw.colorMode",
+                        "currentEffect": "rgbw.effectID",
+                        "last_color": "rgbw.lastOnColor",
                     },
                 ]
             ],
@@ -609,8 +627,8 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "multiSensor",
                     {
-                        "temperature": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "wind": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "temperature": lambda x: f"multiSensor.sensors[?id == `{x}`]|[0]|value",
+                        "wind": lambda x: f"multiSensor.sensors[?id == `{x}`]|[0]|value",
                     },
                 ]
             ],
@@ -618,8 +636,8 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "multiSensor",
                     {
-                        "rain": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "flood": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "rain": lambda x: f"multiSensor.sensors[?id == `{x}`]|[0]|value",
+                        "flood": lambda x: f"multiSensor.sensors[?id == `{x}`]|[0]|value",
                     },
                 ]
             ],
@@ -631,9 +649,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "multiSensor",
                     {
-                        "temperature": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "wind": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "humidity": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "temperature": lambda x: f"multiSensor.sensors[?id == `{x}`]|[0]|value",
+                        "wind": lambda x: f"multiSensor.sensors[?id == `{x}`]|[[0]|value",
+                        "humidity": lambda x: f"multiSensor.sensors[?id == `{x}`]|[0]|value",
                     },
                 ]
             ],
@@ -641,8 +659,8 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "multiSensor",
                     {
-                        "rain": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "flood": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "rain": lambda x: f"multiSensor.sensors[?id == `{x}`]|[0]|value",
+                        "flood": lambda x: f"multiSensor.sensors[?id == `{x}`]|[0]|value",
                     },
                 ]
             ],
@@ -654,10 +672,10 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "multiSensor",
                     {
-                        "illuminance": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "temperature": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "wind": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "humidity": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "illuminance": lambda x: f"multiSensor.sensors[?id == `{x}`]|[0]|value",
+                        "temperature": lambda x: f"multiSensor.sensors[?id == `{x}`]|[0]|value",
+                        "wind": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'wind']|[0]|value",
+                        "humidity": lambda x: f"multiSensor.sensors[?id == `{x}`]|[0]|value",
                     },
                 ]
             ],
@@ -665,8 +683,8 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "multiSensor",
                     {
-                        "rain": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "flood": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "rain": lambda x: f"multiSensor.sensors[?id == `{x}`]|[0]|value",
+                        "flood": lambda x: f"multiSensor.sensors[?id == `{x}`]|[0]|value",
                     },
                 ]
             ],
@@ -678,18 +696,18 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "multiSensor",
                     {
-                        "frequency": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "current": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "voltage": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "apparentPower": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "activePower": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "reactivePower": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "reverseActiveEnergy": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "forwardActiveEnergy": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "illuminance": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "temperature": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "wind": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "humidity": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "frequency": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'frequency']|[0]|value",
+                        "current": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'current']|[0]|value",
+                        "voltage": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'voltage']|[0]|value",
+                        "apparentPower": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'apparentPower']|[0]|value",
+                        "activePower": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'activePower']|[0]|value",
+                        "reactivePower": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'reactivePower']|[0]|value",
+                        "reverseActiveEnergy": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'reverseActiveEnergy']|[0]|value",
+                        "forwardActiveEnergy": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'forwardActiveEnergy']|[0]|value",
+                        "illuminance": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'illuminance']|[0]|value",
+                        "temperature": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'temperature']|[0]|value",
+                        "wind": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'wind']|[0]|value",
+                        "humidity": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'humidity']|[0]|value",
                     },
                 ]
             ],
@@ -697,8 +715,8 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "multiSensor",
                     {
-                        "rain": lambda x: f"multiSensor/sensors/[id={x}]/value",
-                        "flood": lambda x: f"multiSensor/sensors/[id={x}]/value",
+                        "rain": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'rain']|[0]|value",
+                        "flood": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'flood']|[0]|value",
                     },
                 ]
             ],

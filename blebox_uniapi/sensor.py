@@ -124,7 +124,7 @@ class BaseSensor(Feature):
 
 
 @SensorFactory.register("frequency", unit="Hz", scale=1_000)
-@SensorFactory.register("current", unit="mA", scale=10)
+@SensorFactory.register("current", unit="mA", scale=1_000)
 @SensorFactory.register("voltage", unit="V", scale=10)
 @SensorFactory.register("apparentPower", unit="va")
 @SensorFactory.register("reactivePower", unit="var")

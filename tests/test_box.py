@@ -72,6 +72,11 @@ async def test_without_api_level(mock_session, sample_data, config):
 
 
 async def test_json_path_extraction(mock_session, sample_data, config):
+    # note: follow is thin wrapper over jmespath so there's no real reason to test it.
+    # However, this tests makes sure we understand the syntax and know how it works.
+    # We can also use it as a canary for any unexpected change in syntax that may come
+    # in newer version.
+
     # succesfull extraction
     assert follow(["foo"], "[0]") == "foo"
     assert follow([{"foo": "3", "value": 4}], "[?foo=='3'].value") == [4]

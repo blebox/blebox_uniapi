@@ -2,6 +2,7 @@ import pytest
 from unittest import mock
 from blebox_uniapi.box import Box
 from blebox_uniapi import error
+from blebox_uniapi.jfollow import follow
 
 pytestmark = pytest.mark.asyncio
 
@@ -28,26 +29,16 @@ def config(sample_data):
     return Box._match_device_config(sample_data)
 
 
-# async def test_json_path_extraction(mock_session, sample_data, config):
-#     box = Box(mock_session, sample_data, config, None)
+async def test_json_path_extraction(mock_session, sample_data, config):
+    # succesfull extraction
+    assert follow(["foo"], "[0]") == "foo"
+    assert follow([{"foo": "3", "value": 4}], "[?foo=='3'].value") == [4]
 
-#     # Test valid JSON path extraction
-#     assert follow(["foo"], "[0]") == "foo"
-#     assert follow([{"foo": "3", "value": 4}], "[?foo=='3'].value") == [4]
-
-#     # Test JSON path extraction with non-matching condition
-#     with pytest.raises(error.JPathFailed, match=r"with: foo=bc at .* within .*"):
-#         follow([{"foo": "ab", "value": 4}], "[?foo=='bc'].value")
-
-#     # Test JSON path extraction errors
-#     with pytest.raises(error.JPathFailed, match=r"with value at index 1 at .* within .*"):
-#         follow([{"value": 4}], "[1].value")
-
-#     with pytest.raises(error.JPathFailed, match=r"item 'foo' not among \['value'\] at .* within .*"):
-#         follow({"value": 4}, "foo")
-
-#     with pytest.raises(error.JPathFailed, match=r"list expected but got {'foo': \[4\]} at .* within .*"):
-#         follow({"foo": [4]}, "[?bar==`0`].value")
+    # "dud" extraction
+    assert follow([{"foo": "ab", "value": 4}], "[?foo=='bc'].value") == []
+    assert follow([{"value": 4}], "[1].value") is None
+    assert follow({"value": 4}, "foo") is None
+    assert follow({"foo": [4]}, "[?bar==`0`].value") is None
 
 
 async def test_missing_device_id(mock_session, sample_data, config):

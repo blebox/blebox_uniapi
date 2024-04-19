@@ -259,9 +259,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 "on": lambda x=None: ("GET", "/s/1", None),
                 "off": lambda x=None: ("GET", "/s/0", None),
             },
-            "switches": [
-                ["0.relay", {"state": "relays[?relay==`0`]|[0]|state"}, "relay"]
-            ],
+            "switches": [["0.relay", {"state": "[?relay==`0`]|[0]|state"}, "relay"]],
             # note: does not support power measurement
         },
         20190808: {
@@ -282,9 +280,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
-                        "energy": "powerMeasuring.powerConsumption|[0]|value ",
-                        "periodS": "powerMeasuring.powerConsumption|[0]|periodS",
-                        "measurment_enabled": "powerMeasuring.enabled",
+                        "powerMeasurement": lambda x: "powerMeasuring.powerConsumption[0]|value",
+                        "periodS": "powerMeasuring.powerConsumption[0]|periodS",
+                        "measurement_enabled": "powerMeasuring.enabled",
                     },
                 ]
             ],
@@ -307,9 +305,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
-                        "energy": "powerMeasuring.powerConsumption|[0]|value ",
-                        "periodS": "powerMeasuring.powerConsumption|[0]|periodS",
-                        "measurment_enabled": "powerMeasuring.enabled",
+                        "powerMeasurement": lambda x: "powerMeasuring.powerConsumption[0]|value",
+                        "periodS": "powerMeasuring.powerConsumption[0]|periodS",
+                        "measurement_enabled": "powerMeasuring.enabled",
                     },
                 ]
             ],
@@ -332,9 +330,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
-                        "energy": "powerMeasuring.powerConsumption|[0]|value ",
-                        "periodS": "powerMeasuring.powerConsumption|[0]|periodS",
-                        "measurment_enabled": "powerMeasuring.enabled",
+                        "powerMeasurement": lambda x: "powerMeasuring.powerConsumption[0]|value",
+                        "periodS": "powerMeasuring.powerConsumption[0]|periodS",
+                        "measurement_enabled": "powerMeasuring.enabled",
                     },
                 ]
             ],
@@ -359,9 +357,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
-                        "energy": "powerMeasuring.powerConsumption|[0]|value ",
-                        "periodS": "powerMeasuring.powerConsumption|[0]|periodS",
-                        "measurment_enabled": "powerMeasuring.enabled",
+                        "powerMeasurement": lambda x: "powerMeasuring.powerConsumption[0]|value ",
+                        "periodS": "powerMeasuring.powerConsumption[0]|periodS",
+                        "measurement_enabled": "powerMeasuring.enabled",
                     },
                 ]
             ],
@@ -394,9 +392,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
-                        "energy": "powerMeasuring.powerConsumption|[0]|value ",
-                        "periodS": "powerMeasuring.powerConsumption|[0]|periodS",
-                        "measurment_enabled": "powerMeasuring.enabled",
+                        "powerMeasurement": lambda x: "powerMeasuring.powerConsumption[0]|value ",
+                        "periodS": "powerMeasuring.powerConsumption[0]|periodS",
+                        "measurement_enabled": "powerMeasuring.enabled",
                     },
                 ]
             ],
@@ -426,9 +424,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
-                        "energy": "powerMeasuring.powerConsumption|[0]|value ",
-                        "periodS": "powerMeasuring.powerConsumption|[0]|periodS",
-                        "measurment_enabled": "powerMeasuring.enabled",
+                        "powerMeasurement": lambda x: "powerMeasuring.powerConsumption[0]|value ",
+                        "periodS": "powerMeasuring.powerConsumption[0]|periodS",
+                        "measurement_enabled": "powerMeasuring.enabled",
                     },
                 ]
             ],
@@ -458,9 +456,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
-                        "energy": "powerMeasuring.powerConsumption|[0]|value ",
-                        "periodS": "powerMeasuring.powerConsumption|[0]|periodS",
-                        "measurment_enabled": "powerMeasuring.enabled",
+                        "powerMeasurement": lambda x: "powerMeasuring.powerConsumption[0]|value ",
+                        "periodS": "powerMeasuring.powerConsumption[0]|periodS",
+                        "measurement_enabled": "powerMeasuring.enabled",
                     },
                 ]
             ],
@@ -650,7 +648,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     "multiSensor",
                     {
                         "temperature": lambda x: f"multiSensor.sensors[?id == `{x}`]|[0]|value",
-                        "wind": lambda x: f"multiSensor.sensors[?id == `{x}`]|[[0]|value",
+                        "wind": lambda x: f"multiSensor.sensors[?id == `{x}`]|[0]|value",
                         "humidity": lambda x: f"multiSensor.sensors[?id == `{x}`]|[0]|value",
                     },
                 ]

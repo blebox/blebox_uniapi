@@ -29,6 +29,48 @@ def config(sample_data):
     return Box._match_device_config(sample_data)
 
 
+async def test_without_type(mock_session, sample_data, config):
+    del sample_data["type"]
+
+    with pytest.raises(error.UnsupportedBoxResponse, match="has no type"):
+        Box(mock_session, sample_data, config, None)
+
+
+async def test_with_unknown_type(mock_session, sample_data):
+    sample_data["type"] = "unknownBox"
+
+    with pytest.raises(error.UnsupportedBoxResponse, match="not a supported type"):
+        Box._match_device_config(sample_data)
+
+
+async def test_without_name(mock_session, sample_data, config):
+    del sample_data["deviceName"]
+
+    with pytest.raises(error.UnsupportedBoxResponse, match="has no name"):
+        Box(mock_session, sample_data, config, None)
+
+
+async def test_without_firmware_version(mock_session, sample_data, config):
+    del sample_data["fv"]
+
+    with pytest.raises(error.UnsupportedBoxResponse, match="has no firmware version"):
+        Box(mock_session, sample_data, config, None)
+
+
+async def test_without_hardware_version(mock_session, sample_data, config):
+    del sample_data["hv"]
+
+    with pytest.raises(error.UnsupportedBoxResponse, match="has no hardware version"):
+        Box(mock_session, sample_data, config, None)
+
+
+async def test_without_api_level(mock_session, sample_data, config):
+    del sample_data["apiLevel"]
+
+    with pytest.raises(error.UnsupportedBoxVersion, match=r"unsupported version"):
+        Box._match_device_config(sample_data)
+
+
 async def test_json_path_extraction(mock_session, sample_data, config):
     # succesfull extraction
     assert follow(["foo"], "[0]") == "foo"

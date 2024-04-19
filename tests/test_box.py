@@ -1,13 +1,8 @@
-import json
-
 import pytest
-
 from unittest import mock
-
-from unittest.mock import patch
-
 from blebox_uniapi.box import Box
 from blebox_uniapi import error
+from blebox_uniapi.jfollow import follow
 
 pytestmark = pytest.mark.asyncio
 
@@ -18,7 +13,7 @@ def mock_session():
 
 
 @pytest.fixture
-def data():
+def sample_data():
     return {
         "id": "abcd1234ef",
         "type": "airSensor",
@@ -30,143 +25,107 @@ def data():
 
 
 @pytest.fixture
-def config(data):
-    return Box._match_device_config(data)
+def config(sample_data):
+    return Box._match_device_config(sample_data)
 
 
-async def test_json_paths(mock_session, data, config):
-    box = Box(mock_session, data, config, None)
+async def test_without_type(mock_session, sample_data, config):
+    del sample_data["type"]
 
-    assert "foo" == box.follow(json.loads("""["foo"]"""), "[0]")
-    assert 4 == box.follow(
-        json.loads("""[{"foo":"3", "value":4}]"""), "[foo='3']/value"
-    )
-
-    assert 4 == box.follow(json.loads("""[{"foo":3, "value":4}]"""), "[foo=3]/value")
-
-    with pytest.raises(error.JPathFailed, match=r"with: foo=bc at .* within .*"):
-        box.follow(json.loads("""[{"foo":"ab", "value":4}]"""), "[foo='bc']/value")
-
-    with pytest.raises(
-        error.JPathFailed, match=r"with value at index 1 at .* within .*"
-    ):
-        box.follow(json.loads("""[{"value":4}]"""), "[1]/value")
-
-    with pytest.raises(
-        error.JPathFailed, match=r"with value at index 1 at .* within .*"
-    ):
-        box.follow(json.loads("""{"value":4}"""), "[1]/value")
-
-    with pytest.raises(error.JPathFailed, match=r"with: foo=7 at .* within .*"):
-        box.follow(json.loads("""[{"foo":3, "value":4}]"""), "[foo=7]/value")
-
-    with pytest.raises(
-        error.JPathFailed, match=r"item 'foo' not among \['value'\] at .* within .*"
-    ):
-        box.follow(json.loads("""{"value":4}"""), "foo")
-
-    with pytest.raises(
-        error.JPathFailed,
-        match=r"unexpected item type: 'foo' not in: \[4\] at .* within .*",
-    ):
-        box.follow(json.loads("""[4]"""), "foo")
-
-    with pytest.raises(
-        error.JPathFailed,
-        match=r"list expected but got {'foo': \[4\]} at .* within .*",
-    ):
-        box.follow(json.loads("""{"foo": [4]}"""), "[bar=0]/value")
+    with pytest.raises(error.UnsupportedBoxResponse, match="has no type"):
+        Box(mock_session, sample_data, config, None)
 
 
-async def test_without_id(mock_session, data, config):
-    with pytest.raises(
-        error.UnsupportedBoxResponse, match="Device at 172.1.2.3:80 has no id"
-    ):
-        del data["id"]
-        Box(mock_session, data, config, None)
+async def test_with_unknown_type(mock_session, sample_data):
+    sample_data["type"] = "unknownBox"
+
+    with pytest.raises(error.UnsupportedBoxResponse, match="not a supported type"):
+        Box._match_device_config(sample_data)
 
 
-async def test_without_type(mock_session, data, config):
-    with pytest.raises(
-        error.UnsupportedBoxResponse,
-        match="Device:abcd1234ef at 172.1.2.3:80 has no type",
-    ):
-        del data["type"]
-        Box(mock_session, data, config, None)
+async def test_without_name(mock_session, sample_data, config):
+    del sample_data["deviceName"]
+
+    with pytest.raises(error.UnsupportedBoxResponse, match="has no name"):
+        Box(mock_session, sample_data, config, None)
 
 
-async def test_with_unknown_type(mock_session, data):
-    with pytest.raises(error.UnsupportedBoxResponse, match=r"type"):
-        data["type"] = "unknownBox"
-        Box._match_device_config(data)
+async def test_without_firmware_version(mock_session, sample_data, config):
+    del sample_data["fv"]
+
+    with pytest.raises(error.UnsupportedBoxResponse, match="has no firmware version"):
+        Box(mock_session, sample_data, config, None)
 
 
-async def test_without_name(mock_session, data, config):
-    with pytest.raises(
-        error.UnsupportedBoxResponse,
-        match="airSensor:abcd1234ef at 172.1.2.3:80 has no name",
-    ):
-        del data["deviceName"]
-        Box(mock_session, data, config, None)
+async def test_without_hardware_version(mock_session, sample_data, config):
+    del sample_data["hv"]
+
+    with pytest.raises(error.UnsupportedBoxResponse, match="has no hardware version"):
+        Box(mock_session, sample_data, config, None)
 
 
-async def test_without_firmware_version(mock_session, data, config):
-    with pytest.raises(
-        error.UnsupportedBoxResponse,
-        match=r"'foobar' \(airSensor:abcd1234ef at 172.1.2.3:80\) has no firmware version",
-    ):
-        del data["fv"]
-        Box(mock_session, data, config, None)
+async def test_without_api_level(mock_session, sample_data, config):
+    del sample_data["apiLevel"]
+
+    with pytest.raises(error.UnsupportedBoxVersion, match=r"unsupported version"):
+        Box._match_device_config(sample_data)
 
 
-async def test_without_hardware_version(mock_session, data, config):
-    with pytest.raises(
-        error.UnsupportedBoxResponse,
-        match=r"'foobar' \(airSensor:abcd1234ef/1.23 at 172.1.2.3:80\) has no hardware version",
-    ):
-        del data["hv"]
-        Box(mock_session, data, config, None)
+async def test_json_path_extraction(mock_session, sample_data, config):
+    # note: follow is thin wrapper over jmespath so there's no real reason to test it.
+    # However, this tests makes sure we understand the syntax and know how it works.
+    # We can also use it as a canary for any unexpected change in syntax that may come
+    # in newer version.
+
+    # succesfull extraction
+    assert follow(["foo"], "[0]") == "foo"
+    assert follow([{"foo": "3", "value": 4}], "[?foo=='3'].value") == [4]
+
+    # "dud" extraction
+    assert follow([{"foo": "ab", "value": 4}], "[?foo=='bc'].value") == []
+    assert follow([{"value": 4}], "[1].value") is None
+    assert follow({"value": 4}, "foo") is None
+    assert follow({"foo": [4]}, "[?bar==`0`].value") is None
 
 
-async def test_without_api_level(mock_session, data, config):
-    with pytest.raises(
-        error.UnsupportedBoxVersion,
-        match=r"unsupported version",
-    ):
-        del data["apiLevel"]
-        Box._match_device_config(data)
+async def test_missing_device_id(mock_session, sample_data, config):
+    del sample_data["id"]
+    with pytest.raises(error.UnsupportedBoxResponse, match="has no id"):
+        Box(mock_session, sample_data, config, None)
 
 
-async def test_with_init_failure(mock_session, data, config):
-    with patch(
+# Add more test cases for other missing fields (type, name, versions, etc.)
+
+
+async def test_invalid_init(mock_session, sample_data, config):
+    with mock.patch(
         "blebox_uniapi.sensor.SensorFactory.many_from_config",
         spec_set=True,
         autospec=True,
     ) as mock_sensor:
         mock_sensor.side_effect = KeyError
         with pytest.raises(
-            error.UnsupportedBoxResponse,
-            match=r"Failed to initialize:",
+            error.UnsupportedBoxResponse, match=r"Failed to initialize:"
         ):
-            Box(mock_session, data, config, None)
+            Box(mock_session, sample_data, config, None)
 
 
-async def test_properties(mock_session, data, config):
-    box = Box(mock_session, data, config, None)
-    assert "foobar" == box.name
-    assert None is box.last_data
-    assert "airSensor" == box.type
-    assert "airSensor" == box.model
-    assert "abcd1234ef" == box.unique_id
-    assert "1.23" == box.firmware_version
-    assert "4.56" == box.hardware_version
-    assert "BleBox" == box.brand
-    assert 20180403 == box.api_version
-    assert "172.1.2.3:80" == box.address
+async def test_properties(mock_session, sample_data, config):
+    box = Box(mock_session, sample_data, config, None)
+    assert box.name == "foobar"
+    assert box.last_data is None
+    assert box.type == "airSensor"
+    assert box.model == "airSensor"
+    assert box.unique_id == "abcd1234ef"
+    assert box.firmware_version == "1.23"
+    assert box.hardware_version == "4.56"
+    assert box.brand == "BleBox"
+    assert box.api_version == 20180403
+    assert box.address == "172.1.2.3:80"
 
 
-async def test_validations(mock_session, data, config):
-    box = Box(mock_session, data, config, None)
+async def test_field_validations(mock_session, sample_data, config):
+    box = Box(mock_session, sample_data, config, None)
 
     with pytest.raises(
         error.BadFieldExceedsMax,

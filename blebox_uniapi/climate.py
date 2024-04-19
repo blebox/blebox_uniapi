@@ -2,6 +2,7 @@ from .sensor import Temperature
 from .error import JPathFailed
 from typing import Optional, Any, Union
 from .feature import Feature
+from blebox_uniapi.jfollow import follow
 
 
 class Climate(Temperature):
@@ -64,7 +65,7 @@ class Climate(Temperature):
         if extended_state is not None:
             safetyIdPath = box_type_config[0][1].get("safetySensorId")
             if safetyIdPath:
-                safety_sensor_id = product.follow(extended_state, safetyIdPath)
+                safety_sensor_id = follow(extended_state, safetyIdPath)
                 temp_sensor_id = cls.get_temp_sensor_id(
                     safety_sensor_id, extended_state["sensors"]
                 )

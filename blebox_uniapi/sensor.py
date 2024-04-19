@@ -42,7 +42,7 @@ class SensorFactory:
             power_states = extended_state["powerMeasuring"].get("powerConsumption", [])
             # note: be careful of names as this has been historically named differently
             # in home-assistant
-            states.extend({"type": "powerConsumption", **s} for s in power_states)
+            states.extend({"type": "powerMeasurement", **s} for s in power_states)
         return states
 
     @classmethod
@@ -124,7 +124,7 @@ class BaseSensor(Feature):
 
 
 @SensorFactory.register("frequency", unit="Hz", scale=1_000)
-@SensorFactory.register("current", unit="mA", scale=10)
+@SensorFactory.register("current", unit="mA", scale=1_000)
 @SensorFactory.register("voltage", unit="V", scale=10)
 @SensorFactory.register("apparentPower", unit="va")
 @SensorFactory.register("reactivePower", unit="var")
@@ -133,7 +133,6 @@ class BaseSensor(Feature):
 @SensorFactory.register("forwardActiveEnergy", unit="kWh")
 @SensorFactory.register("illuminance", unit="lx", scale=100)
 @SensorFactory.register("humidity", unit="percentage", scale=100)
-@SensorFactory.register("wind", unit="m/s", scale=10)
 class GenericSensor(BaseSensor):
     def __init__(
         # base sensor params
@@ -174,7 +173,17 @@ class GenericSensor(BaseSensor):
         self._native_value = native
 
 
-@SensorFactory.register("powerConsumption", unit="kWh")
+@SensorFactory.register("wind", unit="m/s", scale=10)
+class Wind(GenericSensor):
+    @property
+    def device_class(self):
+        # compat/legacy: this sensor is advertised in homeassistant as wind speed
+        # despite different sensor-type naming. Keep it consistent until we rectiify
+        # this upstream
+        return "wind_speed"
+
+
+@SensorFactory.register("powerMeasurement", unit="kWh")
 class PowerConsumption(GenericSensor):
     # note: almost the same as typical generic sensor but also provides extra property
     # to read last reset value

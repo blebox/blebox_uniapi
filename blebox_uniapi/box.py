@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 import asyncio
 import time
 
@@ -19,7 +18,6 @@ from .switch import Switch
 from .error import (
     UnsupportedBoxResponse,
     UnsupportedBoxVersion,
-    JPathFailed,
     BadFieldExceedsMax,
     BadFieldLessThanMin,
     BadFieldMissing,
@@ -281,89 +279,6 @@ class Box:
         method, *args = self._api[command](value)
         self._last_real_update = None  # force update
         return await self._async_api(False, method, *args)
-
-    def follow(self, data: dict, path: str) -> Any:
-        """
-        Return payload from device response json.
-        :param self:
-        :param data:
-        :param path:
-        :return:
-        """
-        if data is None:
-            raise RuntimeError(f"bad argument: data {data}")  # pragma: no cover
-
-        results = path.split("/")
-        current_tree = data
-
-        for chunk in results:
-            with_string_value = re.compile(r"^\[(.*)='(.*)']$")
-            match = with_string_value.match(chunk)
-            if match:
-                name = match.group(1)
-                value = match.group(2)
-
-                found = False
-
-                for item in current_tree:
-                    if item[name] == value:
-                        current_tree = item
-                        found = True
-                        break
-
-                if not found:
-                    raise JPathFailed(f"with: {name}={value}", path, data)
-
-                continue  # pragma: no cover
-
-            with_int_value = re.compile(r"^\[(.*)=(\d+)]$")
-            match = with_int_value.match(chunk)
-            if match:
-                name = match.group(1)
-                value = int(match.group(2))
-
-                found = False
-
-                if not isinstance(current_tree, list):
-                    raise JPathFailed(
-                        f"list expected but got {current_tree}", path, data
-                    )
-
-                for item in current_tree:
-                    if item[name] == value:
-                        current_tree = item
-                        found = True
-                        break
-
-                if not found:
-                    raise JPathFailed(f"with: {name}={value}", path, data)
-                continue  # pragma: no cover
-
-            with_index = re.compile(r"^\[(\d+)]$")
-            match = with_index.match(chunk)
-            if match:
-                index = int(match.group(1))
-                if not isinstance(current_tree, list) or index >= len(current_tree):
-                    raise JPathFailed(f"with value at index {index}", path, data)
-
-                current_tree = current_tree[index]
-                continue
-
-            if isinstance(current_tree, dict):
-                names = current_tree.keys()
-                if chunk not in names:
-                    raise JPathFailed(
-                        f"item '{chunk}' not among {list(names)}", path, data
-                    )
-
-                current_tree = current_tree[chunk]
-            else:
-                raise JPathFailed(
-                    f"unexpected item type: '{chunk}' not in: {current_tree}",
-                    path,
-                    data,
-                )
-        return current_tree
 
     def expect_int(
         self, field: str, raw_value: int, maximum: int = -1, minimum: int = 0

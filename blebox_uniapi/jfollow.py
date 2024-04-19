@@ -1,9 +1,9 @@
-from typing import Any
+from typing import Any, Union
 
 import jmespath
 
 
-def follow(data: dict | list, path: str) -> Any:
+def follow(data: Union[dict, list], path: str) -> Any:
     if data is None:
         raise RuntimeError(f"bad argument: data {data}")  # pragma: no cover
 

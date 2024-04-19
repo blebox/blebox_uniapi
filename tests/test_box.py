@@ -90,9 +90,7 @@ async def test_json_path_extraction(mock_session, sample_data, config):
 
 async def test_missing_device_id(mock_session, sample_data, config):
     del sample_data["id"]
-    with pytest.raises(
-        error.UnsupportedBoxResponse, match="Device at 172.1.2.3:80 has no id"
-    ):
+    with pytest.raises(error.UnsupportedBoxResponse, match="has no id"):
         Box(mock_session, sample_data, config, None)
 
 

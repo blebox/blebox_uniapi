@@ -1,102 +1,106 @@
+#!/bin/bash
+
+read -p "Enter a name (use underscores for spaces): " custom_name
+custom_name=${custom_name// /_}
+
+yaml_content=$(cat <<EOF
+
+
 views:
-  - title: All phases(1+2+3)
+  - title: ALL PHASES ( 1+2+3)
+    path: all-phases-1-2-3
     cards:
       - type: gauge
-        entity: sensor.smartmeter_k71_3f_multisensor_activepower_0
-        unit: W
+        entity: sensor.${custom_name}_multisensor_activepower_0
+        min: -3000
+        severity:
+          green: -3000
+          yellow: 0
+          red: 0
         name: Active Power
         max: 3000
-        min: -3000
         needle: true
-        severity:
-          green: -3000
-          yellow: 0
-          red: 0
-      - graph: line
+      - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_reactivepower_0
+        entity: sensor.${custom_name}_multisensor_apparentpower_0
         detail: 1
-        name: Reactive Power
-        icon: energy
-        unit: VAR
-      - type: gauge
-        entity: sensor.smartmeter_k71_3f_multisensor_reverseactiveenergy_0
-        unit: kWh
-        name: Reverse Active Energy
-        needle: false
-      - graph: line
+        name: Apparent Power
+      - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_apparentpower_0
+        entity: sensor.${custom_name}_multisensor_current_0
         detail: 1
-        name: Apparent power
-        icon: energy
-        unit: VAR
-      - type: gauge
-        entity: sensor.smartmeter_k71_3f_multisensor_forwardactiveenergy_0
-        unit: kWh
+        name: Current
+      - graph: none
+        type: sensor
+        entity: sensor.${custom_name}_multisensor_forwardactiveenergy_0
+        detail: 1
         name: Forward Active Energy
-        max: 3000
-        min: -3000
-        needle: true
-        severity:
-          green: -3000
-          yellow: 0
-          red: 0
-      - graph: line
+      - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_frequency_0
+        entity: sensor.${custom_name}_multisensor_frequency_0
         detail: 1
         name: Frequency
-        icon: energy
+      - graph: none
+        type: sensor
+        entity: sensor.${custom_name}_multisensor_reactivepower_0
+        detail: 1
+        name: Reactive Power
         unit: VAR
+      - graph: none
+        type: sensor
+        entity: sensor.${custom_name}_multisensor_reverseactiveenergy_0
+        detail: 1
+        name: Reverse Active Energy
+    type: sidebar
   - title: Phase1
     path: active-power
     cards:
       - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_forwardactiveenergy_1
+        entity: sensor.${custom_name}_multisensor_forwardactiveenergy_1
         detail: 1
         name: Forward Active Energy
         view_layout:
           position: main
       - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_reverseactiveenergy_1
+        entity: sensor.${custom_name}_multisensor_reverseactiveenergy_1
         detail: 1
         name: Reverse Active Energy
         view_layout:
           position: main
       - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_activepower_1
+        entity: sensor.${custom_name}_multisensor_activepower_1
         detail: 1
         name: Active Power
         view_layout:
           position: main
       - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_reactivepower_1
+        entity: sensor.${custom_name}_multisensor_reactivepower_1
         detail: 1
         name: Reactive Power
         view_layout:
           position: main
+        unit: VAR
       - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_apparentpower_1
+        entity: sensor.${custom_name}_multisensor_apparentpower_1
         detail: 1
         name: Apparent Power
         view_layout:
           position: main
       - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_frequency_1
+        entity: sensor.${custom_name}_multisensor_frequency_1
         detail: 1
         name: Frequency
         view_layout:
           position: main
       - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_voltage_1
+        entity: sensor.${custom_name}_multisensor_voltage_1
         detail: 1
         name: Voltage
         view_layout:
@@ -104,7 +108,7 @@ views:
         icon: mdi:flash
       - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_current_1
+        entity: sensor.${custom_name}_multisensor_current_1
         detail: 1
         name: Current
     type: sidebar
@@ -113,49 +117,50 @@ views:
     cards:
       - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_forwardactiveenergy_2
+        entity: sensor.${custom_name}_multisensor_forwardactiveenergy_2
         detail: 1
         name: Forward Active Energy
         view_layout:
           position: main
       - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_reverseactiveenergy_2
+        entity: sensor.${custom_name}_multisensor_reverseactiveenergy_2
         detail: 1
         name: Reverse Active Energy
         view_layout:
           position: main
       - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_activepower_2
+        entity: sensor.${custom_name}_multisensor_activepower_2
         detail: 1
         name: Active Power
         view_layout:
           position: main
       - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_reactivepower_2
+        entity: sensor.${custom_name}_multisensor_reactivepower_2
         detail: 1
         name: Reactive Power
         view_layout:
           position: main
+        unit: VAR
       - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_apparentpower_2
+        entity: sensor.${custom_name}_multisensor_apparentpower_2
         detail: 1
         name: Apparent Power
         view_layout:
           position: main
       - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_frequency_2
+        entity: sensor.${custom_name}_multisensor_frequency_2
         detail: 1
         name: Frequency
         view_layout:
           position: main
       - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_voltage_2
+        entity: sensor.${custom_name}_multisensor_voltage_2
         detail: 1
         name: Voltage
         view_layout:
@@ -163,7 +168,7 @@ views:
         icon: mdi:flash
       - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_current_2
+        entity: sensor.${custom_name}_multisensor_current_2
         detail: 1
         name: Current
     type: sidebar
@@ -172,49 +177,50 @@ views:
     cards:
       - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_forwardactiveenergy_3
+        entity: sensor.${custom_name}_multisensor_forwardactiveenergy_3
         detail: 1
         name: Forward Active Energy
         view_layout:
           position: main
       - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_reverseactiveenergy_3
+        entity: sensor.${custom_name}_multisensor_reverseactiveenergy_3
         detail: 1
         name: Reverse Active Energy
         view_layout:
           position: main
       - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_activepower_3
+        entity: sensor.${custom_name}_multisensor_activepower_3
         detail: 1
         name: Active Power
         view_layout:
           position: main
       - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_reactivepower_3
+        entity: sensor.${custom_name}_multisensor_reactivepower_3
         detail: 1
         name: Reactive Power
         view_layout:
           position: main
+        unit: VAR
       - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_apparentpower_3
+        entity: sensor.${custom_name}_multisensor_apparentpower_3
         detail: 1
         name: Apparent Power
         view_layout:
           position: main
       - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_frequency_3
+        entity: sensor.${custom_name}_multisensor_frequency_3
         detail: 1
         name: Frequency
         view_layout:
           position: main
       - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_voltage_3
+        entity: sensor.${custom_name}_multisensor_voltage_3
         detail: 1
         name: Voltage
         view_layout:
@@ -222,10 +228,16 @@ views:
         icon: mdi:flash
       - graph: none
         type: sensor
-        entity: sensor.smartmeter_k71_3f_multisensor_current_3
+        entity: sensor.${custom_name}_multisensor_current_3
         detail: 1
         name: Current
         view_layout:
           position: main
     type: sidebar
-title: Smart Meter k71
+title: ${custom_name}
+EOF
+)
+
+echo "$yaml_content" > "${custom_name}.yaml"
+
+echo "YAML file '${custom_name}.yaml' generated successfully."

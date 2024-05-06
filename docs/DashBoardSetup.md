@@ -44,11 +44,11 @@ This guide explains how to set up a dashboard in Home Assistant using a YAML con
 
    #### Windows Users
 
-   - Open Command Prompt or PowerShell.
+   - Open PowerShell.
    - Navigate to the directory where your script `generate_yaml.ps1` is located.
    - Run the script by entering its name 
       ```bash
-      ./generate_yaml.ps1`
+      .\generate_yaml.ps1`
       ```
    - Follow the prompts to enter a custom name for your dashboard.
    - The script will generate a YAML file named `<custom_name>.yaml` in the same directory.

@@ -1,5 +1,4 @@
 from .sensor import Temperature
-from .error import JPathFailed
 from typing import Optional, Any, Union
 from .feature import Feature
 from blebox_uniapi.jfollow import follow
@@ -141,10 +140,8 @@ class Climate(Temperature):
             self._max_temp = None
             return
 
-        try:
-            self.raw_value("minimum")
-        except JPathFailed:
-            # TODO: coverage
+        raw_min = self.raw_value("minimum")
+        if raw_min is None:
             return
 
         self._min_temp = self._read_temperature("minimum")

@@ -1,6 +1,3 @@
-from typing import Optional
-
-
 class Error(RuntimeError):
     """Generic blebox_uniapi error."""
 
@@ -60,15 +57,6 @@ class UnsupportedAppVersion(BoxError):
 # class OutdatedBoxVersion(BoxError):
 #     pass
 
-
-class JPathFailed(BoxError):
-    def __init__(self, message: str, path: str, data: Optional[dict]):
-        self._message = message
-        self._path = path
-        self._data = data
-
-    def __str__(self) -> str:
-        return f"{self._message} at '{self._path}' within '''{self._data}'''"
 
 
 class BadFieldExceedsMax(BoxError):

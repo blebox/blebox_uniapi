@@ -1,6 +1,5 @@
 from enum import IntEnum, auto
 
-import blebox_uniapi.error
 from .error import MisconfiguredDevice
 from .feature import Feature
 from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar
@@ -222,11 +221,12 @@ class GateBox(Gate):
     def read_has_stop(self, alias: str, raw_value: Any, product: "Box") -> bool:
         if product.last_data is None:
             return False
-        try:
-            raw = raw_value("extraButtonType")
-        except blebox_uniapi.error.JPathFailed:
+
+        button_type = raw_value("extraButtonType")
+        if button_type is None:
             return False
-        return 1 == product.expect_int(alias, raw, 3, 0)
+
+        return button_type == 1
 
 
 class GateBoxB(GateBox):
@@ -269,6 +269,8 @@ class GateBoxB(GateBox):
     def close_command(self) -> str:
         if self._control_type == GateBoxControlType.OPEN_CLOSE:
             return "secondary"
+
+        return super().close_command
 
 
 GateT = TypeVar("GateT", bound=Gate)

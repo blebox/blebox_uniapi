@@ -1,6 +1,5 @@
 from enum import IntEnum, auto
 
-import blebox_uniapi.error
 from .error import MisconfiguredDevice
 from .feature import Feature
 from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar

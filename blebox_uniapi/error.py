@@ -1,6 +1,3 @@
-from typing import Optional
-
-
 class Error(RuntimeError):
     """Generic blebox_uniapi error."""
 

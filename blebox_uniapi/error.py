@@ -5,13 +5,7 @@ class Error(RuntimeError):
 
 
 # Likely fixable/retriable network/busy errors
-
-
-class TemporaryError(Error):
-    pass
-
-
-class ConnectionError(TemporaryError):
+class ConnectionError(Error):
     pass
 
 
@@ -20,8 +14,6 @@ class TimeoutError(ConnectionError):
 
 
 # Likely unfixable device errors (do not setup)
-
-
 class ClientError(Error):
     pass
 
@@ -35,8 +27,6 @@ class UnauthorizedRequest(ClientError):
 
 
 # API errors
-
-
 class BoxError(Error):
     pass
 
@@ -47,15 +37,6 @@ class UnsupportedBoxResponse(BoxError):
 
 class UnsupportedBoxVersion(BoxError):
     pass
-
-
-class UnsupportedAppVersion(BoxError):
-    pass
-
-
-# TODO: not used yet
-# class OutdatedBoxVersion(BoxError):
-#     pass
 
 
 
@@ -121,12 +102,6 @@ class BadFieldNotRGBW(BoxError):
     def __str__(self) -> str:
         return f"{self._dev_name}.{self._field} is {self._value} which is not a rgbw string"
 
-
-# API command errors
-
-
-class BadOnValueError(BoxError):
-    pass
 
 
 # misc errors

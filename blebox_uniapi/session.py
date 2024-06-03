@@ -71,12 +71,12 @@ class ApiHost:
         except asyncio.TimeoutError as ex:
             raise error.TimeoutError(
                 f"Failed to connect to {self.host}:{self.port} within {client_timeout}s: ({ex})"
-            ) from None
+            ) from ex
 
         except aiohttp.ClientConnectionError as ex:
             raise error.ConnectionError(
                 f"Failed to connect to {self.host}:{self.port}: {ex}"
-            ) from None
+            ) from ex
 
         except aiohttp.ClientError as ex:
             raise error.ClientError(f"API request {url} failed: {ex}") from ex

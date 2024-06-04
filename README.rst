@@ -2,19 +2,8 @@
 BleBox Python UniAPI
 ====================
 
-
 .. image:: https://img.shields.io/pypi/v/blebox_uniapi.svg
         :target: https://pypi.python.org/pypi/blebox_uniapi
-
-.. image:: https://travis-ci.com/blebox/blebox_uniapi.svg?branch=master
-        :target: https://travis-ci.com/blebox/blebox_uniapi
-
-.. image:: https://readthedocs.org/projects/blebox-uniapi/badge/?version=latest
-        :target: https://blebox-uniapi.readthedocs.io/en/latest/?badge=latest
-        :alt: Documentation Status
-
-
-
 
 Python API for accessing BleBox smart home devices
 
@@ -38,7 +27,6 @@ Contributions are welcome!
 
 Credits
 -------
-
 
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage

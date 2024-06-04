@@ -35,7 +35,9 @@ class SensorFactory:
         # note: probably we should iterate extended state in future if there
         # are other api flavours other than multiSensor that provide sensors
         states = extended_state.get("multiSensor", {}).get("sensors", [])
-
+        # note: but for now we are only able to support non-multisensor devices
+        # that provide sensor data in extended data payload root
+        states.extend(extended_state.get("sensors", []))
         # note: power measuring feature predates multiSensor API, so we need a small
         # shim to adapt older shape of power measuring schema to the new sensor API
         if "powerMeasuring" in extended_state:

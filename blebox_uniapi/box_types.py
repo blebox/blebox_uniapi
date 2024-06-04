@@ -280,7 +280,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
+                        # note: switchbox/switchboxD sensors are currently not indexed (singletons)
                         "powerConsumption": lambda x: "powerMeasuring.powerConsumption[0]|value",
+                        "activePower": lambda x: "sensors[?type == 'activePower']|[0]|value",
                         "periodS": "powerMeasuring.powerConsumption[0]|periodS",
                         "measurement_enabled": "powerMeasuring.enabled",
                     },
@@ -305,7 +307,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
+                        # note: switchbox/switchboxD sensors are currently not indexed (singletons)
                         "powerConsumption": lambda x: "powerMeasuring.powerConsumption[0]|value",
+                        "activePower": lambda x: "sensors[?type == 'activePower']|[0]|value",
                         "periodS": "powerMeasuring.powerConsumption[0]|periodS",
                         "measurement_enabled": "powerMeasuring.enabled",
                     },
@@ -330,7 +334,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
+                        # note: switchbox/switchboxD sensors are currently not indexed (singletons)
                         "powerConsumption": lambda x: "powerMeasuring.powerConsumption[0]|value",
+                        "activePower": lambda x: "sensors[?type == 'activePower']|[0]|value",
                         "periodS": "powerMeasuring.powerConsumption[0]|periodS",
                         "measurement_enabled": "powerMeasuring.enabled",
                     },
@@ -357,7 +363,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
+                        # note: switchbox/switchboxD sensors are currently not indexed (singletons)
                         "powerConsumption": lambda x: "powerMeasuring.powerConsumption[0]|value ",
+                        "activePower": lambda x: "sensors[?type == 'activePower']|[0]|value",
                         "periodS": "powerMeasuring.powerConsumption[0]|periodS",
                         "measurement_enabled": "powerMeasuring.enabled",
                     },
@@ -392,7 +400,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
+                        # note: switchbox/switchboxD sensors are currently not indexed (singletons)
                         "powerConsumption": lambda x: "powerMeasuring.powerConsumption[0]|value ",
+                        "activePower": lambda x: "sensors[?type == 'activePower']|[0]|value",
                         "periodS": "powerMeasuring.powerConsumption[0]|periodS",
                         "measurement_enabled": "powerMeasuring.enabled",
                     },
@@ -424,7 +434,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
+                        # note: switchbox/switchboxD sensors are currently not indexed (singletons)
                         "powerConsumption": lambda x: "powerMeasuring.powerConsumption[0]|value ",
+                        "activePower": lambda x: "sensors[?type == 'activePower']|[0]|value",
                         "periodS": "powerMeasuring.powerConsumption[0]|periodS",
                         "measurement_enabled": "powerMeasuring.enabled",
                     },
@@ -456,7 +468,9 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 [
                     "switchBox.energy",
                     {
+                        # note: switchbox/switchboxD sensors are currently not indexed (singletons)
                         "powerConsumption": lambda x: "powerMeasuring.powerConsumption[0]|value ",
+                        "activePower": lambda x: "sensors[?type == 'activePower']|[0]|value",
                         "periodS": "powerMeasuring.powerConsumption[0]|periodS",
                         "measurement_enabled": "powerMeasuring.enabled",
                     },

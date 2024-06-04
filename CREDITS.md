@@ -12,6 +12,7 @@ Project contributors (in alphabetical order)
 - @riokuu
 - @swistakm
 - @Pastucha
+- @pvsti
 
 ## Projects
 - Initial scaffolding for this project was created using [cookiecutter](https://github.com/audreyr/cookiecutter) and

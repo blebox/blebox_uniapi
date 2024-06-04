@@ -1,6 +1,14 @@
 =======
 History
 =======
+2.4.0 (2024-06-03)
+------------------
+* Fix: Refactor sensor_factory by @Pastucha in https://github.com/blebox/blebox_uniapi/pull/163
+* Order in BOX_TYPES by @Pastucha in https://github.com/blebox/blebox_uniapi/pull/164
+* Feature: smart meter by @swistakm in https://github.com/blebox/blebox_uniapi/pull/168
+* Smartmeter by @pvsti in https://github.com/blebox/blebox_uniapi/pull/170
+* fix: resolve regressions in cover and climate due to jmespath introduction by @swistakm in https://github.com/blebox/blebox_uniapi/pull/173
+
 2.3.0 (2024-03-13)
 ------------------
 * feat: add new methods to cover feature enabling handling of tilt open/close actions by @swistakm in https://github.com/blebox/blebox_uniapi/pull/154

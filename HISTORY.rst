@@ -1,6 +1,10 @@
 =======
 History
 =======
+2.4.1 (2024-06-04)
+------------------
+* fix: rectify ambiguity around powerConsumption and wind sensor types
+
 2.4.0 (2024-06-03)
 ------------------
 * Fix: Refactor sensor_factory by @Pastucha in https://github.com/blebox/blebox_uniapi/pull/163

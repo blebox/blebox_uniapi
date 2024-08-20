@@ -42,6 +42,10 @@ class Feature:
     def product(self) -> "Box":
         return self._product
 
+    @property
+    def alias(self):
+        return self._alias
+
     # TODO: (cleanup) move to product/box ?
     def raw_value(self, name: str) -> Any:
         product = self._product

@@ -1,6 +1,10 @@
 =======
 History
 =======
+2.5.0 (2024-08-20)
+------------------
+* feature: expose sensor_id in sensors and alias in all features by @swistakm in https://github.com/blebox/blebox_uniapi/pull/176
+
 2.4.2 (2024-06-04)
 ------------------
 * fix: add missing support for active power sensors on switchbox/switchboxd devices by @swistakm in https://github.com/blebox/blebox_uniapi/pull/175

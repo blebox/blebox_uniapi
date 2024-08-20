@@ -219,8 +219,14 @@ class PowerConsumption(GenericSensor):
 class Temperature(BaseSensor):
     _current: Union[float, int, None]
 
-    def __init__(self, product: "Box", alias: str, methods: dict):
-        super().__init__(product, alias, methods)
+    def __init__(
+        self,
+        product: "Box",
+        alias: str,
+        methods: dict,
+        sensor_id: Optional[int] = None,
+    ):
+        super().__init__(product, alias, methods, sensor_id=sensor_id)
         self._unit = "celsius"
         self._device_class = "temperature"
 
@@ -247,7 +253,11 @@ class AirQuality(BaseSensor):
     _pm: Optional[int]
 
     def __init__(
-        self, product: "Box", alias: str, methods: dict, sensor_id: Optional[str] = None
+        self,
+        product: "Box",
+        alias: str,
+        methods: dict,
+        sensor_id: Optional[str] = None,
     ):
         super().__init__(product, alias, methods, sensor_id)
         self._unit = "concentration_of_mp"

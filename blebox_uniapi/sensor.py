@@ -73,7 +73,10 @@ class SensorFactory:
                     }
 
                     feature = constructor(
-                        product=product, alias=alias, methods=materialized_methods
+                        product=product,
+                        alias=alias,
+                        methods=materialized_methods,
+                        sensor_id=sensor_id,
                     )
                     object_list.append(feature)
 
@@ -98,11 +101,18 @@ class BaseSensor(Feature):
     _device_class: str
     _native_value: Union[float, int, str]
     _sensor_type: Optional[str]
+    _sensor_id: Optional[int]
 
     def __init__(
-        self, product: "Box", alias: str, methods: dict, sensor_type: str = None
+        self,
+        product: "Box",
+        alias: str,
+        methods: dict,
+        sensor_type: str = None,
+        sensor_id: Optional[int] = None,
     ):
         self._sensor_type = sensor_type
+        self._sensor_id = sensor_id
         super().__init__(product, alias, methods)
 
     @property
@@ -116,6 +126,14 @@ class BaseSensor(Feature):
     @property
     def native_value(self):
         return self._native_value
+
+    @property
+    def sensor_id(self):
+        return self._sensor_id
+
+    @property
+    def probe_id(self):
+        return self.sensor_id
 
     @classmethod
     def many_from_config(cls, product, box_type_config, extended_state):
@@ -143,6 +161,7 @@ class GenericSensor(BaseSensor):
         product: "Box",
         alias: str,
         methods: dict,
+        sensor_id: Optional[int],
         *,
         # generalization params
         sensor_type: str,
@@ -150,7 +169,7 @@ class GenericSensor(BaseSensor):
         scale: float = 1,
         precision: Optional[int] = None,
     ):
-        super().__init__(product, alias, methods)
+        super().__init__(product, alias, methods, sensor_id=sensor_id)
         self._unit = unit
         self._scale = scale
         self._precision = precision
@@ -200,8 +219,14 @@ class PowerConsumption(GenericSensor):
 class Temperature(BaseSensor):
     _current: Union[float, int, None]
 
-    def __init__(self, product: "Box", alias: str, methods: dict):
-        super().__init__(product, alias, methods)
+    def __init__(
+        self,
+        product: "Box",
+        alias: str,
+        methods: dict,
+        sensor_id: Optional[int] = None,
+    ):
+        super().__init__(product, alias, methods, sensor_id=sensor_id)
         self._unit = "celsius"
         self._device_class = "temperature"
 
@@ -227,8 +252,14 @@ class Temperature(BaseSensor):
 class AirQuality(BaseSensor):
     _pm: Optional[int]
 
-    def __init__(self, product: "Box", alias: str, methods: dict):
-        super().__init__(product, alias, methods)
+    def __init__(
+        self,
+        product: "Box",
+        alias: str,
+        methods: dict,
+        sensor_id: Optional[str] = None,
+    ):
+        super().__init__(product, alias, methods, sensor_id)
         self._unit = "concentration_of_mp"
         self._device_class = alias
 

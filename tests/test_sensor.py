@@ -276,6 +276,74 @@ class TestTempSensor(DefaultBoxTest):
         assert entity.native_value == 1.2
 
 
+class TestMultiSensorEnergy(DefaultBoxTest):
+    """Tests for multiSensor energy/current sensors (apiLevel 20230606)."""
+
+    DEVCLASS = "sensors"
+    ENTITY_CLASS = BleBoxSensorEntity
+
+    DEV_INFO_PATH = "state"
+
+    DEVICE_INFO = json.loads(
+        """
+        {
+          "device": {
+            "deviceName": "My multiSensor",
+            "type": "multiSensor",
+            "product": "energySensor",
+            "hv": "eS-1.0",
+            "fv": "0.1",
+            "universe": 0,
+            "apiLevel": "20230606",
+            "id": "aa00112233bb",
+            "ip": "172.0.0.1",
+            "availableFv": null
+          }
+        }
+        """
+    )
+
+    def patch_version(apiLevel):
+        return f'{{ "device": {{ "apiLevel": {apiLevel} }} }}'
+
+    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(future_date()))
+    DEVICE_INFO_LATEST = jmerge(
+        DEVICE_INFO, patch_version(get_latest_api_level("multiSensor"))
+    )
+    DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180603))
+    DEVICE_INFO_UNSPECIFIED_API = None
+
+    STATE_DEFAULT = json.loads(
+        """
+        {
+            "multiSensor": {
+                "sensors": [
+                    {"type": "current",             "id": 0, "value": 1500},
+                    {"type": "forwardActiveEnergy",  "id": 1, "value": 5000},
+                    {"type": "reverseActiveEnergy",  "id": 2, "value": 3000}
+                ]
+            }
+        }
+        """
+    )
+
+    DEVICE_EXTENDED_INFO = STATE_DEFAULT
+    DEVICE_EXTENDED_INFO_PATH = "/state/extended"
+
+    @pytest.mark.parametrize(
+        "index,unit,value",
+        [
+            (0, "mA", 1500),
+            (1, "kWh", 5.0),
+            (2, "kWh", 3.0),
+        ],
+    )
+    async def test_sensor_value(self, aioclient_mock, index, unit, value):
+        entity = await self.updated(aioclient_mock, self.STATE_DEFAULT, index=index)
+        assert entity._feature.unit == unit
+        assert entity.native_value == value
+
+
 class TestAirSensor(DefaultBoxTest):
     """Tests for sensors representing BleBox airSensor."""
 

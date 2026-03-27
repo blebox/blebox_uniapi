@@ -144,13 +144,13 @@ class BaseSensor(Feature):
 
 
 @SensorFactory.register("frequency", unit="Hz", scale=1_000)
-@SensorFactory.register("current", unit="mA", scale=1_000)
+@SensorFactory.register("current", unit="mA")
 @SensorFactory.register("voltage", unit="V", scale=10)
 @SensorFactory.register("apparentPower", unit="va")
 @SensorFactory.register("reactivePower", unit="var")
 @SensorFactory.register("activePower", unit="W")
-@SensorFactory.register("reverseActiveEnergy", unit="kWh")
-@SensorFactory.register("forwardActiveEnergy", unit="kWh")
+@SensorFactory.register("reverseActiveEnergy", unit="kWh", scale=1_000)
+@SensorFactory.register("forwardActiveEnergy", unit="kWh", scale=1_000)
 @SensorFactory.register("illuminance", unit="lx", scale=100)
 @SensorFactory.register("humidity", unit="percentage", scale=100)
 @SensorFactory.register("wind", unit="m/s", scale=10)

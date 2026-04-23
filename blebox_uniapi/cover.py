@@ -119,6 +119,11 @@ class Gate:
         return 0
 
     @property
+    def is_position_inverted(self) -> bool:
+        # shutterBox/gateController: % closed (0=open, 100=closed), inverted vs HA convention
+        return True
+
+    @property
     def is_slider(self) -> bool:
         return True
 
@@ -177,6 +182,11 @@ class GateBox(Gate):
     _control_type: Optional[GateBoxControlType]
 
     @property
+    def is_position_inverted(self) -> bool:
+        # gateBox: (0=closed, 100=open), matches HA convention
+        return False
+
+    @property
     def is_slider(self) -> bool:
         return False
 
@@ -189,8 +199,6 @@ class GateBox(Gate):
         return "primary"
 
     def read_state(self, alias: str, raw_value: Any, product: "Box") -> int:
-        # Reinterpret state to match shutterBox
-        # NOTE: shutterBox is inverted (0 == closed), gateBox isn't
         current = raw_value("position")
         desired = raw_value("desired")
 
@@ -328,6 +336,10 @@ class Cover(Feature):
     @property
     def has_tilt(self) -> bool:
         return self._attributes.has_tilt
+
+    @property
+    def is_position_inverted(self) -> bool:
+        return self._attributes.is_position_inverted
 
     @property
     def has_stop(self) -> bool:

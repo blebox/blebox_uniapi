@@ -242,6 +242,7 @@ class TestShutter(CoverTest):
 
         assert entity.supported_features & SUPPORT_SET_POSITION
         assert entity.current_cover_position is None
+        assert entity._feature.is_position_inverted is True
 
         # TODO: tilt
         # assert entity.supported_features & SUPPORT_SET_TILT_POSITION
@@ -385,6 +386,7 @@ class TestGateBox(CoverTest):
 
         assert not entity.supported_features & SUPPORT_SET_POSITION
         assert entity.current_cover_position is None
+        assert entity._feature.is_position_inverted is False
         self.assert_state(entity, None)
 
     async def test_device_info(self, aioclient_mock):
@@ -561,6 +563,7 @@ class TestGateBoxB(CoverTest):
         assert entity.supported_features & SUPPORT_OPEN
         assert entity.supported_features & SUPPORT_CLOSE
         assert entity.current_cover_position is None
+        assert entity._feature.is_position_inverted is False
         self.assert_state(entity, None)
 
     async def test_device_info(self, aioclient_mock):
@@ -693,6 +696,7 @@ class TestGateController(CoverTest):
 
         assert entity.supported_features & SUPPORT_SET_POSITION
         assert entity.current_cover_position is None
+        assert entity._feature.is_position_inverted is True
         self.assert_state(entity, None)
 
     async def test_device_info(self, aioclient_mock):

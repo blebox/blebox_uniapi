@@ -720,6 +720,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                         "temperature": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'temperature']|[0]|value",
                         "wind": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'wind']|[0]|value",
                         "humidity": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'humidity']|[0]|value",
+                        "openStatus": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'openStatus']|[0]|value",
                     },
                 ]
             ],
@@ -729,6 +730,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     {
                         "rain": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'rain']|[0]|value",
                         "flood": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'flood']|[0]|value",
+                        "openStatus": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'openStatus']|[0]|value",
                     },
                 ]
             ],

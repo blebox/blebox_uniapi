@@ -19,6 +19,7 @@ class BinarySensor(Feature):
         type_class_map = {
             "rain": Rain,
             "flood": Flood,
+            "openStatus": Open,
         }
 
         output_list = list()
@@ -94,3 +95,25 @@ class Flood(BinarySensor):
 
     def after_update(self) -> None:
         self._current = self._read_flood("flood")
+
+
+class Open(BinarySensor):
+    def __init__(self, product: "Box", alias: str, methods: dict):
+        self._device_class = "open"
+        super().__init__(product, alias, methods)
+
+    @property
+    def state(self) -> bool:
+        return self._current != 4  # 4 = closed, 0-3 = open
+
+    def _read_input(self, field: str) -> Union[float, int, None]:
+        product = self._product
+
+        if product.last_data is not None:
+            raw = self.raw_value(field)
+            if raw is not None:  # no reading
+                return self.raw_value("openStatus")
+        return 0
+
+    def after_update(self) -> None:
+        self._current = self._read_input("openStatus")

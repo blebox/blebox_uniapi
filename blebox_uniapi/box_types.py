@@ -729,6 +729,7 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     {
                         "rain": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'rain']|[0]|value",
                         "flood": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'flood']|[0]|value",
+                        "binary": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'binary']|[0]|value",
                     },
                 ]
             ],

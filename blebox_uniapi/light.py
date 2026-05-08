@@ -506,7 +506,7 @@ class Light(Feature):
                 if self.color_mode in (BleboxColorMode.RGBW, BleboxColorMode.RGBorW):
                     return 255, 255, 255, 255
                 if self.color_mode == BleboxColorMode.MONO:
-                    return 255
+                    return [255]
                 if self.color_mode in (BleboxColorMode.CT, BleboxColorMode.CTx2):
                     return 255, 255
             else:

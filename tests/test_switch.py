@@ -345,6 +345,8 @@ class TestSwitchBoxD(DefaultBoxTest):
         ]
     }
     STATE_DEFAULT = STATE_BOTH_OFF
+    DEVICE_EXTENDED_INFO = STATE_BOTH_OFF
+    DEVICE_EXTENDED_INFO_PATH = "/state/extended"
 
     async def test_init(self, aioclient_mock):
         """Test switch default state."""
@@ -352,17 +354,16 @@ class TestSwitchBoxD(DefaultBoxTest):
         entities = await self.async_entities(aioclient_mock)
 
         entity = entities[0]
-        # TODO: include output names?
-        assert entity.name == "My switchBoxD (switchBoxD#0.relay)"
-        assert entity.unique_id == "BleBox-switchBoxD-1afe34e750b8-0.relay"
+        assert entity.unique_id == "BleBox-switchBoxD-1afe34e750b8-0.relay_0"
         assert entity.device_class == DEVICE_CLASS_SWITCH
-        assert entity.is_on is None
+        assert entity._feature.index == 0
+        assert entity._feature.name == "output 1"
 
         entity = entities[1]
-        assert entity.name == "My switchBoxD (switchBoxD#1.relay)"
-        assert entity.unique_id == "BleBox-switchBoxD-1afe34e750b8-1.relay"
+        assert entity.unique_id == "BleBox-switchBoxD-1afe34e750b8-0.relay_1"
         assert entity.device_class == DEVICE_CLASS_SWITCH
-        assert entity.is_on is None
+        assert entity._feature.index == 1
+        assert entity._feature.name == "output 2"
 
     async def test_device_info(self, aioclient_mock):
         await self.allow_get_info(aioclient_mock, self.DEVICE_INFO)

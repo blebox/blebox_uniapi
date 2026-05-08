@@ -77,6 +77,7 @@ class SensorFactory:
                         alias=alias,
                         methods=materialized_methods,
                         sensor_id=sensor_id,
+                        name=sensor.get("name"),
                     )
                     object_list.append(feature)
 
@@ -110,9 +111,11 @@ class BaseSensor(Feature):
         methods: dict,
         sensor_type: str = None,
         sensor_id: Optional[int] = None,
+        name: Optional[str] = None,
     ):
         self._sensor_type = sensor_type
         self._sensor_id = sensor_id
+        self._name = name
         super().__init__(product, alias, methods)
 
     @property
@@ -134,6 +137,14 @@ class BaseSensor(Feature):
     @property
     def probe_id(self):
         return self.sensor_id
+
+    @property
+    def index(self) -> Optional[int]:
+        return self._sensor_id
+
+    @property
+    def name(self) -> Optional[str]:
+        return self._name
 
     @classmethod
     def many_from_config(cls, product, box_type_config, extended_state):
@@ -162,6 +173,7 @@ class GenericSensor(BaseSensor):
         alias: str,
         methods: dict,
         sensor_id: Optional[int],
+        name: Optional[str] = None,
         *,
         # generalization params
         sensor_type: str,
@@ -169,7 +181,7 @@ class GenericSensor(BaseSensor):
         scale: float = 1,
         precision: Optional[int] = None,
     ):
-        super().__init__(product, alias, methods, sensor_id=sensor_id)
+        super().__init__(product, alias, methods, sensor_id=sensor_id, name=name)
         self._unit = unit
         self._scale = scale
         self._precision = precision
@@ -225,8 +237,9 @@ class Temperature(BaseSensor):
         alias: str,
         methods: dict,
         sensor_id: Optional[int] = None,
+        name: Optional[str] = None,
     ):
-        super().__init__(product, alias, methods, sensor_id=sensor_id)
+        super().__init__(product, alias, methods, sensor_id=sensor_id, name=name)
         self._unit = "celsius"
         self._device_class = "temperature"
 
@@ -258,8 +271,9 @@ class AirQuality(BaseSensor):
         alias: str,
         methods: dict,
         sensor_id: Optional[str] = None,
+        name: Optional[str] = None,
     ):
-        super().__init__(product, alias, methods, sensor_id)
+        super().__init__(product, alias, methods, sensor_id, name=name)
         self._unit = "concentration_of_mp"
         self._device_class = alias
 

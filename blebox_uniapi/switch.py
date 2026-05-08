@@ -15,11 +15,13 @@ class Switch(Feature):
         methods: dict,
         dev_class: str,
         unit_id: Union[str, int, None] = 0,
+        name: Optional[str] = None,
     ):
         methods = self.resolve_access_method_paths(methods, str(unit_id))
         super().__init__(product, alias, methods)
         self._device_class = dev_class
         self._unit_id = unit_id
+        self._name = name
 
     @classmethod
     def many_from_config(
@@ -46,6 +48,7 @@ class Switch(Feature):
                         methods,
                         relay_type,
                         relay_id,
+                        name=relay.get("name"),
                     )
                 )
 
@@ -73,6 +76,14 @@ class Switch(Feature):
     def _unit_args(self) -> list:
         unit = self._unit_id
         return [] if unit is None else [unit]
+
+    @property
+    def index(self) -> Optional[int]:
+        return self._unit_id
+
+    @property
+    def name(self) -> Optional[str]:
+        return self._name
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         await self.async_api_command("on", *self._unit_args)

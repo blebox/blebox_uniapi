@@ -544,6 +544,7 @@ class TestWLightBoxS(DefaultBoxTest):
         assert entity.unique_id == "BleBox-wLightBoxS-1afe34e750b8-brightness_mono1"
         assert entity.brightness == 0xF5
         assert entity.is_on
+        assert entity._feature.index == 0
 
     async def test_device_info(self, aioclient_mock):
         await self.allow_get_info(aioclient_mock, self.DEVICE_INFO)
@@ -945,6 +946,7 @@ class TestWLightBox(DefaultBoxTest):
 
         assert "_cct2" in entity.name
         assert entity.brightness
+        assert entity._feature.index == 1
 
     async def test_effect_list_return_list(self, aioclient_mock):
         self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_5
@@ -962,6 +964,18 @@ class TestWLightBox(DefaultBoxTest):
 
         assert "_cct1" in entity.name
         assert entity.color_temp
+        assert entity._feature.index == 0
+
+    async def test_mono_4ch_indices(self, aioclient_mock):
+        """Test that 4-channel MONO mode produces entities with correct indices."""
+        self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_3
+        await self.allow_get_info(aioclient_mock)
+        self.STATE_DEFAULT["rgbw"]["colorMode"] = 3
+        entities = await self.async_entities(aioclient_mock)
+
+        assert len(entities) == 4
+        for i, entity in enumerate(entities):
+            assert entity._feature.index == i
 
     async def test_color_temp_for_colomode_rgbww(self, aioclient_mock):
         self.DEVICE_EXTENDED_INFO = self.DEVICE_EXTENDED_INFO_COLORMODE_7

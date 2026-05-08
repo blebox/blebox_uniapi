@@ -112,8 +112,10 @@ class Light(Feature):
         color_mode,
         effect_list,
         current_effect,
+        index: Optional[int] = None,
     ) -> None:
         super().__init__(product, alias, methods)
+        self._index = index
         config = self.CONFIG[product.type]
         self.mask = mask
         self.desired_color = desired_color
@@ -187,6 +189,7 @@ class Light(Feature):
                                 product,
                                 alias=alias + "_" + indicator,
                                 mask=mask,
+                                index=i,
                                 **const_kwargs,
                             )
                         )
@@ -208,12 +211,13 @@ class Light(Feature):
                 ct = ctx2
                 if len(desired_color) > 8:
                     ct = ctx2_v3
-                for indicator, mask in ct.items():
+                for i, (indicator, mask) in enumerate(ct.items()):
                     object_list.append(
                         cls(
                             product,
                             alias=alias + "_" + indicator,
                             mask=mask,
+                            index=i,
                             **const_kwargs,
                         )
                     )
@@ -246,6 +250,10 @@ class Light(Feature):
             return self.evaluate_brightness_from_rgb(rgb_list)
         else:
             return None
+
+    @property
+    def index(self) -> Optional[int]:
+        return self._index
 
     @property
     def effect_list(self):

@@ -251,6 +251,8 @@ class TestTempSensor(DefaultBoxTest):
         # TODO: include product name?
         assert entity.name == "My tempSensor (tempSensor#0.temperature)"
         assert entity.state == 25.2
+        assert entity._feature.index is None
+        assert entity._feature.name is None
 
     async def test_sensor_factory(self, aioclient_mock):
         """Test sensor factory method class."""
@@ -260,9 +262,15 @@ class TestTempSensor(DefaultBoxTest):
         self.DEVICE_INFO = self.DEVICE_INFO_MULTISENSOR
         await self.allow_get_info(aioclient_mock)
 
-        entity = await self.async_entities(aioclient_mock)
+        entities = await self.async_entities(aioclient_mock)
 
-        assert len(entity) == 3
+        assert len(entities) == 3
+        assert entities[0]._feature.index == 0
+        assert entities[0]._feature.name == "Temperature outside"
+        assert entities[1]._feature.index == 1
+        assert entities[1]._feature.name == "Temperature inside fence"
+        assert entities[2]._feature.index == 2
+        assert entities[2]._feature.name == "Underground -10 cm"
 
     async def test_multisensor_update(self, aioclient_mock):
         self.DEV_INFO_PATH = "state"

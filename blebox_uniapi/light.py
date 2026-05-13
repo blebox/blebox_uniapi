@@ -297,6 +297,12 @@ class Light(Feature):
         if brightness == 0:
             return [value]
 
+        if self.color_mode in (
+            BleboxColorMode.RGB,
+            BleboxColorMode.RGBW,
+            BleboxColorMode.RGBorW,
+        ):
+            value = self.normalise_elements_of_rgb(list(value))
         res = list(map(lambda x: round(x * (brightness / 255)), value))
         return res
 
@@ -310,10 +316,10 @@ class Light(Feature):
         :return: str
         """
         if self.mask:
-            if len(raw_hex) < len(self.mask("x").replace("x", "")):
-                return "0" * len(raw_hex)
-            else:
-                return "0" * (len(raw_hex) - len(self.mask("x").replace("x", "")))
+            placeholder = self._get_placeholder_for_color_mode()
+            mask_result = self.mask(placeholder)
+            x_count = mask_result.count("x")
+            return "0" * x_count
         elif raw_hex is not None:
             if len(raw_hex) < len(config["off"]):
                 return config["off"][: len(raw_hex)]
@@ -356,6 +362,18 @@ class Light(Feature):
         white_hex = value[6:8]
         return f"{rgb_hex}{white_hex}"
 
+    def _get_placeholder_for_color_mode(self) -> str:
+        if self._color_mode == BleboxColorMode.MONO:
+            return "xx"
+        elif self._color_mode in (BleboxColorMode.CT, BleboxColorMode.CTx2):
+            return "xxxx"
+        elif self._color_mode == BleboxColorMode.RGB:
+            return "xxxxxx"
+        elif self._color_mode in (BleboxColorMode.RGBW, BleboxColorMode.RGBorW):
+            return "xxxxxxxx"
+        else:
+            return "x"
+
     def return_color_temp_with_brightness(
         self, value, brightness: Any
     ) -> Optional[str]:
@@ -374,17 +392,8 @@ class Light(Feature):
         return self.rgb_hex_to_rgb_list(warm + cold)
 
     def value_for_selected_channels_from_given_val(self, value: str):
-        if self.color_mode in [BleboxColorMode.CT, BleboxColorMode.CTx2]:
-            lambda_result = self.mask("xxxx")
-        elif self.color_mode == BleboxColorMode.MONO:
-            lambda_result = self.mask("xx")
-        elif self.color_mode == BleboxColorMode.RGB:
-            lambda_result = self.mask("xxxxxx")
-        elif (
-            self.color_mode == BleboxColorMode.RGBW
-            or self.color_mode == BleboxColorMode.RGBorW
-        ):
-            lambda_result = self.mask("xxxxxxxx")
+        placeholder = self._get_placeholder_for_color_mode()
+        lambda_result = self.mask(placeholder)
         first_index = lambda_result.index("x")
         last_index = lambda_result.rindex("x")
         return value[first_index : last_index + 1]
@@ -451,10 +460,9 @@ class Light(Feature):
 
     def _set_last_on_value(self, alias, product, raw):
         if raw == self._off_value:
-            if (
-                product.type == "wLightBox"
-            ):  # jezeli urzadzenie typu wLightBox ma wyciagnac last_color
-                raw = product.expect_rgbw(alias, self.raw_value("last_color"))
+            last_color = self.raw_value("last_color")
+            if last_color is not None:
+                raw = product.expect_rgbw(alias, last_color)
                 if self.mask is not None:
                     raw = self.value_for_selected_channels_from_given_val(raw)
                     if raw == self._off_value:
@@ -518,7 +526,11 @@ class Light(Feature):
                 if self.color_mode in (BleboxColorMode.CT, BleboxColorMode.CTx2):
                     return 255, 255
             else:
-                if self.color_mode == BleboxColorMode.MONO:
+                if self.color_mode in (
+                    BleboxColorMode.MONO,
+                    BleboxColorMode.CT,
+                    BleboxColorMode.CTx2,
+                ):
                     return self.rgb_hex_to_rgb_list(self._last_on_state)
                 return self.normalise_elements_of_rgb(
                     self.rgb_hex_to_rgb_list(self._last_on_state)
@@ -529,9 +541,7 @@ class Light(Feature):
                     return [255] * len(self.rgb_hex_to_rgb_list(self._last_on_state))
                 else:
                     if self.color_mode == BleboxColorMode.RGB:
-                        return self.normalise_elements_of_rgb(
-                            self.rgb_hex_to_rgb_list(self._last_on_state[:6])
-                        )
+                        return self.rgb_hex_to_rgb_list(self._last_on_state[:6])
                     elif self.color_mode == BleboxColorMode.MONO:
                         return self._last_on_state
                     else:

@@ -280,6 +280,23 @@ class Light(Feature):
             )
         return int(max(iterable))
 
+    @staticmethod
+    def swap_ww_cw(value: list) -> list:
+        """Swap WW and CW channels in RGBWW mode for API compatibility."""
+        if len(value) == 5:
+            value = list(value)
+            value[3], value[4] = value[4], value[3]
+        return value
+
+    @staticmethod
+    def scale_rgbww_brightness(value: list, brightness: int) -> list:
+        """Scale RGBWW value preserving WW:CW ratio."""
+        current_max = max(value)
+        if current_max > 0:
+            return [round(x * brightness / current_max) for x in value]
+        else:
+            return [0, 0, 0, 0, brightness]
+
     def apply_brightness(self, value: int, brightness: int) -> Any:
         """Return list of values with applied brightness."""
         if not isinstance(brightness, int):
@@ -303,7 +320,11 @@ class Light(Feature):
             BleboxColorMode.RGBorW,
         ):
             value = self.normalise_elements_of_rgb(list(value))
-        res = list(map(lambda x: round(x * (brightness / 255)), value))
+            res = list(map(lambda x: round(x * (brightness / 255)), value))
+        elif self.color_mode == BleboxColorMode.RGBWW:
+            res = self.scale_rgbww_brightness(value, brightness)
+        else:
+            res = list(map(lambda x: round(x * (brightness / 255)), value))
         return res
 
     def evaluate_off_value(self, config: dict, raw_hex: str) -> str:
@@ -544,6 +565,9 @@ class Light(Feature):
                         return self.rgb_hex_to_rgb_list(self._last_on_state[:6])
                     elif self.color_mode == BleboxColorMode.MONO:
                         return self._last_on_state
+                    elif self.color_mode == BleboxColorMode.RGBWW:
+                        result = self.rgb_hex_to_rgb_list(self._last_on_state)
+                        return self.swap_ww_cw(result)
                     else:
                         return self.rgb_hex_to_rgb_list(self._last_on_state)
             else:

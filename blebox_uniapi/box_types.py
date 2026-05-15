@@ -194,6 +194,14 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     },
                 ]
             ],
+            "sensors": [
+                [
+                    "temperature",
+                    {
+                        "temperature": lambda x: f"sensors[?id == `{x}`]|[0]|value",
+                    },
+                ]
+            ],
         }
     },
     # saunaBox

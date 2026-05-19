@@ -33,12 +33,21 @@ class ShutterBoxControlType(IntEnum):
 
     SEGMENTED_SHUTTER = 1
     NO_CALIBRATION = 2
-    TILT_SHUTTER = 3
+    TILT_SHUTTER_90 = 3
     WINDOW_OPENER = 4
     MATERIAL_SHUTTER = 5
     AWNING = 6
     SCREEN = 7
     CURTAIN = 8
+    ROOF_SEGMENTED_SHUTTER = 9
+    SERVOMOTOR = 10
+    CURTAIN_ONE_SIDED = 11
+    CURTAIN_TWO_SIDED = 12
+    TILT_ONLY = 13
+    PERGOLA_ROOF = 14
+    PERGOLA_ROOF_TILT_ONLY = 15
+    TILT_SHUTTER_180 = 16
+    TILT_SHUTTER_WITHOUT_POSITIONING = 17
 
 
 class GateBoxControlType(IntEnum):
@@ -155,7 +164,34 @@ class Shutter(Gate):
 
     @property
     def has_tilt(self) -> bool:
-        return self._control_type == ShutterBoxControlType.TILT_SHUTTER
+        return self._control_type in (
+            ShutterBoxControlType.TILT_SHUTTER_90,
+            ShutterBoxControlType.TILT_SHUTTER_180,
+            ShutterBoxControlType.TILT_ONLY,
+            ShutterBoxControlType.PERGOLA_ROOF_TILT_ONLY,
+            ShutterBoxControlType.TILT_SHUTTER_WITHOUT_POSITIONING,
+        )
+
+    @property
+    def tilt_only(self) -> bool:
+        return self._control_type in (
+            ShutterBoxControlType.TILT_ONLY,
+            ShutterBoxControlType.PERGOLA_ROOF_TILT_ONLY,
+        )
+
+    @property
+    def is_tilt_180(self) -> bool:
+        return self._control_type == ShutterBoxControlType.TILT_SHUTTER_180
+
+    @property
+    def is_slider(self) -> bool:
+        return self._control_type not in (
+            ShutterBoxControlType.NO_CALIBRATION,
+            ShutterBoxControlType.CURTAIN,
+            ShutterBoxControlType.TILT_ONLY,
+            ShutterBoxControlType.PERGOLA_ROOF_TILT_ONLY,
+            ShutterBoxControlType.TILT_SHUTTER_WITHOUT_POSITIONING,
+        )
 
     def read_cover_type(
         self, alias: str, raw_value: Any, product: "Box"
@@ -164,7 +200,7 @@ class Shutter(Gate):
             return UnifiedCoverType.SHUTTER
         if self._control_type == ShutterBoxControlType.NO_CALIBRATION:
             return UnifiedCoverType.SHUTTER
-        if self._control_type == ShutterBoxControlType.TILT_SHUTTER:
+        if self._control_type == ShutterBoxControlType.TILT_SHUTTER_90:
             return UnifiedCoverType.SHUTTER
         if self._control_type == ShutterBoxControlType.WINDOW_OPENER:
             return UnifiedCoverType.WINDOW
@@ -176,6 +212,24 @@ class Shutter(Gate):
             return UnifiedCoverType.SHADE
         if self._control_type == ShutterBoxControlType.CURTAIN:
             return UnifiedCoverType.CURTAIN
+        if self._control_type == ShutterBoxControlType.ROOF_SEGMENTED_SHUTTER:
+            return UnifiedCoverType.SHUTTER
+        if self._control_type == ShutterBoxControlType.SERVOMOTOR:
+            return UnifiedCoverType.SHUTTER
+        if self._control_type == ShutterBoxControlType.CURTAIN_ONE_SIDED:
+            return UnifiedCoverType.CURTAIN
+        if self._control_type == ShutterBoxControlType.CURTAIN_TWO_SIDED:
+            return UnifiedCoverType.CURTAIN
+        if self._control_type == ShutterBoxControlType.TILT_ONLY:
+            return UnifiedCoverType.SHUTTER
+        if self._control_type == ShutterBoxControlType.PERGOLA_ROOF:
+            return UnifiedCoverType.AWNING
+        if self._control_type == ShutterBoxControlType.PERGOLA_ROOF_TILT_ONLY:
+            return UnifiedCoverType.AWNING
+        if self._control_type == ShutterBoxControlType.TILT_SHUTTER_180:
+            return UnifiedCoverType.SHUTTER
+        if self._control_type == ShutterBoxControlType.TILT_SHUTTER_WITHOUT_POSITIONING:
+            return UnifiedCoverType.SHUTTER
 
 
 class GateBox(Gate):
@@ -344,6 +398,22 @@ class Cover(Feature):
     @property
     def has_stop(self) -> bool:
         return self._has_stop
+
+    @property
+    def tilt_only(self) -> bool:
+        return (
+            self._attributes.tilt_only
+            if hasattr(self._attributes, "tilt_only")
+            else False
+        )
+
+    @property
+    def is_tilt_180(self) -> bool:
+        return (
+            self._attributes.is_tilt_180
+            if hasattr(self._attributes, "is_tilt_180")
+            else False
+        )
 
     @property
     def cover_type(self) -> Optional[UnifiedCoverType]:

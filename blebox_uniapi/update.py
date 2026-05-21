@@ -1,13 +1,15 @@
+from typing import Optional
+
 from .feature import Feature
 
 
 class Update(Feature):
     @property
-    def installed_version(self) -> str | None:
+    def installed_version(self) -> Optional[str]:
         return self._product.firmware_version
 
     @property
-    def latest_version(self) -> str | None:
+    def latest_version(self) -> Optional[str]:
         return self._product.available_firmware_version
 
     async def async_update(self) -> None:

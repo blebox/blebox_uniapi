@@ -14,6 +14,7 @@ from .sensor import SensorFactory
 from .binary_sensor import BinarySensor
 from .session import ApiHost
 from .switch import Switch
+from .update import Update
 
 from .error import (
     UnsupportedBoxResponse,
@@ -26,7 +27,6 @@ from .error import (
     BadFieldNotRGBW,
     HttpError,
 )
-
 
 DEFAULT_PORT = 80
 
@@ -105,6 +105,8 @@ class Box:
                 info, f"{location} has no hardware version"
             ) from ex
 
+        available_firmware_version = info.get("availableFv")
+
         level = int(info.get("apiLevel", _DEFAULT_API_LEVEL))
 
         self._data_path = config["api_path"]
@@ -114,6 +116,7 @@ class Box:
         self._address = address
         self._firmware_version = firmware_version
         self._hardware_version = hardware_version
+        self._available_firmware_version = available_firmware_version
         self._api_version = level
         self._model = config.get("model", type)
         self._api = config.get("api", {})
@@ -143,6 +146,7 @@ class Box:
                     )
             except KeyError:
                 raise UnsupportedBoxResponse("Failed to initialize:", info)
+        features["updates"] = [Update(self, "update", {})]
         return features
 
     @classmethod
@@ -153,7 +157,9 @@ class Box:
         except HttpError:
             path = "/info"
             data = await api_host.async_api_get(path)
-        info = data.get("device", data)  # type: ignore
+        if data is None:
+            raise UnsupportedBoxResponse("Device returned non-JSON response")
+        info = data.get("device", data)
         extended_state = None
 
         config = cls._match_device_config(info)
@@ -217,6 +223,10 @@ class Box:
     @property
     def hardware_version(self) -> Any:
         return self._hardware_version
+
+    @property
+    def available_firmware_version(self) -> Any:
+        return self._available_firmware_version
 
     @property
     def api_version(self) -> int:
@@ -366,3 +376,19 @@ class Box:
                 response = await self._session.async_api_post(path, post_data)
             self._update_last_data(response)
             self._last_real_update = time.time()
+
+    async def async_ota_check(self) -> None:
+        await self._session.async_api_get_ota("/api/ota/check")
+        for _ in range(3):
+            await asyncio.sleep(1)
+            response = await self._session.async_api_get("/info")
+            if response is None:
+                raise UnsupportedBoxResponse("Device returned non-JSON response")
+            response = response.get("device", response)
+            if response.get("availableFv") is not None:
+                self._firmware_version = response.get("fv", self._firmware_version)
+                self._available_firmware_version = response["availableFv"]
+                return
+
+    async def async_ota_update(self) -> None:
+        await self._session.async_api_get("/api/ota/update")

@@ -94,7 +94,9 @@ def json_get_expect(mock, url, **kwargs):
             data = HTTP_MOCKS[self._key][url]
             response = _json.dumps(data).encode("utf-8")
             status = 200
-            return AiohttpClientMockResponse("GET", url, status, response)
+            return AiohttpClientMockResponse(
+                "GET", url, status, response, headers={"content-type": "application/json"}
+            )
 
     mock.get = AsyncMock(side_effect=EffectWhenGet(mock))
 
@@ -123,7 +125,9 @@ def json_post_expect(mock, url, **kwargs):
             data = HTTP_MOCKS[self._key][url][params]
             response = _json.dumps(data).encode("utf-8")
             status = 200
-            return AiohttpClientMockResponse("POST", url, status, response)
+            return AiohttpClientMockResponse(
+                "POST", url, status, response, headers={"content-type": "application/json"}
+            )
 
     mock.post = AsyncMock(side_effect=EffectWhenPost(mock))
 

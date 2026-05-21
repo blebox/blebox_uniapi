@@ -29,6 +29,7 @@ def client():
 def valid_response():
     response = Mock(spec_set=aiohttp.ClientResponse)
     response.status = 200
+    response.content_type = "application/json"
     response.text = AsyncMock(return_value="foobar")
     response.json = AsyncMock(return_value=123)
     return response
@@ -153,3 +154,76 @@ async def test_session_provides_a_logger(logger, client):
     api_session = Session("127.0.0.4", "88", 2, client, None, logger)
     api_session.logger.debug("foobar")
     logger.debug.assert_called_once_with("foobar")
+
+
+def ota_accepted_response(status=202):
+    response = Mock(spec_set=aiohttp.ClientResponse)
+    response.status = status
+    response.content_type = None
+    return response
+
+
+def unauthorized_response():
+    response = Mock(spec_set=aiohttp.ClientResponse)
+    response.status = 401
+    return response
+
+
+def non_json_response():
+    response = Mock(spec_set=aiohttp.ClientResponse)
+    response.status = 200
+    response.content_type = None
+    return response
+
+
+async def test_session_api_get_ota_accepts_202_without_body(logger, client):
+    client.get = AsyncMock(return_value=ota_accepted_response(status=202))
+    api_session = Session("127.0.0.4", "88", 2, client, None, logger)
+    result = await api_session.async_api_get_ota("/api/ota/check")
+    assert result is None
+
+
+async def test_session_api_get_ota_accepts_204_no_content(logger, client):
+    client.get = AsyncMock(return_value=ota_accepted_response(status=204))
+    api_session = Session("127.0.0.4", "88", 2, client, None, logger)
+    result = await api_session.async_api_get_ota("/api/ota/check")
+    assert result is None
+
+
+async def test_session_api_get_ota_rejects_400(logger, client):
+    client.get = AsyncMock(return_value=bad_http_response())
+    api_session = Session("127.0.0.4", "88", 2, client, None, logger)
+    with pytest.raises(error.HttpError):
+        await api_session.async_api_get_ota("/api/ota/check")
+
+
+async def test_session_api_get_unauthorized(logger, client):
+    client.get = AsyncMock(return_value=unauthorized_response())
+    api_session = Session("127.0.0.4", "88", 2, client, None, logger)
+    with pytest.raises(error.UnauthorizedRequest):
+        await api_session.async_api_get("/api/device/state")
+
+
+async def test_session_api_get_ota_unauthorized(logger, client):
+    client.get = AsyncMock(return_value=unauthorized_response())
+    api_session = Session("127.0.0.4", "88", 2, client, None, logger)
+    with pytest.raises(error.UnauthorizedRequest):
+        await api_session.async_api_get_ota("/api/ota/check")
+
+
+async def test_session_api_get_non_json_returns_none(logger, client):
+    client.get = AsyncMock(return_value=non_json_response())
+    api_session = Session("127.0.0.4", "88", 2, client, None, logger)
+    result = await api_session.async_api_get("/api/device/state")
+    assert result is None
+
+
+async def test_session_api_get_unicode_decode_error_raises_connection_error(logger, client):
+    response = Mock(spec_set=aiohttp.ClientResponse)
+    response.status = 200
+    response.content_type = "application/json"
+    response.json = AsyncMock(side_effect=UnicodeDecodeError("utf-8", b"", 0, 1, "invalid"))
+    client.get = AsyncMock(return_value=response)
+    api_session = Session("127.0.0.4", "88", 2, client, None, logger)
+    with pytest.raises(error.ConnectionError, match="Invalid response encoding"):
+        await api_session.async_api_get("/api/device/state")

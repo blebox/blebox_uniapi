@@ -1163,3 +1163,177 @@ class TestWLightBox(DefaultBoxTest):
 def test_unit_light_evaluate_brightness_from_rgb():
     tested_ob = Light.evaluate_brightness_from_rgb(iterable=(140, 230))
     assert tested_ob == 230
+
+
+def test_unit_light_evaluate_off_value_mono_2ch():
+    """Test evaluate_off_value for MONO mode with 2 channels (e.g., desired_color="0000")."""
+    from blebox_uniapi.box import Box
+    from unittest.mock import MagicMock
+
+    box = MagicMock(spec=Box)
+    box.type = "wLightBox"
+
+    def mask(x):
+        return f"{x}------"
+
+    light = Light(
+        product=box,
+        alias="test_mono1",
+        methods={},
+        extended_state={"rgbw": {"colorMode": 3}},
+        mask=mask,
+        desired_color="0000",
+        color_mode=3,
+        effect_list=None,
+        current_effect=None,
+    )
+
+    assert light._off_value == "00"
+
+
+def test_unit_light_evaluate_off_value_mono_4ch():
+    """Test evaluate_off_value for MONO mode with 4 channels (e.g., desired_color="00000000")."""
+    from blebox_uniapi.box import Box
+    from unittest.mock import MagicMock
+
+    box = MagicMock(spec=Box)
+    box.type = "wLightBox"
+
+    def mask(x):
+        return f"------{x}"
+
+    light = Light(
+        product=box,
+        alias="test_mono4",
+        methods={},
+        extended_state={"rgbw": {"colorMode": 3}},
+        mask=mask,
+        desired_color="00000000",
+        color_mode=3,
+        effect_list=None,
+        current_effect=None,
+    )
+
+    assert light._off_value == "00"
+
+
+def test_unit_light_evaluate_off_value_ct():
+    """Test evaluate_off_value for CT (color temperature) mode."""
+    from blebox_uniapi.box import Box
+    from unittest.mock import MagicMock
+
+    box = MagicMock(spec=Box)
+    box.type = "wLightBox"
+
+    def mask(x):
+        return f"{x}----"
+
+    light = Light(
+        product=box,
+        alias="test_cct",
+        methods={},
+        extended_state={"rgbw": {"colorMode": 5}},
+        mask=mask,
+        desired_color="ffff",
+        color_mode=5,
+        effect_list=None,
+        current_effect=None,
+    )
+
+    assert light._off_value == "0000"
+
+
+def test_unit_light_get_placeholder_for_color_mode():
+    """Test _get_placeholder_for_color_mode returns correct placeholder for each color mode."""
+    from blebox_uniapi.box import Box
+    from blebox_uniapi.light import BleboxColorMode
+    from unittest.mock import MagicMock
+
+    box = MagicMock(spec=Box)
+    box.type = "wLightBox"
+
+    def mask(x):
+        return x
+
+    test_cases = [
+        (BleboxColorMode.MONO, "xx"),
+        (BleboxColorMode.CT, "xxxx"),
+        (BleboxColorMode.CTx2, "xxxx"),
+        (BleboxColorMode.RGB, "xxxxxx"),
+        (BleboxColorMode.RGBW, "xxxxxxxx"),
+        (BleboxColorMode.RGBorW, "xxxxxxxx"),
+    ]
+
+    for color_mode, expected_placeholder in test_cases:
+        light = Light(
+            product=box,
+            alias=f"test_{color_mode}",
+            methods={},
+            extended_state={"rgbw": {"colorMode": color_mode}},
+            mask=mask,
+            desired_color="ff000000",
+            color_mode=color_mode,
+            effect_list=None,
+            current_effect=None,
+        )
+        assert light._get_placeholder_for_color_mode() == expected_placeholder
+
+
+def test_unit_light_set_last_on_value_with_last_color():
+    """Test _set_last_on_value calls expect_rgbw when last_color exists and raw is off."""
+    from blebox_uniapi.box import Box
+    from unittest.mock import MagicMock
+
+    box = MagicMock(spec=Box)
+    box.type = "wLightBox"
+    box.expect_rgbw = MagicMock(return_value="ff00ff00")
+    box.last_data = {"rgbw": {"lastOnColor": "ff00ff00"}}
+
+    def mask(x):
+        return x
+
+    light = Light(
+        product=box,
+        alias="test_last_color",
+        methods={"last_color": "rgbw.lastOnColor"},
+        extended_state={"rgbw": {"colorMode": 4, "lastOnColor": "ff00ff00"}},
+        mask=mask,
+        desired_color="00000000",
+        color_mode=4,
+        effect_list=None,
+        current_effect=None,
+    )
+
+    light._set_last_on_value("test_alias", box, light._off_value)
+    box.expect_rgbw.assert_called_once_with("test_alias", "ff00ff00")
+    assert light._last_on_state == "ff00ff00"
+
+
+def test_unit_light_set_last_on_value_without_last_color():
+    """Test _set_last_on_value uses default_on_value when last_color is None."""
+    from blebox_uniapi.box import Box
+    from unittest.mock import MagicMock
+
+    box = MagicMock(spec=Box)
+    box.type = "wLightBox"
+    box.expect_rgbw = MagicMock(return_value="ff00ff00")
+    box.last_data = {"rgbw": {}}
+
+    def mask(x):
+        return x
+
+    light = Light(
+        product=box,
+        alias="test_no_last_color",
+        methods={"last_color": "rgbw.lastOnColor"},
+        extended_state={"rgbw": {"colorMode": 4}},
+        mask=mask,
+        desired_color="00000000",
+        color_mode=4,
+        effect_list=None,
+        current_effect=None,
+    )
+
+    light._set_last_on_value("test_alias", box, light._off_value)
+    box.expect_rgbw.assert_not_called()
+    assert light._last_on_state == light._default_on_value

@@ -1337,3 +1337,33 @@ def test_unit_light_set_last_on_value_without_last_color():
     light._set_last_on_value("test_alias", box, light._off_value)
     box.expect_rgbw.assert_not_called()
     assert light._last_on_state == light._default_on_value
+
+
+def test_unit_light_swap_ww_cw():
+    """Test swap_ww_cw preserves first 3 channels and swaps last 2."""
+    value = [100, 150, 200, 120, 80]
+    result = Light.swap_ww_cw(value)
+    assert result == [100, 150, 200, 80, 120]
+
+
+def test_unit_light_swap_ww_cw_non_5_channel():
+    """Test swap_ww_cw returns unchanged for non-5-channel values."""
+    value = [100, 150, 200]
+    result = Light.swap_ww_cw(value)
+    assert result == [100, 150, 200]
+
+
+def test_unit_light_scale_rgbww_brightness_preserves_ratio():
+    """Test scale_rgbww_brightness preserves WW:CW ratio within rounding tolerance."""
+    value = [100, 100, 100, 120, 80]
+    result = Light.scale_rgbww_brightness(value, 100)
+    expected_ratio = 120 / 80
+    actual_ratio = result[3] / result[4]
+    assert abs(actual_ratio - expected_ratio) < 0.01
+
+
+def test_unit_light_scale_rgbww_brightness_zero():
+    """Test scale_rgbww_brightness with zero max."""
+    value = [0, 0, 0, 0, 0]
+    result = Light.scale_rgbww_brightness(value, 200)
+    assert result == [0, 0, 0, 0, 200]

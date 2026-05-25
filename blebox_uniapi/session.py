@@ -46,7 +46,11 @@ class ApiHost:
         self._loop = loop
 
     async def async_request(
-        self, path: str, async_method: Any, data: Union[dict, str, None] = None
+        self,
+        path: str,
+        async_method: Any,
+        data: Union[dict, str, None] = None,
+        allow_ota_check_response: bool = False,
     ) -> Optional[dict]:
         # TODO: check timeout
         client_timeout = self._timeout
@@ -57,7 +61,8 @@ class ApiHost:
             else:
                 response = await async_method(url, timeout=client_timeout)
 
-            if response.status != 200:
+            accepted_statuses = (200, 202, 204) if allow_ota_check_response else (200,)
+            if response.status not in accepted_statuses:
                 if response.status == 401:
                     raise error.UnauthorizedRequest(
                         f"Request to {url} failed with HTTP {response.status}, UNAUTHORISED"
@@ -65,6 +70,9 @@ class ApiHost:
                 raise error.HttpError(
                     f"Request to {url} failed with HTTP {response.status}"
                 )
+
+            if response.content_type != "application/json":
+                return None
 
             return await response.json()
 
@@ -81,9 +89,23 @@ class ApiHost:
         except aiohttp.ClientError as ex:
             raise error.ClientError(f"API request {url} failed: {ex}") from ex
 
+        except UnicodeDecodeError as ex:
+            raise error.ConnectionError(
+                f"Invalid response encoding from {url}: {ex}"
+            ) from ex
+
     async def async_api_get(self, path: str) -> Optional[dict]:
         try:
             return await self.async_request(path, self._session.get)
+        except Exception as ex:
+            logger.error(f"EXCEPTION DURING API CALL: {ex}")
+            raise ex
+
+    async def async_api_get_ota(self, path: str) -> Optional[dict]:
+        try:
+            return await self.async_request(
+                path, self._session.get, allow_ota_check_response=True
+            )
         except Exception as ex:
             logger.error(f"EXCEPTION DURING API CALL: {ex}")
             raise ex

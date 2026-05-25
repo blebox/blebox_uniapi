@@ -1,5 +1,6 @@
 import pytest
 from unittest import mock
+from unittest.mock import AsyncMock, patch
 from blebox_uniapi.box import Box
 from blebox_uniapi import error
 from blebox_uniapi.jfollow import follow
@@ -167,3 +168,62 @@ async def test_field_validations(mock_session, sample_data, config):
         error.BadFieldNotRGBW, match=r"foobar.field1 is 123 which is not a rgbw string"
     ):
         box.check_rgbw("123", "field1")
+
+
+async def test_available_firmware_version_none(mock_session, sample_data, config):
+    box = Box(mock_session, sample_data, config, None)
+    assert box.available_firmware_version is None
+
+
+async def test_available_firmware_version_set(mock_session, sample_data, config):
+    sample_data["availableFv"] = "2.0"
+    box = Box(mock_session, sample_data, config, None)
+    assert box.available_firmware_version == "2.0"
+
+
+async def test_async_ota_update_calls_session(mock_session, sample_data, config):
+    box = Box(mock_session, sample_data, config, None)
+    mock_session.async_api_get = AsyncMock(return_value=None)
+    await box.async_ota_update()
+    mock_session.async_api_get.assert_called_once_with("/api/ota/update")
+
+
+async def test_async_ota_check_updates_firmware_versions(mock_session, sample_data, config):
+    box = Box(mock_session, sample_data, config, None)
+    mock_session.async_api_get_ota = AsyncMock(return_value=None)
+    mock_session.async_api_get = AsyncMock(
+        return_value={"availableFv": "2.0", "fv": "1.5"}
+    )
+    with patch("asyncio.sleep", new=AsyncMock()):
+        await box.async_ota_check()
+    assert box.available_firmware_version == "2.0"
+    assert box.firmware_version == "1.5"
+
+
+async def test_async_ota_check_unwraps_device_key(mock_session, sample_data, config):
+    box = Box(mock_session, sample_data, config, None)
+    mock_session.async_api_get_ota = AsyncMock(return_value=None)
+    mock_session.async_api_get = AsyncMock(
+        return_value={"device": {"availableFv": "3.0", "fv": "2.5"}}
+    )
+    with patch("asyncio.sleep", new=AsyncMock()):
+        await box.async_ota_check()
+    assert box.available_firmware_version == "3.0"
+
+
+async def test_async_ota_check_raises_on_none_info_response(mock_session, sample_data, config):
+    box = Box(mock_session, sample_data, config, None)
+    mock_session.async_api_get_ota = AsyncMock(return_value=None)
+    mock_session.async_api_get = AsyncMock(return_value=None)
+    with patch("asyncio.sleep", new=AsyncMock()):
+        with pytest.raises(error.UnsupportedBoxResponse):
+            await box.async_ota_check()
+
+
+async def test_async_ota_check_returns_silently_when_no_available_fv(mock_session, sample_data, config):
+    box = Box(mock_session, sample_data, config, None)
+    mock_session.async_api_get_ota = AsyncMock(return_value=None)
+    mock_session.async_api_get = AsyncMock(return_value={"fv": "1.0"})
+    with patch("asyncio.sleep", new=AsyncMock()):
+        await box.async_ota_check()
+    assert box.available_firmware_version is None

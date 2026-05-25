@@ -6,6 +6,7 @@ import pytest
 
 from blebox_uniapi.box_types import get_latest_api_level
 from blebox_uniapi import error
+from blebox_uniapi.cover import Shutter, ShutterBoxControlType, UnifiedCoverType
 
 from .conftest import CommonEntity, DefaultBoxTest, future_date, jmerge
 
@@ -140,6 +141,114 @@ class CoverTest(DefaultBoxTest):
         assert entity.is_opening is opening
         assert entity.is_closing is closing
         assert entity.is_closed is closed
+
+
+class TestShutterAttributes:
+    """Unit tests for Shutter attribute properties based on control type."""
+
+    @pytest.mark.parametrize(
+        "control_type",
+        [
+            ShutterBoxControlType.TILT_SHUTTER_90,
+            ShutterBoxControlType.TILT_SHUTTER_180,
+            ShutterBoxControlType.TILT_ONLY,
+            ShutterBoxControlType.PERGOLA_ROOF_TILT_ONLY,
+            ShutterBoxControlType.TILT_SHUTTER_WITHOUT_POSITIONING,
+        ],
+    )
+    def test_has_tilt_true(self, control_type):
+        assert Shutter(control_type).has_tilt is True
+
+    @pytest.mark.parametrize(
+        "control_type",
+        [
+            ShutterBoxControlType.SEGMENTED_SHUTTER,
+            ShutterBoxControlType.NO_CALIBRATION,
+            ShutterBoxControlType.WINDOW_OPENER,
+            ShutterBoxControlType.PERGOLA_ROOF,
+            ShutterBoxControlType.CURTAIN,
+        ],
+    )
+    def test_has_tilt_false(self, control_type):
+        assert Shutter(control_type).has_tilt is False
+
+    @pytest.mark.parametrize(
+        "control_type",
+        [
+            ShutterBoxControlType.TILT_ONLY,
+            ShutterBoxControlType.PERGOLA_ROOF_TILT_ONLY,
+        ],
+    )
+    def test_tilt_only_true(self, control_type):
+        assert Shutter(control_type).tilt_only is True
+
+    @pytest.mark.parametrize(
+        "control_type",
+        [
+            ShutterBoxControlType.TILT_SHUTTER_90,
+            ShutterBoxControlType.TILT_SHUTTER_180,
+            ShutterBoxControlType.TILT_SHUTTER_WITHOUT_POSITIONING,
+            ShutterBoxControlType.SEGMENTED_SHUTTER,
+        ],
+    )
+    def test_tilt_only_false(self, control_type):
+        assert Shutter(control_type).tilt_only is False
+
+    def test_is_tilt_180_true(self):
+        assert Shutter(ShutterBoxControlType.TILT_SHUTTER_180).is_tilt_180 is True
+
+    @pytest.mark.parametrize(
+        "control_type",
+        [
+            ShutterBoxControlType.TILT_SHUTTER_90,
+            ShutterBoxControlType.TILT_ONLY,
+            ShutterBoxControlType.TILT_SHUTTER_WITHOUT_POSITIONING,
+        ],
+    )
+    def test_is_tilt_180_false(self, control_type):
+        assert Shutter(control_type).is_tilt_180 is False
+
+    @pytest.mark.parametrize(
+        "control_type",
+        [
+            ShutterBoxControlType.NO_CALIBRATION,
+            ShutterBoxControlType.CURTAIN,
+            ShutterBoxControlType.TILT_ONLY,
+            ShutterBoxControlType.PERGOLA_ROOF_TILT_ONLY,
+            ShutterBoxControlType.TILT_SHUTTER_WITHOUT_POSITIONING,
+        ],
+    )
+    def test_is_slider_false(self, control_type):
+        assert Shutter(control_type).is_slider is False
+
+    @pytest.mark.parametrize(
+        "control_type",
+        [
+            ShutterBoxControlType.TILT_SHUTTER_90,
+            ShutterBoxControlType.TILT_SHUTTER_180,
+            ShutterBoxControlType.PERGOLA_ROOF,
+            ShutterBoxControlType.SEGMENTED_SHUTTER,
+        ],
+    )
+    def test_is_slider_true(self, control_type):
+        assert Shutter(control_type).is_slider is True
+
+    @pytest.mark.parametrize(
+        "control_type, expected",
+        [
+            (ShutterBoxControlType.ROOF_SEGMENTED_SHUTTER, UnifiedCoverType.SHUTTER),
+            (ShutterBoxControlType.SERVOMOTOR, UnifiedCoverType.SHUTTER),
+            (ShutterBoxControlType.CURTAIN_ONE_SIDED, UnifiedCoverType.CURTAIN),
+            (ShutterBoxControlType.CURTAIN_TWO_SIDED, UnifiedCoverType.CURTAIN),
+            (ShutterBoxControlType.TILT_ONLY, UnifiedCoverType.SHUTTER),
+            (ShutterBoxControlType.PERGOLA_ROOF, UnifiedCoverType.AWNING),
+            (ShutterBoxControlType.PERGOLA_ROOF_TILT_ONLY, UnifiedCoverType.AWNING),
+            (ShutterBoxControlType.TILT_SHUTTER_180, UnifiedCoverType.SHUTTER),
+            (ShutterBoxControlType.TILT_SHUTTER_WITHOUT_POSITIONING, UnifiedCoverType.SHUTTER),
+        ],
+    )
+    def test_read_cover_type_new_types(self, control_type, expected):
+        assert Shutter(control_type).read_cover_type(None, None, None) == expected
 
 
 class TestShutter(CoverTest):

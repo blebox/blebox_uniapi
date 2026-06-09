@@ -168,6 +168,8 @@ class BaseSensor(Feature):
 @SensorFactory.register("humidity", unit="percentage", scale=100)
 @SensorFactory.register("wind", unit="m/s", scale=10)
 @SensorFactory.register("openStatus", unit="")
+@SensorFactory.register("co2", unit="ppm")
+@SensorFactory.register("co2Definition", unit="")
 class GenericSensor(BaseSensor):
     def __init__(
         # base sensor params

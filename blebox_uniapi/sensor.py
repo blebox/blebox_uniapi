@@ -160,6 +160,8 @@ class BaseSensor(Feature):
 @SensorFactory.register("apparentPower", unit="va")
 @SensorFactory.register("reactivePower", unit="var")
 @SensorFactory.register("activePower", unit="W")
+@SensorFactory.register("reverseReactiveEnergy", unit="kvarh", scale=1_000)
+@SensorFactory.register("forwardReactiveEnergy", unit="kvarh", scale=1_000)
 @SensorFactory.register("reverseActiveEnergy", unit="kWh", scale=1_000)
 @SensorFactory.register("forwardActiveEnergy", unit="kWh", scale=1_000)
 @SensorFactory.register("illuminance", unit="lx", scale=100)

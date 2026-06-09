@@ -724,6 +724,8 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                         "reactivePower": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'reactivePower']|[0]|value",
                         "reverseActiveEnergy": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'reverseActiveEnergy']|[0]|value",
                         "forwardActiveEnergy": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'forwardActiveEnergy']|[0]|value",
+                        "forwardReactiveEnergy": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'forwardReactiveEnergy']|[0]|value",
+                        "reverseReactiveEnergy": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'reverseReactiveEnergy']|[0]|value",
                         "illuminance": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'illuminance']|[0]|value",
                         "temperature": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'temperature']|[0]|value",
                         "wind": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'wind']|[0]|value",

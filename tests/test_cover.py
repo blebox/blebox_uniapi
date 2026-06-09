@@ -146,6 +146,12 @@ class CoverTest(DefaultBoxTest):
 class TestShutterAttributes:
     """Unit tests for Shutter attribute properties based on control type."""
 
+    def test_is_calibrated_false(self):
+        assert Shutter(1, False).is_calibrated is False
+
+    def test_is_calibrated_true(self):
+        assert Shutter(1, True).is_calibrated is True
+
     @pytest.mark.parametrize(
         "control_type",
         [
@@ -218,8 +224,20 @@ class TestShutterAttributes:
             ShutterBoxControlType.TILT_SHUTTER_WITHOUT_POSITIONING,
         ],
     )
-    def test_is_slider_false(self, control_type):
-        assert Shutter(control_type).is_slider is False
+    def test_is_slider_false_by_control_type(self, control_type):
+        assert Shutter(control_type, is_calibrated=True).is_slider is False
+
+    @pytest.mark.parametrize(
+        "control_type",
+        [
+            ShutterBoxControlType.TILT_SHUTTER_90,
+            ShutterBoxControlType.TILT_SHUTTER_180,
+            ShutterBoxControlType.PERGOLA_ROOF,
+            ShutterBoxControlType.SEGMENTED_SHUTTER,
+        ],
+    )
+    def test_is_slider_false_when_not_calibrated(self, control_type):
+        assert Shutter(control_type, is_calibrated=False).is_slider is False
 
     @pytest.mark.parametrize(
         "control_type",
@@ -231,7 +249,7 @@ class TestShutterAttributes:
         ],
     )
     def test_is_slider_true(self, control_type):
-        assert Shutter(control_type).is_slider is True
+        assert Shutter(control_type, is_calibrated=True).is_slider is True
 
     @pytest.mark.parametrize(
         "control_type, expected",
@@ -244,7 +262,10 @@ class TestShutterAttributes:
             (ShutterBoxControlType.PERGOLA_ROOF, UnifiedCoverType.AWNING),
             (ShutterBoxControlType.PERGOLA_ROOF_TILT_ONLY, UnifiedCoverType.AWNING),
             (ShutterBoxControlType.TILT_SHUTTER_180, UnifiedCoverType.SHUTTER),
-            (ShutterBoxControlType.TILT_SHUTTER_WITHOUT_POSITIONING, UnifiedCoverType.SHUTTER),
+            (
+                ShutterBoxControlType.TILT_SHUTTER_WITHOUT_POSITIONING,
+                UnifiedCoverType.SHUTTER,
+            ),
         ],
     )
     def test_read_cover_type_new_types(self, control_type, expected):
@@ -256,8 +277,7 @@ class TestShutter(CoverTest):
 
     DEV_INFO_PATH = "api/shutter/state"
 
-    DEVICE_INFO = json.loads(
-        """
+    DEVICE_INFO = json.loads("""
     {
         "device": {
             "deviceName": "My shutter 1",
@@ -269,8 +289,21 @@ class TestShutter(CoverTest):
             "ip": "172.0.0.1"
         }
     }
-    """
-    )
+    """)
+
+    DEVICE_EXTENDED_INFO_PATH = "/api/shutter/extended/state"
+    DEVICE_EXTENDED_INFO = {
+        "shutter": {
+            "state": 2,
+            "currentPos": {"position": 50, "tilt": 50},
+            "desiredPos": {"position": 50, "tilt": 50},
+            "favPos": {"position": 50, "tilt": 50},
+            "controlType": 1,
+            "calibrationParameters": {
+                "isCalibrated": 1,
+            },
+        }
+    }
 
     DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(future_date()))
     DEVICE_INFO_LATEST = jmerge(
@@ -278,8 +311,7 @@ class TestShutter(CoverTest):
     )
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180603))
 
-    DEVICE_INFO_UNSPECIFIED_API = json.loads(
-        """
+    DEVICE_INFO_UNSPECIFIED_API = json.loads("""
     {
         "device": {
             "deviceName": "My shutter 1",
@@ -290,11 +322,9 @@ class TestShutter(CoverTest):
             "ip": "172.0.0.1"
         }
     }
-    """
-    )
+    """)
 
-    STATE_DEFAULT = json.loads(
-        """
+    STATE_DEFAULT = json.loads("""
     {
         "shutter": {
             "state": 2,
@@ -312,8 +342,7 @@ class TestShutter(CoverTest):
             }
         }
     }
-    """
-    )
+    """)
 
     def patch_state(state, current, desired):
         """Generate a patch for a JSON state fixture."""
@@ -349,15 +378,30 @@ class TestShutter(CoverTest):
         assert entity.supported_features & SUPPORT_CLOSE
         assert entity.supported_features & SUPPORT_STOP
 
+        assert entity._feature.is_calibrated is True
         assert entity.supported_features & SUPPORT_SET_POSITION
-        assert entity.current_cover_position is None
+        assert entity.current_cover_position == 50
         assert entity._feature.is_position_inverted is True
 
         # TODO: tilt
         # assert entity.supported_features & SUPPORT_SET_TILT_POSITION
         # assert entity.current_cover_tilt_position == None
 
-        self.assert_state(entity, None)
+        self.assert_state(entity, STATE_OPEN)
+
+    async def test_init_not_calibrated(self, aioclient_mock):
+        """Test that is_calibrated is False when device reports isCalibrated=0."""
+        original = self.DEVICE_EXTENDED_INFO
+        self.DEVICE_EXTENDED_INFO = jmerge(
+            original,
+            '{"shutter": {"calibrationParameters": {"isCalibrated": 0}}}',
+        )
+        try:
+            await self.allow_get_info(aioclient_mock)
+            entity = (await self.async_entities(aioclient_mock))[0]
+            assert entity._feature.is_calibrated is False
+        finally:
+            self.DEVICE_EXTENDED_INFO = original
 
     async def test_device_info(self, aioclient_mock):
         await self.allow_get_info(aioclient_mock, self.DEVICE_INFO)
@@ -426,8 +470,7 @@ class TestGateBox(CoverTest):
 
     DEV_INFO_PATH = "api/gate/state"
 
-    DEVICE_INFO = json.loads(
-        """
+    DEVICE_INFO = json.loads("""
         {
             "deviceName": "My gate 1",
             "type": "gateBox",
@@ -436,8 +479,7 @@ class TestGateBox(CoverTest):
             "id": "1afe34db9437",
             "ip": "192.168.1.11"
         }
-        """
-    )
+        """)
 
     DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, f'{{ "apiLevel":"{future_date()}" }}')
     DEVICE_INFO_LATEST = jmerge(
@@ -447,8 +489,7 @@ class TestGateBox(CoverTest):
 
     DEVICE_INFO_UNSPECIFIED_API = None  # already handled as default case
 
-    STATE_DEFAULT = json.loads(
-        """
+    STATE_DEFAULT = json.loads("""
         {
             "currentPos": 50,
             "desiredPos": 50,
@@ -464,8 +505,7 @@ class TestGateBox(CoverTest):
             "openLimitSwitchInputNumber": 0,
             "closeLimitSwitchInputNumber": 1
         }
-    """
-    )
+    """)
 
     STATE_CLOSED = jmerge(STATE_DEFAULT, '{ "currentPos": 0, "desiredPos": 0 }')
     STATE_OPENING = jmerge(STATE_DEFAULT, '{ "currentPos": 50, "desiredPos": 100 }')
@@ -593,8 +633,7 @@ class TestGateBoxB(CoverTest):
 
     DEV_INFO_PATH = "state/extended"
 
-    DEVICE_INFO = json.loads(
-        """
+    DEVICE_INFO = json.loads("""
         {
             "device": {
                 "deviceName":"My gateBox 1",
@@ -609,8 +648,7 @@ class TestGateBoxB(CoverTest):
                 "availableFv":null
             }
         }
-        """
-    )
+        """)
 
     DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(future_date()))
     DEVICE_INFO_LATEST = jmerge(
@@ -620,8 +658,7 @@ class TestGateBoxB(CoverTest):
 
     DEVICE_INFO_UNSPECIFIED_API = None  # already handled as default case
 
-    STATE_DEFAULT = json.loads(
-        """
+    STATE_DEFAULT = json.loads("""
         {
             "gate": {
                 "currentPos": 0,
@@ -635,15 +672,13 @@ class TestGateBoxB(CoverTest):
                 "inputsType": 0
             }
         }
-        """
-    )
+        """)
 
     STATE_CLOSED = STATE_DEFAULT
     STATE_STOPPED = jmerge(STATE_DEFAULT, '{"gate": {"currentPos": 50 }}')
     STATE_FULLY_OPENED = jmerge(STATE_DEFAULT, '{"gate": {"currentPos": 100 }}')
 
-    STATE_UNKNOWN = json.loads(
-        """
+    STATE_UNKNOWN = json.loads("""
         {
             "gate": {
                 "currentPos": -1,
@@ -657,8 +692,7 @@ class TestGateBoxB(CoverTest):
                 "inputsType": 0
             }
         }
-        """
-    )
+        """)
 
     async def test_init(self, aioclient_mock):
         """Test cover default state."""
@@ -716,8 +750,7 @@ class TestGateController(CoverTest):
 
     DEV_INFO_PATH = "api/gatecontroller/state"
 
-    DEVICE_INFO = json.loads(
-        """
+    DEVICE_INFO = json.loads("""
     {
       "device": {
         "deviceName": "My gate controller 1",
@@ -729,8 +762,7 @@ class TestGateController(CoverTest):
         "ip": "192.168.1.11"
       }
     }
-    """
-    )
+    """)
 
     DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(future_date()))
     DEVICE_INFO_LATEST = jmerge(
@@ -739,8 +771,7 @@ class TestGateController(CoverTest):
     DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180603))
 
     # NOTE: can't happen with a real device
-    DEVICE_INFO_UNSPECIFIED_API = json.loads(
-        """
+    DEVICE_INFO_UNSPECIFIED_API = json.loads("""
     {
       "device": {
         "deviceName": "My gate controller 1",
@@ -751,11 +782,9 @@ class TestGateController(CoverTest):
         "ip": "192.168.1.11"
       }
     }
-    """
-    )
+    """)
 
-    STATE_DEFAULT = json.loads(
-        """
+    STATE_DEFAULT = json.loads("""
     {
         "gateController": {
             "state": 2,
@@ -767,8 +796,7 @@ class TestGateController(CoverTest):
             "desiredPos": { "positions": [ 29 ] }
         }
     }
-    """
-    )
+    """)
 
     def patch_state(state, current, desired):
         """Generate a patch for a JSON state fixture."""

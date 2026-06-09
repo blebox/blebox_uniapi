@@ -101,7 +101,7 @@ class UnifiedCoverType(IntEnum):
 class Gate:
     _control_type: Optional[int]
 
-    def __init__(self, control_type: int):
+    def __init__(self, control_type: int, is_calibrated: bool = False):
         self._control_type = control_type
 
     def read_state(self, alias: str, raw_value: Any, product: "Box") -> int:
@@ -148,6 +148,10 @@ class Gate:
     def close_command(self) -> str:
         return "close"
 
+    @property
+    def is_calibrated(self) -> None:
+        return None
+
     def stop_command(self, has_stop: bool) -> str:
         return "stop"
 
@@ -157,6 +161,11 @@ class Gate:
 
 class Shutter(Gate):
     _control_type: Optional[ShutterBoxControlType]
+    _is_calibrated: bool
+
+    def __init__(self, control_type: int, is_calibrated: bool = False):
+        super().__init__(control_type)
+        self._is_calibrated = is_calibrated
 
     @property
     def min_position(self) -> int:
@@ -185,13 +194,21 @@ class Shutter(Gate):
 
     @property
     def is_slider(self) -> bool:
-        return self._control_type not in (
-            ShutterBoxControlType.NO_CALIBRATION,
-            ShutterBoxControlType.CURTAIN,
-            ShutterBoxControlType.TILT_ONLY,
-            ShutterBoxControlType.PERGOLA_ROOF_TILT_ONLY,
-            ShutterBoxControlType.TILT_SHUTTER_WITHOUT_POSITIONING,
+        return (
+            self._control_type
+            not in (
+                ShutterBoxControlType.NO_CALIBRATION,
+                ShutterBoxControlType.CURTAIN,
+                ShutterBoxControlType.TILT_ONLY,
+                ShutterBoxControlType.PERGOLA_ROOF_TILT_ONLY,
+                ShutterBoxControlType.TILT_SHUTTER_WITHOUT_POSITIONING,
+            )
+            and self.is_calibrated is True
         )
+
+    @property
+    def is_calibrated(self) -> bool:
+        return self._is_calibrated
 
     def read_cover_type(
         self, alias: str, raw_value: Any, product: "Box"
@@ -355,13 +372,20 @@ class Cover(Feature):
         extended_state: dict,
     ) -> None:
         control_type = None
+        is_calibrated: bool = False
         if extended_state and issubclass(subclass, Shutter):
             control_type = extended_state.get("shutter", {}).get("controlType", None)
+            is_calibrated = bool(
+                extended_state.get("shutter", {})
+                .get("calibrationParameters", {})
+                .get("isCalibrated", False)
+            )
+
         elif extended_state and issubclass(subclass, GateBoxB):
             control_type = extended_state.get("gate", {}).get("openCloseMode", None)
 
         self._device_class = dev_class
-        self._attributes: GateT = subclass(control_type)
+        self._attributes: GateT = subclass(control_type, is_calibrated)
         self._tilt_current = None
         super().__init__(product, alias, methods)
 
@@ -382,6 +406,10 @@ class Cover(Feature):
     @property
     def tilt_current(self):
         return self._tilt_current
+
+    @property
+    def is_calibrated(self) -> Optional[bool]:
+        return self._attributes.is_calibrated
 
     @property
     def is_slider(self) -> Any:

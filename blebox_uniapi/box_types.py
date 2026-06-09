@@ -380,6 +380,36 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 ]
             ],
         },
+        20220505: {
+            "api_path": "/state/extended",
+            "extended_state_path": "/state/extended",
+            "api": {
+                # note: old control api (i.e. /s/0, /s/1, /s/2) still supported but
+                # now deprecated. switchBox has now API consistent with switchBoxD
+                "on": lambda x=None: ("GET", f"/s/{x}/1", None),
+                "off": lambda x=None: ("GET", f"/s/{x}/0", None),
+            },
+            "switches": [
+                [
+                    "relay",
+                    {"state": lambda x: f"relays[?relay==`{x}`]|[0]|state"},
+                    "relay",
+                ]
+            ],
+            "sensors": [
+                [
+                    "switchBox.energy",
+                    {
+                        # note: switchbox/switchboxD sensors are currently not indexed (singletons)
+                        "powerConsumption": lambda x: "powerMeasuring.powerConsumption[0]|value ",
+                        "activePower": lambda x: "sensors[?type == 'activePower']|[0]|value",
+                        "voltage": lambda x: "sensors[?type == 'voltage']|[0]|value",
+                        "periodS": "powerMeasuring.powerConsumption[0]|periodS",
+                        "measurement_enabled": "powerMeasuring.enabled",
+                    },
+                ]
+            ],
+        },
     },
     # switchBoxD
     "switchBoxD": {

@@ -729,6 +729,8 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                         "wind": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'wind']|[0]|value",
                         "humidity": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'humidity']|[0]|value",
                         "openStatus": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'openStatus']|[0]|value",
+                        "co2": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'co2']|[0]|value",
+                        "co2Definition": lambda x: f"multiSensor.sensors[?id == `{x}`]|[?type == 'co2Definition']|[0]|value",
                     },
                 ]
             ],

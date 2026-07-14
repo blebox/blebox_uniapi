@@ -125,7 +125,7 @@ $ bump2version patch # possible: major / minor / patch
 $ git push --follow-tags
 
 bump2version bumps the version in setup.py, blebox_uniapi/__init__.py and
-setup.cfg, commits the change and creates a matching git tag (e.g. 2.5.5).
+setup.cfg, commits the change and creates a matching git tag (e.g. v2.6.0).
 Pushing the tag triggers the "Publish to PyPI" GitHub Actions workflow
 (.github/workflows/release.yml), which first runs lint + tests, then builds and
 uploads to PyPI via Trusted Publishing (OIDC) from the blebox/blebox_uniapi repo.

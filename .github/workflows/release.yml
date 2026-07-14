@@ -2,7 +2,7 @@ name: Publish to PyPI
 
 on:
   push:
-    tags: ['[0-9]*.[0-9]*.[0-9]*']   # bare bumpversion tags, e.g. 2.5.5
+    tags: ['v[0-9]*.[0-9]*.[0-9]*']   # bumpversion tags, e.g. v2.6.0
 
 permissions:
   contents: read

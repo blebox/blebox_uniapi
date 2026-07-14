@@ -122,7 +122,11 @@ Make sure all your changes are committed (including an entry in HISTORY.rst).
 Then run::
 
 $ bump2version patch # possible: major / minor / patch
-$ git push
-$ git push --tags
+$ git push --follow-tags
 
-Travis will then deploy to PyPI if tests pass.
+bump2version bumps the version in setup.py, blebox_uniapi/__init__.py and
+setup.cfg, commits the change and creates a matching git tag (e.g. 2.5.5).
+Pushing the tag triggers the "Publish to PyPI" GitHub Actions workflow
+(.github/workflows/release.yml), which first runs lint + tests, then builds and
+uploads to PyPI via Trusted Publishing (OIDC) from the blebox/blebox_uniapi repo.
+The publish step only runs if the tests pass.

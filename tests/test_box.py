@@ -188,7 +188,9 @@ async def test_async_ota_update_calls_session(mock_session, sample_data, config)
     mock_session.async_api_get.assert_called_once_with("/api/ota/update")
 
 
-async def test_async_ota_check_updates_firmware_versions(mock_session, sample_data, config):
+async def test_async_ota_check_updates_firmware_versions(
+    mock_session, sample_data, config
+):
     box = Box(mock_session, sample_data, config, None)
     mock_session.async_api_get_ota = AsyncMock(return_value=None)
     mock_session.async_api_get = AsyncMock(
@@ -211,7 +213,9 @@ async def test_async_ota_check_unwraps_device_key(mock_session, sample_data, con
     assert box.available_firmware_version == "3.0"
 
 
-async def test_async_ota_check_raises_on_none_info_response(mock_session, sample_data, config):
+async def test_async_ota_check_raises_on_none_info_response(
+    mock_session, sample_data, config
+):
     box = Box(mock_session, sample_data, config, None)
     mock_session.async_api_get_ota = AsyncMock(return_value=None)
     mock_session.async_api_get = AsyncMock(return_value=None)
@@ -220,7 +224,9 @@ async def test_async_ota_check_raises_on_none_info_response(mock_session, sample
             await box.async_ota_check()
 
 
-async def test_async_ota_check_returns_silently_when_no_available_fv(mock_session, sample_data, config):
+async def test_async_ota_check_returns_silently_when_no_available_fv(
+    mock_session, sample_data, config
+):
     box = Box(mock_session, sample_data, config, None)
     mock_session.async_api_get_ota = AsyncMock(return_value=None)
     mock_session.async_api_get = AsyncMock(return_value={"fv": "1.0"})

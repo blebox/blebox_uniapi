@@ -39,7 +39,6 @@ class UnsupportedBoxVersion(BoxError):
     pass
 
 
-
 class BadFieldExceedsMax(BoxError):
     def __init__(self, dev_name: str, field: str, value: int, max_value: int):
         self._dev_name = dev_name
@@ -101,7 +100,6 @@ class BadFieldNotRGBW(BoxError):
 
     def __str__(self) -> str:
         return f"{self._dev_name}.{self._field} is {self._value} which is not a rgbw string"
-
 
 
 # misc errors

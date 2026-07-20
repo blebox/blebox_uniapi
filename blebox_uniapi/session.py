@@ -98,7 +98,7 @@ class ApiHost:
         try:
             return await self.async_request(path, self._session.get)
         except Exception as ex:
-            logger.error(f"EXCEPTION DURING API CALL: {ex}")
+            logger.debug(f"EXCEPTION DURING API CALL: {ex}")
             raise ex
 
     async def async_api_get_ota(self, path: str) -> Optional[dict]:
@@ -107,7 +107,7 @@ class ApiHost:
                 path, self._session.get, allow_ota_check_response=True
             )
         except Exception as ex:
-            logger.error(f"EXCEPTION DURING API CALL: {ex}")
+            logger.debug(f"EXCEPTION DURING API CALL: {ex}")
             raise ex
 
     async def async_api_post(

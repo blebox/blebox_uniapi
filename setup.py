@@ -34,6 +34,7 @@ setup(
         "Natural Language :: English",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
     ],
     description="Python API for accessing BleBox smart home devices",
     install_requires=requirements,

@@ -218,11 +218,15 @@ async def test_session_api_get_non_json_returns_none(logger, client):
     assert result is None
 
 
-async def test_session_api_get_unicode_decode_error_raises_connection_error(logger, client):
+async def test_session_api_get_unicode_decode_error_raises_connection_error(
+    logger, client
+):
     response = Mock(spec_set=aiohttp.ClientResponse)
     response.status = 200
     response.content_type = "application/json"
-    response.json = AsyncMock(side_effect=UnicodeDecodeError("utf-8", b"", 0, 1, "invalid"))
+    response.json = AsyncMock(
+        side_effect=UnicodeDecodeError("utf-8", b"", 0, 1, "invalid")
+    )
     client.get = AsyncMock(return_value=response)
     api_session = Session("127.0.0.4", "88", 2, client, None, logger)
     with pytest.raises(error.ConnectionError, match="Invalid response encoding"):

@@ -44,7 +44,9 @@ class TestAsyncUpdate:
         await update.async_update()
         mock_product.async_ota_check.assert_called_once()
 
-    async def test_propagates_connection_error_from_ota_check(self, update, mock_product):
+    async def test_propagates_connection_error_from_ota_check(
+        self, update, mock_product
+    ):
         mock_product.async_ota_check = AsyncMock(
             side_effect=error.ConnectionError("connection refused")
         )
@@ -58,7 +60,9 @@ class TestAsyncInstall:
         await update.async_install()
         mock_product.async_ota_update.assert_called_once()
 
-    async def test_propagates_connection_error_from_ota_update(self, update, mock_product):
+    async def test_propagates_connection_error_from_ota_update(
+        self, update, mock_product
+    ):
         mock_product.async_ota_update = AsyncMock(
             side_effect=error.ConnectionError("connection refused")
         )

@@ -111,6 +111,7 @@ class Box:
 
         self._data_path = config["api_path"]
         self._type = type
+        self._product = product
         self._unique_id = unique_id
         self._name = name
         self._address = address
@@ -211,6 +212,11 @@ class Box:
     @property
     def type(self) -> str:
         return self._type
+
+    @property
+    def product(self) -> str:
+        """Product name for informational purpose only - do not use it in any application logic."""
+        return self._product
 
     @property
     def unique_id(self) -> Any:

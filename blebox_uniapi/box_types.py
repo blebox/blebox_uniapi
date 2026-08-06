@@ -1,3 +1,4 @@
+from .button import GateBoxSecondOutput, TvLift
 from .cover import Gate, GateBox, GateBoxB, Shutter
 from typing import Union, Any
 
@@ -50,9 +51,8 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                 "set": lambda command: ("GET", f"/s/c/{command}")
             },  # dictionary with interaction methods
             "buttons": [
-                "tvLift",
-                {"lift": ""},
-            ],  # key used to set platform, list elements used in cls init, e.g. [<alias>, {"path": "state_value"}]
+                ["tvLift", {}, TvLift],
+            ],  # key used to set platform, list elements used in cls init, e.g. [<alias>, {"path": "state_value"}, <optional type class>]
         }
     },
     # airSensor
@@ -135,10 +135,14 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     {
                         "position": "gate.currentPos",
                         "gate_type": "gate.gateType",
+                        "extra_button_type": "gate.extraButtonType",
                     },
                     "gatebox",
                     GateBoxB,
                 ]
+            ],
+            "buttons": [
+                ["second_output", {}, GateBoxSecondOutput],
             ],
         },
     },

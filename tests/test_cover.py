@@ -732,6 +732,7 @@ class TestGateBoxB(CoverTest):
 
         entity = await self.updated(aioclient_mock, self.STATE_STOPPED)
         self.assert_state(entity, STATE_OPEN)
+        assert entity.supported_features & SUPPORT_STOP
 
     async def test_closed(self, aioclient_mock):
         """Test cover closed."""
@@ -743,6 +744,77 @@ class TestGateBoxB(CoverTest):
         """Test handling cover at unknown position."""
         entity = await self.updated(aioclient_mock, self.STATE_UNKNOWN)
         self.assert_state(entity, None)
+
+
+class TestGateBoxBSecondOutput(CoverTest):
+    """Tests for a GateBoxB whose extra button output is exposed as a button."""
+
+    DEV_INFO_PATH = "state/extended"
+
+    DEVICE_INFO = json.loads("""
+        {
+            "device": {
+                "deviceName":"My gateBox 1",
+                "type":"gateBox",
+                "product":"gateBox",
+                "hv":"9.1d",
+                "fv":"0.1010",
+                "universe":0,
+                "apiLevel":"20230102",
+                "id":"1afe34d27e4f",
+                "ip":"192.168.4.1",
+                "availableFv":null
+            }
+        }
+        """)
+
+    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(future_date()))
+    DEVICE_INFO_LATEST = jmerge(
+        DEVICE_INFO, patch_version(get_latest_api_level("gateBox"))
+    )
+    DEVICE_INFO_UNSUPPORTED = DEVICE_INFO
+
+    DEVICE_INFO_UNSPECIFIED_API = None  # already handled as default case
+
+    STATE_DEFAULT = json.loads("""
+        {
+            "gate": {
+                "currentPos": 0,
+                "openCloseMode": 0,
+                "gateType": 1,
+                "gatePulseTimeMs": 1500,
+                "gateOutputState": 0,
+                "extraButtonType": 2,
+                "extraButtonPulseTimeMs": 1500,
+                "extraButtonOutputState": 0,
+                "inputsType": 0
+            }
+        }
+        """)
+
+    DEVICE_EXTENDED_INFO_PATH = "/state/extended"
+    DEVICE_EXTENDED_INFO = STATE_DEFAULT
+
+    async def test_init(self, aioclient_mock):
+        """Test cover default state."""
+
+        await self.allow_get_info(aioclient_mock)
+        entity = (await self.async_entities(aioclient_mock))[0]
+
+        assert entity.name == "My gateBox 1 (gateBox#position)"
+        assert entity.unique_id == "BleBox-gateBox-1afe34d27e4f-position"
+        assert entity.device_class == DEVICE_CLASS_DOOR
+        assert entity.supported_features & SUPPORT_OPEN
+        assert entity.supported_features & SUPPORT_CLOSE
+
+    async def test_second_output_claims_stop(self, aioclient_mock):
+        """Test that a second_output button removes the cover's stop action.
+
+        Both would issue the same secondary command.
+        """
+
+        entity = await self.updated(aioclient_mock, self.STATE_DEFAULT)
+        assert not entity.supported_features & SUPPORT_STOP
 
 
 class TestGateController(CoverTest):

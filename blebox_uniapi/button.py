@@ -1,5 +1,6 @@
+from .cover import GateBoxControlType, GateBoxExtraButtonType
 from .feature import Feature
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Optional, Type
 
 from enum import Enum, auto
 
@@ -23,33 +24,98 @@ class ControlType(Enum):
     CLOSE = auto()
 
 
+class Buttons:
+    """Buttons defines how a product derives its buttons from extended state."""
+
+    @staticmethod
+    def many_from_extended_state(
+        button_cls: Type["Button"],
+        product: "Box",
+        alias: str,
+        methods: dict,
+        extended_state: dict,
+    ) -> list["Button"]:
+        raise NotImplementedError  # pragma: no cover
+
+
+class TvLift(Buttons):
+    @staticmethod
+    def many_from_extended_state(
+        button_cls: Type["Button"],
+        product: "Box",
+        alias: str,
+        methods: dict,
+        extended_state: dict,
+    ) -> list["Button"]:
+        control_type = extended_state.get("tvLift", {}).get("controlType")
+        endpoints = TV_LIFT_CONTROL_TYPES_API.get(control_type, {})
+        return [
+            button_cls(product, f"{alias}_{endpoint}", methods, endpoint)
+            for endpoint in endpoints.values()
+        ]
+
+
+class GateBoxSecondOutput(Buttons):
+    """GateBoxSecondOutput exposes the gateBox extra button output as a button.
+
+    WALK_IN and OTHER share one button name because what the output does is a
+    device setting the user can change at any time, not a hardware trait.
+    """
+
+    @staticmethod
+    def many_from_extended_state(
+        button_cls: Type["Button"],
+        product: "Box",
+        alias: str,
+        methods: dict,
+        extended_state: dict,
+    ) -> list["Button"]:
+        gate = extended_state.get("gate", {})
+        if gate.get("extraButtonType") not in (
+            GateBoxExtraButtonType.WALK_IN,
+            GateBoxExtraButtonType.OTHER,
+        ):
+            return []
+
+        # Api levels below 20230102 report no mode and cannot be wired that way.
+        if gate.get("openCloseMode") == GateBoxControlType.OPEN_CLOSE:
+            return []
+
+        return [button_cls(product, alias, methods, "second_output", "secondary")]
+
+
 class Button(Feature):
     def __init__(
-        self, product: "Box", alias: str, methods: dict, query_string: str
+        self,
+        product: "Box",
+        alias: str,
+        methods: dict,
+        query_string: str,
+        api_command: str = "set",
     ) -> None:
         super().__init__(product, alias, methods)
         self._device_class = "UPDATE"
         self._query_string: str = query_string
+        self._api_command: str = api_command
 
     @classmethod
-    def many_from_config(cls, product, box_type_config, extended_state):
-        object_list = list()
-        if len(box_type_config) > 0:
-            alias = box_type_config[0]
-            if isinstance(extended_state, dict) and extended_state is not None:
-                lift_mode = extended_state.get("tvLift", {}).get("controlType", None)
-                for row in TV_LIFT_CONTROL_TYPES_API[lift_mode].items():
-                    indicator, endpoint = row
-                    object_list.append(
-                        cls(product, alias + "_" + endpoint, {}, endpoint)
-                    )
-
-                return object_list
-        else:
+    def many_from_config(
+        cls, product: "Box", box_type_config: list, extended_state: Any
+    ) -> list["Button"]:
+        if not isinstance(extended_state, dict):
             return []
 
-    async def set(self):
-        await self.async_api_command("set", self.query_string)
+        features: list[Button] = []
+        for alias, methods, buttons in box_type_config:
+            features.extend(
+                buttons.many_from_extended_state(
+                    cls, product, alias, methods, extended_state
+                )
+            )
+        return features
+
+    async def set(self) -> None:
+        await self.async_api_command(self._api_command, self.query_string)
 
     def after_update(self) -> None:
         pass

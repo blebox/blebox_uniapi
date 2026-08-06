@@ -65,6 +65,19 @@ class GateBoxControlType(IntEnum):
     OPEN_CLOSE = 2
 
 
+class GateBoxExtraButtonType(IntEnum):
+    """GateBoxExtraButtonType defines gateBox extra button semantics.
+
+    Only meaningful outside OPEN_CLOSE mode, which takes the extra button output
+    for the close action and leaves this field unused.
+    """
+
+    DISABLED = 0
+    STOP = 1
+    WALK_IN = 2
+    OTHER = 3
+
+
 class GateBoxGateType(IntEnum):
     """GateBoxGateType defines possible gate/cover types reported by gateBox"""
 
@@ -305,7 +318,7 @@ class GateBox(Gate):
         if button_type is None:
             return False
 
-        return button_type == 1
+        return button_type == GateBoxExtraButtonType.STOP
 
 
 class GateBoxB(GateBox):
@@ -328,9 +341,23 @@ class GateBoxB(GateBox):
         return raw_value("position")
 
     def read_has_stop(self, alias: str, raw_value: Any, product: "Box") -> bool:
+        if product.last_data is None:
+            return False
+
         # note: if control type is unknown we assume it is not open/close
         #       and has the stop feature via secondary button command.
-        return self._control_type != GateBoxControlType.OPEN_CLOSE
+        if self._control_type == GateBoxControlType.OPEN_CLOSE:
+            return False
+
+        # stop_command issues the same secondary command as the second_output button.
+        extra_button_type = raw_value("extra_button_type")
+        if extra_button_type in (
+            GateBoxExtraButtonType.WALK_IN,
+            GateBoxExtraButtonType.OTHER,
+        ):
+            return False
+
+        return True
 
     def read_cover_type(
         self, alias: str, raw_value: Any, product: "Box"

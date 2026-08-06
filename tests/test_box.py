@@ -117,6 +117,7 @@ async def test_properties(mock_session, sample_data, config):
     assert box.last_data is None
     assert box.type == "airSensor"
     assert box.model == "airSensor"
+    assert box.product == "airSensor"
     assert box.unique_id == "abcd1234ef"
     assert box.firmware_version == "1.23"
     assert box.hardware_version == "4.56"

@@ -283,6 +283,73 @@ class TestTempSensor(DefaultBoxTest):
 
         assert entity.native_value == 1.2
 
+    STATE_SENSOR_ERROR = json.loads(
+        """
+    {
+      "tempSensor": {
+        "sensors": [
+          {
+            "type": "temperature",
+            "id": 0,
+            "value": 18349,
+            "trend": 3,
+            "state": 3,
+            "elapsedTimeS": 0
+          }
+        ]
+      }
+    }
+    """
+    )
+
+    async def test_update_with_sensor_error_state_ignores_out_of_range_value(
+        self, aioclient_mock
+    ):
+        """Regression test: a broken probe must not prevent device setup."""
+
+        entity = await self.updated(aioclient_mock, self.STATE_SENSOR_ERROR)
+
+        assert entity.native_value is None
+        assert entity._feature.is_error is True
+
+    async def test_valid_state_trusts_out_of_nominal_range_value(self, aioclient_mock):
+        """state == 2 means the value is valid, even outside the nominal range."""
+
+        state = jmerge(
+            self.STATE_DEFAULT,
+            '{ "tempSensor": { "sensors": [ { "value": 18349, "state": 2 } ] } }',
+        )
+
+        entity = await self.updated(aioclient_mock, state)
+
+        assert entity._feature.is_error is False
+        assert entity.native_value == 183.5
+
+    async def test_initializing_state_reports_unknown_not_error(self, aioclient_mock):
+        """state == 1 (measurement in progress) must not surface a value or an error."""
+
+        state = jmerge(
+            self.STATE_DEFAULT,
+            '{ "tempSensor": { "sensors": [ { "value": 18349, "state": 1 } ] } }',
+        )
+
+        entity = await self.updated(aioclient_mock, state)
+
+        assert entity._feature.is_error is False
+        assert entity.native_value is None
+
+    async def test_update_recovers_after_sensor_error_clears(self, aioclient_mock):
+        """Entity value is restored once the sensor reports a valid state again."""
+
+        entity = await self.updated(aioclient_mock, self.STATE_SENSOR_ERROR)
+        assert entity._feature.is_error is True
+
+        product = entity._feature.product
+        product._update_last_data(self.STATE_DEFAULT)
+
+        assert entity._feature.is_error is False
+        assert entity.native_value == 25.2
+
 
 class TestMultiSensorEnergy(DefaultBoxTest):
     """Tests for multiSensor energy/current sensors (apiLevel 20230606)."""
@@ -350,6 +417,49 @@ class TestMultiSensorEnergy(DefaultBoxTest):
         entity = await self.updated(aioclient_mock, self.STATE_DEFAULT, index=index)
         assert entity._feature.unit == unit
         assert entity.native_value == value
+
+    async def test_sensor_error_state_reports_error(self, aioclient_mock):
+        """state == 3 is the only value that marks the sensor as errored."""
+
+        state_json = jmerge(
+            self.STATE_DEFAULT,
+            '{ "multiSensor": { "sensors": [ { "state": 3 } ] } }',
+        )
+
+        entity = await self.updated(aioclient_mock, state_json, index=0)
+
+        assert entity.native_value is None
+        assert entity._feature.is_error is True
+
+    async def test_sensor_initializing_state_reports_unknown_not_error(
+        self, aioclient_mock
+    ):
+        """state == 1 (measurement in progress) must not surface a value or an error."""
+
+        state_json = jmerge(
+            self.STATE_DEFAULT,
+            '{ "multiSensor": { "sensors": [ { "state": 1 } ] } }',
+        )
+
+        entity = await self.updated(aioclient_mock, state_json, index=0)
+
+        assert entity._feature.is_error is False
+        assert entity.native_value is None
+
+    @pytest.mark.parametrize("state", [0, 2, 4, 5])
+    async def test_sensor_valid_state_reports_value(self, aioclient_mock, state):
+        """States other than 1 (init) and 3 (error) trust the reported value,
+        including 4/5 (out of range), where value is the measurement limit."""
+
+        state_json = jmerge(
+            self.STATE_DEFAULT,
+            f'{{ "multiSensor": {{ "sensors": [ {{ "state": {state} }} ] }} }}',
+        )
+
+        entity = await self.updated(aioclient_mock, state_json, index=0)
+
+        assert entity._feature.is_error is False
+        assert entity.native_value == 1500
 
 
 class TestAirSensor(DefaultBoxTest):

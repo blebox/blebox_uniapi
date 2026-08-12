@@ -1,7 +1,17 @@
+from enum import IntEnum
 from .sensor import Temperature
 from typing import Optional, Any, Union
 from .feature import Feature
 from blebox_uniapi.jfollow import follow
+
+
+class BleboxThermoState(IntEnum):
+    """Possible states of a thermo regulator, as reported by the device."""
+
+    OFF = 0
+    ON = 1
+    BOOST = 3
+    SAFETY_OFF = 4
 
 
 class Climate(Temperature):
@@ -90,11 +100,17 @@ class Climate(Temperature):
             raw = self.raw_value("state")
             if raw is not None:  # no reading
                 alias = self._alias
-                return product.expect_int(alias, raw, 3, 0) in (
-                    1,
-                    3,
-                )  # 1: On, 3: Boost(thermoBox max temp of mode)
+                return product.expect_int(alias, raw, max(BleboxThermoState), 0) in (
+                    BleboxThermoState.ON,
+                    BleboxThermoState.BOOST,
+                )
         return None
+
+    def _read_safety_off(self) -> bool:
+        """Return True when the safety system forced the output off."""
+        if self._product.last_data is None:
+            return False
+        return self.raw_value("state") == BleboxThermoState.SAFETY_OFF
 
     def _read_operating_state(self) -> Optional[int]:
         """Return current operating state"""
@@ -107,13 +123,13 @@ class Climate(Temperature):
                 return None
 
     def _read_is_heating(self) -> Optional[bool]:
-        if not self._product.last_data:
+        if not self._product.last_data or self.current is None or self.desired is None:
             return None
 
         return self.is_on and (self.current < self.desired)
 
     def _read_is_cooling(self) -> Optional[bool]:
-        if not self._product.last_data:
+        if not self._product.last_data or self.current is None or self.desired is None:
             return None
 
         return self.is_on and (self.current > self.desired)
@@ -131,7 +147,22 @@ class Climate(Temperature):
     def after_update(self) -> None:
         self._is_on = self._read_is_on()
         self._desired = self._read_temperature("desired")
-        self._current = self._read_temperature("temperature")
+
+        state = self._read_state("temperature")
+        if self._state_is_error(state):
+            self._error = True
+            self._current = None
+        else:
+            self._error = False
+            if self._state_is_initializing(state):
+                self._current = None
+            else:
+                self._current = self._read_temperature("temperature")
+
+        if self._read_safety_off():
+            self._error = True
+
+        self._native_value = self._current
         self._is_heating = self._read_is_heating()
         self._is_cooling = self._read_is_cooling()
         self._havc_action = self._read_operating_state()

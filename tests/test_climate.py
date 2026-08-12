@@ -39,7 +39,6 @@ class BleBoxClimateEntity(CommonEntity, ClimateDevice):
     def __init__(self, feature):
         super().__init__(feature)
         ClimateDevice.__init__(self)
-        pass
 
     """Representation of a BleBox climate feature."""
 
@@ -293,6 +292,45 @@ class TestSauna(DefaultBoxTest):
         )
         entity = (await self.async_entities(aioclient_mock))[0]
         assert entity.device_info["name"] == "My ThermoBox"
+
+    async def test_thermo_sensor_error_state(self, aioclient_mock):
+        """A broken probe (state=3, out-of-range value) must not prevent setup."""
+        self.DEVICE_INFO = self.DEVICE_INFO_THERMO
+        self.DEVICE_EXTENDED_INFO = jmerge(
+            self.DEVICE_EXTENDED_INFO_THERMO,
+            '{ "sensors": [ { "value": 18349, "state": 3 } ] }',
+        )
+        await self.allow_get_info(aioclient_mock)
+        entity = (await self.async_entities(aioclient_mock))[0]
+
+        assert entity.current_temperature is None
+        assert entity._feature.is_error is True
+
+    async def test_thermo_sensor_initializing_state(self, aioclient_mock):
+        """state=1 (measurement in progress) must not surface a value or an error."""
+        self.DEVICE_INFO = self.DEVICE_INFO_THERMO
+        self.DEVICE_EXTENDED_INFO = jmerge(
+            self.DEVICE_EXTENDED_INFO_THERMO,
+            '{ "sensors": [ { "value": 18349, "state": 1 } ] }',
+        )
+        await self.allow_get_info(aioclient_mock)
+        entity = (await self.async_entities(aioclient_mock))[0]
+
+        assert entity.current_temperature is None
+        assert entity._feature.is_error is False
+
+    async def test_thermo_safety_off_state(self, aioclient_mock):
+        """state=4 (output blocked by safety system) must not prevent setup."""
+        self.DEVICE_INFO = self.DEVICE_INFO_THERMO
+        self.DEVICE_EXTENDED_INFO = jmerge(
+            self.DEVICE_EXTENDED_INFO_THERMO,
+            '{ "thermo": { "state": 4 } }',
+        )
+        await self.allow_get_info(aioclient_mock)
+        entity = (await self.async_entities(aioclient_mock))[0]
+
+        assert entity._feature.is_on is False
+        assert entity._feature.is_error is True
 
     async def test_device_info(self, aioclient_mock):
         await self.allow_get_info(aioclient_mock, self.DEVICE_INFO)

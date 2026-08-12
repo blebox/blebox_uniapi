@@ -1,5 +1,5 @@
 import datetime
-import numbers
+from enum import IntEnum
 from functools import partial
 
 from .feature import Feature
@@ -67,10 +67,9 @@ class SensorFactory:
                     # note: methods for sensor readings are provided as template
                     # functions (lambdas) in the box config. We need to "materialize"
                     # them to make sure they are properly indexed by sensor ID
-                    materialized_methods = {
-                        **methods,
-                        device_class: methods[device_class](sensor_id),
-                    }
+                    materialized_methods = Feature.resolve_access_method_paths(
+                        methods, sensor_id
+                    )
 
                     feature = constructor(
                         product=product,
@@ -97,12 +96,24 @@ class SensorFactory:
             return []
 
 
+class BleboxSensorState(IntEnum):
+    """Possible states of a sensor reading, not all valid for every device type."""
+
+    IDLE = 0
+    INITIALIZING = 1
+    ACTIVE = 2
+    ERROR = 3
+    ABOVE_RANGE = 4
+    BELOW_RANGE = 5
+
+
 class BaseSensor(Feature):
     _unit: str
     _device_class: str
-    _native_value: Union[float, int, str]
+    _native_value: Optional[Union[float, int, str]] = None
     _sensor_type: Optional[str]
     _sensor_id: Optional[int]
+    _error: bool = False
 
     def __init__(
         self,
@@ -129,6 +140,26 @@ class BaseSensor(Feature):
     @property
     def native_value(self):
         return self._native_value
+
+    @property
+    def is_error(self) -> bool:
+        return self._error
+
+    def _read_state(self, name: str) -> Optional[int]:
+        if self._product.last_data is None:
+            return None
+        raw = self.raw_value(f"{name}.state")
+        if not isinstance(raw, (int, float)):
+            return None
+        return int(raw)
+
+    @staticmethod
+    def _state_is_error(state: Optional[int]) -> bool:
+        return state == BleboxSensorState.ERROR
+
+    @staticmethod
+    def _state_is_initializing(state: Optional[int]) -> bool:
+        return state == BleboxSensorState.INITIALIZING
 
     @property
     def sensor_id(self):
@@ -201,9 +232,22 @@ class GenericSensor(BaseSensor):
         if product.last_data is None:
             return
 
+        state = self._read_state(self._device_class)
+        if self._state_is_error(state):
+            self._error = True
+            self._native_value = None
+            return
+
+        self._error = False
+
+        if self._state_is_initializing(state):
+            self._native_value = None
+            return
+
         raw = self.raw_value(self._device_class)
-        if not isinstance(raw, numbers.Number):
-            raw = float("nan")
+        if not isinstance(raw, (int, float)):
+            self._native_value = None
+            return
 
         native = raw / self._scale
         if self._precision:
@@ -234,7 +278,7 @@ class PowerConsumption(GenericSensor):
 
 @SensorFactory.register("temperature")
 class Temperature(BaseSensor):
-    _current: Union[float, int, None]
+    _current: Optional[Union[float, int]]
 
     def __init__(
         self,
@@ -249,21 +293,35 @@ class Temperature(BaseSensor):
         self._device_class = "temperature"
 
     @property
-    def current(self) -> Union[float, int, None]:
+    def current(self) -> Optional[Union[float, int]]:
         return self._current
 
-    def _read_temperature(self, field: str) -> Union[float, int, None]:
+    def _read_temperature(self, field: str) -> Optional[Union[float, int]]:
         product = self._product
         if product.last_data is not None:
             raw = self.raw_value(field)
-            if raw is not None:
-                alias = self._alias
-                return round(product.expect_int(alias, raw, 12500, -5500) / 100.0, 1)
+            if isinstance(raw, (int, float)):
+                return round(raw / 100.0, 1)
         return None
 
     def after_update(self) -> None:
-        self._current = self._read_temperature("temperature")
-        self._native_value = self._read_temperature("temperature")
+        state = self._read_state("temperature")
+        if self._state_is_error(state):
+            self._error = True
+            self._current = None
+            self._native_value = None
+            return
+
+        self._error = False
+
+        if self._state_is_initializing(state):
+            self._current = None
+            self._native_value = None
+            return
+
+        current = self._read_temperature("temperature")
+        self._current = current
+        self._native_value = current
 
 
 @SensorFactory.register("airSensor")
@@ -282,14 +340,25 @@ class AirQuality(BaseSensor):
         self._unit = "concentration_of_mp"
         self._device_class = alias
 
-    def _pm_value(self, name: str) -> Optional[int]:
+    def _pm_value(self, name: str) -> Optional[Union[int, float]]:
         product = self._product
         if product.last_data is not None:
             raw = self.raw_value(name)
-            if raw is not None:
-                alias = self._alias
-                return product.expect_int(alias, raw, 3000, 0)
+            if isinstance(raw, (int, float)):
+                return raw
         return None
 
     def after_update(self) -> None:
+        state = self._read_state(self.device_class)
+        if self._state_is_error(state):
+            self._error = True
+            self._native_value = None
+            return
+
+        self._error = False
+
+        if self._state_is_initializing(state):
+            self._native_value = None
+            return
+
         self._native_value = self._pm_value(f"{self.device_class}.value")

@@ -465,7 +465,7 @@ class TestMultiSensorEnergy(DefaultBoxTest):
 class TestAirSensor(DefaultBoxTest):
     """Tests for sensors representing BleBox airSensor."""
 
-    DEV_INFO_PATH = "api/air/state"
+    DEV_INFO_PATH = "state"
 
     DEVCLASS = "sensors"
     ENTITY_CLASS = BleBoxSensorEntity
@@ -473,12 +473,13 @@ class TestAirSensor(DefaultBoxTest):
     DEVICE_INFO = json.loads(
         """
     {
-        "deviceName": "My air 1",
+        "deviceName": "airSensor",
         "type": "airSensor",
-        "fv": "0.973",
-        "hv": "0.6",
-        "apiLevel": "20180403",
-        "id": "1afe34db9437",
+        "product": "airSensor",
+        "fv": "0.1007",
+        "hv": "1.6",
+        "apiLevel": "20210118",
+        "id": "0af9e06b71d4",
         "ip": "192.168.1.11"
     }
     """
@@ -513,14 +514,15 @@ class TestAirSensor(DefaultBoxTest):
         """
         {
             "air": {
+                "airQualityLevel": 6,
                 "sensors": [
                     {
                         "type": "pm1",
                         "value": 49,
                         "trend": 3,
                         "state": 0,
-                        "qualityLevel": 0,
-                        "elaspedTimeS": -1
+                        "qualityLevel": -1,
+                        "elapsedTimeS": -1
                     },
                     {
                         "type": "pm2.5",
@@ -528,7 +530,7 @@ class TestAirSensor(DefaultBoxTest):
                         "trend": 1,
                         "state": 0,
                         "qualityLevel": 4,
-                        "elaspedTimeS": -1
+                        "elapsedTimeS": -1
                     },
                     {
                         "type": "pm10",
@@ -536,7 +538,7 @@ class TestAirSensor(DefaultBoxTest):
                         "trend": 0,
                         "state": 0,
                         "qualityLevel": 6,
-                        "elaspedTimeS": -1
+                        "elapsedTimeS": -1
                     }
                 ]
             }
@@ -544,8 +546,8 @@ class TestAirSensor(DefaultBoxTest):
         """
     )
 
-    # DEVICE_EXTENDED_INFO
-    # DEVICE_EXTENDED_INFO_PATH
+    DEVICE_EXTENDED_INFO = DEVICE_INFO
+    DEVICE_EXTENDED_INFO_PATH = 'info'
 
     async def test_init(self, aioclient_mock):
         """Test air quality sensor default state."""

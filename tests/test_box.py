@@ -234,3 +234,21 @@ async def test_async_ota_check_returns_silently_when_no_available_fv(
     with patch("asyncio.sleep", new=AsyncMock()):
         await box.async_ota_check()
     assert box.available_firmware_version is None
+
+
+async def test_async_ota_check_falls_back_to_info(mock_session, sample_data, config):
+    box = Box(mock_session, sample_data, config, None)
+    mock_session.async_api_get_ota = AsyncMock(return_value=None)
+    mock_session.async_api_get = AsyncMock(
+        side_effect=[
+            error.HttpError("Request to /api/device/state failed with HTTP 404"),
+            {"device": {"availableFv": "2.0", "fv": "1.5"}},
+        ]
+    )
+    with patch("asyncio.sleep", new=AsyncMock()):
+        await box.async_ota_check()
+    mock_session.async_api_get.assert_has_calls(
+        [mock.call("/api/device/state"), mock.call("/info")]
+    )
+    assert box.available_firmware_version == "2.0"
+    assert box.firmware_version == "1.5"

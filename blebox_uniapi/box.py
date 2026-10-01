@@ -387,7 +387,10 @@ class Box:
         await self._session.async_api_get_ota("/api/ota/check")
         for _ in range(3):
             await asyncio.sleep(1)
-            response = await self._session.async_api_get("/info")
+            try:
+                response = await self._session.async_api_get("/api/device/state")
+            except HttpError:
+                response = await self._session.async_api_get("/info")
             if response is None:
                 raise UnsupportedBoxResponse("Device returned non-JSON response")
             response = response.get("device", response)

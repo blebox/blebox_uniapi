@@ -105,6 +105,7 @@ class BleboxSensorState(IntEnum):
     ERROR = 3
     ABOVE_RANGE = 4
     BELOW_RANGE = 5
+    NOT_CONFIGURED = 6
 
 
 class BaseSensor(Feature):
@@ -114,6 +115,7 @@ class BaseSensor(Feature):
     _sensor_type: Optional[str]
     _sensor_id: Optional[int]
     _error: bool = False
+    _needs_configuration: bool = False
 
     def __init__(
         self,
@@ -145,17 +147,22 @@ class BaseSensor(Feature):
     def is_error(self) -> bool:
         return self._error
 
+    @property
+    def needs_configuration(self) -> bool:
+        return self._needs_configuration
+
     def _read_state(self, name: str) -> Optional[int]:
         if self._product.last_data is None:
             return None
         raw = self.raw_value(f"{name}.state")
-        if not isinstance(raw, (int, float)):
-            return None
-        return int(raw)
+        state = int(raw) if isinstance(raw, (int, float)) else None
+        self._needs_configuration = state == BleboxSensorState.NOT_CONFIGURED
+        return state
 
     @staticmethod
     def _state_is_error(state: Optional[int]) -> bool:
-        return state == BleboxSensorState.ERROR
+        # note: unconfigured probe reports garbage values
+        return state in (BleboxSensorState.ERROR, BleboxSensorState.NOT_CONFIGURED)
 
     @staticmethod
     def _state_is_initializing(state: Optional[int]) -> bool:
@@ -201,6 +208,10 @@ class BaseSensor(Feature):
 @SensorFactory.register("openStatus", unit="")
 @SensorFactory.register("co2", unit="ppm")
 @SensorFactory.register("co2Definition", unit="")
+@SensorFactory.register("gaugePressure", unit="mbar")
+@SensorFactory.register("liquidHeight", unit="cm")
+@SensorFactory.register("fillLevel", unit="percentage", scale=10)
+@SensorFactory.register("volume", unit="L")
 class GenericSensor(BaseSensor):
     def __init__(
         # base sensor params

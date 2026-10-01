@@ -462,6 +462,103 @@ class TestMultiSensorEnergy(DefaultBoxTest):
         assert entity.native_value == 1500
 
 
+class TestMultiSensorTank(DefaultBoxTest):
+    """Tests for multiSensor tank level sensors (apiLevel 20230606)."""
+
+    DEVCLASS = "sensors"
+    ENTITY_CLASS = BleBoxSensorEntity
+
+    DEV_INFO_PATH = "state"
+
+    DEVICE_INFO = json.loads(
+        """
+        {
+          "device": {
+            "deviceName": "My tankSensor",
+            "type": "multiSensor",
+            "product": "tankSensor",
+            "hv": "tS-1.0",
+            "fv": "0.1",
+            "universe": 0,
+            "apiLevel": "20230606",
+            "id": "aa00112233bb",
+            "ip": "172.0.0.1",
+            "availableFv": null
+          }
+        }
+        """
+    )
+
+    def patch_version(apiLevel):
+        return f'{{ "device": {{ "apiLevel": {apiLevel} }} }}'
+
+    DEVICE_INFO_FUTURE = jmerge(DEVICE_INFO, patch_version(future_date()))
+    DEVICE_INFO_LATEST = jmerge(
+        DEVICE_INFO, patch_version(get_latest_api_level("multiSensor"))
+    )
+    DEVICE_INFO_UNSUPPORTED = jmerge(DEVICE_INFO, patch_version(20180603))
+    DEVICE_INFO_UNSPECIFIED_API = None
+
+    STATE_DEFAULT = json.loads(
+        """
+        {
+            "multiSensor": {
+                "sensors": [
+                    {"type": "gaugePressure", "id": 0, "value": 98,   "state": 2},
+                    {"type": "liquidHeight",  "id": 1, "value": 100,  "state": 2},
+                    {"type": "fillLevel",     "id": 2, "value": 205,  "state": 2},
+                    {"type": "volume",        "id": 3, "value": 2000, "state": 2}
+                ]
+            }
+        }
+        """
+    )
+
+    DEVICE_EXTENDED_INFO = STATE_DEFAULT
+    DEVICE_EXTENDED_INFO_PATH = "/state/extended"
+
+    @pytest.mark.parametrize(
+        "index,unit,value",
+        [
+            (0, "mbar", 98),
+            (1, "cm", 100),
+            (2, "percentage", 20.5),
+            (3, "L", 2000),
+        ],
+    )
+    async def test_sensor_value(self, aioclient_mock, index, unit, value):
+        entity = await self.updated(aioclient_mock, self.STATE_DEFAULT, index=index)
+        assert entity._feature.unit == unit
+        assert entity.native_value == value
+        assert entity._feature.needs_configuration is False
+
+    @pytest.mark.parametrize("value", [None, 9999])
+    async def test_not_configured_state_reports_error(self, aioclient_mock, value):
+        """state == 6 (probe not configured) carries a meaningless or null value."""
+
+        state_json = jmerge(
+            self.STATE_DEFAULT,
+            json.dumps({"multiSensor": {"sensors": [{"state": 6, "value": value}]}}),
+        )
+
+        entity = await self.updated(aioclient_mock, state_json, index=0)
+
+        assert entity.native_value is None
+        assert entity._feature.is_error is True
+        assert entity._feature.needs_configuration is True
+
+    async def test_error_state_does_not_need_configuration(self, aioclient_mock):
+        state_json = jmerge(
+            self.STATE_DEFAULT,
+            '{ "multiSensor": { "sensors": [ { "state": 3 } ] } }',
+        )
+
+        entity = await self.updated(aioclient_mock, state_json, index=0)
+
+        assert entity._feature.is_error is True
+        assert entity._feature.needs_configuration is False
+
+
 class TestAirSensor(DefaultBoxTest):
     """Tests for sensors representing BleBox airSensor."""
 

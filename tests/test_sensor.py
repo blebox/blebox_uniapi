@@ -530,6 +530,33 @@ class TestMultiSensorTank(DefaultBoxTest):
         entity = await self.updated(aioclient_mock, self.STATE_DEFAULT, index=index)
         assert entity._feature.unit == unit
         assert entity.native_value == value
+        assert entity._feature.needs_configuration is False
+
+    @pytest.mark.parametrize("value", [None, 9999])
+    async def test_not_configured_state_reports_error(self, aioclient_mock, value):
+        """state == 6 (probe not configured) carries a meaningless or null value."""
+
+        state_json = jmerge(
+            self.STATE_DEFAULT,
+            json.dumps({"multiSensor": {"sensors": [{"state": 6, "value": value}]}}),
+        )
+
+        entity = await self.updated(aioclient_mock, state_json, index=0)
+
+        assert entity.native_value is None
+        assert entity._feature.is_error is True
+        assert entity._feature.needs_configuration is True
+
+    async def test_error_state_does_not_need_configuration(self, aioclient_mock):
+        state_json = jmerge(
+            self.STATE_DEFAULT,
+            '{ "multiSensor": { "sensors": [ { "state": 3 } ] } }',
+        )
+
+        entity = await self.updated(aioclient_mock, state_json, index=0)
+
+        assert entity._feature.is_error is True
+        assert entity._feature.needs_configuration is False
 
 
 class TestAirSensor(DefaultBoxTest):

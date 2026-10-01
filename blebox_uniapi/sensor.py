@@ -201,6 +201,10 @@ class BaseSensor(Feature):
 @SensorFactory.register("openStatus", unit="")
 @SensorFactory.register("co2", unit="ppm")
 @SensorFactory.register("co2Definition", unit="")
+@SensorFactory.register("gaugePressure", unit="mbar")
+@SensorFactory.register("liquidHeight", unit="cm")
+@SensorFactory.register("fillLevel", unit="percentage", scale=10)
+@SensorFactory.register("volume", unit="L")
 class GenericSensor(BaseSensor):
     def __init__(
         # base sensor params

@@ -4,11 +4,11 @@
 
 from setuptools import setup, find_packages
 
-with open("README.rst") as readme_file:
+with open("README.md") as readme_file:
     readme = readme_file.read()
 
-with open("HISTORY.rst") as history_file:
-    history = history_file.read()
+with open("CHANGELOG.md") as changelog_file:
+    changelog = changelog_file.read()
 
 requirements = ["aiohttp>=3", "jmespath>1.0.0"]
 
@@ -39,8 +39,8 @@ setup(
     description="Python API for accessing BleBox smart home devices",
     install_requires=requirements,
     license="Apache Software License 2.0",
-    long_description=readme + "\n\n" + history,
-    long_description_content_type="text/x-rst",
+    long_description=readme + "\n\n" + changelog,
+    long_description_content_type="text/markdown",
     include_package_data=False,
     keywords="blebox_uniapi",
     name="blebox_uniapi",

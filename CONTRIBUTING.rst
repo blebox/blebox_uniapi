@@ -101,10 +101,14 @@ Before you submit a pull request, check that it meets these guidelines:
 1. The pull request should include tests.
 2. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring, and add the
-   feature to the list in README.rst.
-3. The pull request should work for Python 3.6, 3.7 and 3.8, and for PyPy. Check
-   https://travis-ci.com/gadgetmobile/blebox_uniapi/pull_requests
-   and make sure that the tests pass for all supported Python versions.
+   feature to the list in README.md.
+3. The pull request should work for Python 3.9, 3.10 and 3.11.
+4. The title follows `Conventional Commits`_: ``fix:`` (patch), ``feat:``
+   (minor), ``feat!:`` (major). It becomes the CHANGELOG.md entry. Titles
+   without these prefixes (``docs:``, ``chore:``, ``ci:``, ...) or with no
+   prefix are left out of the changelog.
+
+.. _Conventional Commits: https://www.conventionalcommits.org/
 
 Tips
 ----
@@ -117,16 +121,8 @@ $ pytest tests.test_blebox_uniapi
 Deploying
 ---------
 
-A reminder for the maintainers on how to deploy.
-Make sure all your changes are committed (including an entry in HISTORY.rst).
-Then run::
-
-$ bump2version patch # possible: major / minor / patch
-$ git push --follow-tags
-
-bump2version bumps the version in setup.py, blebox_uniapi/__init__.py and
-setup.cfg, commits the change and creates a matching git tag (e.g. v2.6.0).
-Pushing the tag triggers the "Publish to PyPI" GitHub Actions workflow
-(.github/workflows/release.yml), which first runs lint + tests, then builds and
-uploads to PyPI via Trusted Publishing (OIDC) from the blebox/blebox_uniapi repo.
-The publish step only runs if the tests pass.
+Squash-merge pull requests, fixing the title in the commit message if needed.
+release-please keeps an open "chore(master): release X.Y.Z" pull request with
+the version bump and CHANGELOG.md entry. Merging it creates the tag and GitHub
+release, runs the tests and publishes to PyPI. Pushing a tag by hand releases
+nothing.

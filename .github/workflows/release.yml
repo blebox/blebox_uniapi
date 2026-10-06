@@ -1,14 +1,29 @@
-name: Publish to PyPI
+name: Release
 
+# Publish from the release-please run
 on:
   push:
-    tags: ['v[0-9]*.[0-9]*.[0-9]*']   # bumpversion tags, e.g. v2.6.0
+    branches: [master]
 
 permissions:
   contents: read
 
 jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write          # autorelease: pending/tagged labels on the Release PR
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+
   tests:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
     uses: ./.github/workflows/tests.yml
 
   build:

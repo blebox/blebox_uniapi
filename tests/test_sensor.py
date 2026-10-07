@@ -504,10 +504,10 @@ class TestMultiSensorTank(DefaultBoxTest):
         {
             "multiSensor": {
                 "sensors": [
-                    {"type": "gaugePressure", "id": 0, "value": 98,   "state": 2},
-                    {"type": "liquidHeight",  "id": 1, "value": 100,  "state": 2},
                     {"type": "fillLevel",     "id": 2, "value": 205,  "state": 2},
-                    {"type": "volume",        "id": 3, "value": 2000, "state": 2}
+                    {"type": "gaugePressure", "id": 0, "value": 98,   "state": 2},
+                    {"type": "liquidHeight",  "id": 1, "value": 1234, "state": 2},
+                    {"type": "volume",        "id": 3, "value": 2345, "state": 2}
                 ]
             }
         }
@@ -520,10 +520,10 @@ class TestMultiSensorTank(DefaultBoxTest):
     @pytest.mark.parametrize(
         "index,unit,value",
         [
-            (0, "mbar", 98),
-            (1, "cm", 100),
-            (2, "percentage", 20.5),
-            (3, "L", 2000),
+            (0, "percentage", 20.5),
+            (1, "mbar", 98),
+            (2, "cm", 123.4),
+            (3, "L", 2.345),
         ],
     )
     async def test_sensor_value(self, aioclient_mock, index, unit, value):

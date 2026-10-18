@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.9](https://github.com/blebox/blebox_uniapi/compare/v2.5.8...v2.5.9) (2026-10-18)
+
+
+### Bug Fixes
+
+* tankSensor liquidHeight and volume are reported in mm and ml ([#206](https://github.com/blebox/blebox_uniapi/issues/206)) ([7512f43](https://github.com/blebox/blebox_uniapi/commit/7512f4394c2452c77c7d65e9c2d2c645a58019a3))
+
 ## [2.5.8](https://github.com/blebox/blebox_uniapi/compare/v2.5.7...v2.5.8) (2026-10-01)
 
 ### Features

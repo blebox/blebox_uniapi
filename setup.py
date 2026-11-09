@@ -10,7 +10,7 @@ with open("README.md") as readme_file:
 with open("CHANGELOG.md") as changelog_file:
     changelog = changelog_file.read()
 
-requirements = ["aiohttp>=3", "jmespath>1.0.0"]
+requirements = ["aiohttp>=3.10", "jmespath>1.0.0"]
 
 setup_requirements = [
     "pytest-runner",

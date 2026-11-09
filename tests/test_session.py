@@ -6,7 +6,7 @@ import aiohttp
 
 from unittest.mock import patch, Mock, AsyncMock
 
-from blebox_uniapi.session import ApiHost as Session
+from blebox_uniapi.session import CONNECT_TIMEOUT, ApiHost as Session
 from blebox_uniapi import error
 
 
@@ -59,7 +59,10 @@ async def test_session_api_get(logger, client):
 
     result = await api_session.async_api_get("/api/foo")
 
-    client.get.assert_called_once_with("http://127.0.0.4:88/api/foo", timeout=2)
+    client.get.assert_called_once_with(
+        "http://127.0.0.4:88/api/foo",
+        timeout=aiohttp.ClientTimeout(total=2, sock_connect=CONNECT_TIMEOUT),
+    )
 
     assert result == 123
 
@@ -70,7 +73,10 @@ async def test_session_default_client_created(mocked_client, logger):
 
     result = await api_session.async_api_get("/api/foo")
 
-    mocked_client.get.assert_called_once_with("http://127.0.0.4:88/api/foo", timeout=2)
+    mocked_client.get.assert_called_once_with(
+        "http://127.0.0.4:88/api/foo",
+        timeout=aiohttp.ClientTimeout(total=2, sock_connect=CONNECT_TIMEOUT),
+    )
     assert result == 123
 
 
@@ -80,7 +86,7 @@ async def test_session_default_timeout_used(mocked_client, logger):
 
     await api_session.async_api_get("/api/foo")
     expected_timeout = aiohttp.ClientTimeout(
-        total=None, connect=None, sock_read=5, sock_connect=5
+        total=None, connect=None, sock_read=5, sock_connect=CONNECT_TIMEOUT
     )
 
     mocked_client.get.assert_called_once_with(
@@ -231,3 +237,79 @@ async def test_session_api_get_unicode_decode_error_raises_connection_error(
     api_session = Session("127.0.0.4", "88", 2, client, None, logger)
     with pytest.raises(error.ConnectionError, match="Invalid response encoding"):
         await api_session.async_api_get("/api/device/state")
+
+
+async def test_session_retries_after_connection_timeout(logger, client):
+    client.get = AsyncMock(
+        side_effect=[aiohttp.ConnectionTimeoutError(), valid_response()]
+    )
+    api_session = Session("127.0.0.4", "88", 2, client, None, logger)
+
+    result = await api_session.async_api_get("/api/foo")
+
+    assert result == 123
+    assert client.get.call_count == 2
+
+
+async def test_session_post_retries_after_connection_timeout(logger, client):
+    client.post = AsyncMock(
+        side_effect=[aiohttp.ConnectionTimeoutError(), valid_response()]
+    )
+    api_session = Session("127.0.0.4", "88", 2, client, None, logger)
+
+    result = await api_session.async_api_post("/api/foo", {"a": 1})
+
+    assert result == 123
+    assert client.post.call_count == 2
+    client.post.assert_called_with(
+        "http://127.0.0.4:88/api/foo",
+        timeout=aiohttp.ClientTimeout(total=2, sock_connect=CONNECT_TIMEOUT),
+        data={"a": 1},
+    )
+
+
+async def test_session_connection_timeout_after_all_attempts(logger, client):
+    client.get = AsyncMock(side_effect=aiohttp.ConnectionTimeoutError())
+    api_session = Session("127.0.0.4", "88", 2, client, None, logger)
+
+    with pytest.raises(
+        error.TimeoutError,
+        match=rf"Failed to connect to 127\.0\.0\.4:88 within {CONNECT_TIMEOUT}s",
+    ):
+        await api_session.async_api_get("/api/foo")
+
+    assert client.get.call_count == 2
+
+
+async def test_session_read_timeout_is_not_retried(logger, client):
+    client.get = AsyncMock(side_effect=aiohttp.SocketTimeoutError())
+    api_session = Session("127.0.0.4", "88", 2, client, None, logger)
+
+    with pytest.raises(
+        error.TimeoutError,
+        match=r"Request to http://127\.0\.0\.4:88/api/foo timed out",
+    ):
+        await api_session.async_api_get("/api/foo")
+
+    client.get.assert_called_once()
+
+
+async def test_session_client_timeout_passed_through(logger, client):
+    client.get = AsyncMock(return_value=valid_response())
+    timeout = aiohttp.ClientTimeout(total=7, sock_connect=1)
+    api_session = Session("127.0.0.4", "88", timeout, client, None, logger)
+
+    await api_session.async_api_get("/api/foo")
+
+    client.get.assert_called_once_with("http://127.0.0.4:88/api/foo", timeout=timeout)
+
+
+async def test_session_connection_timeout_message_uses_connect(logger, client):
+    client.get = AsyncMock(side_effect=aiohttp.ConnectionTimeoutError())
+    timeout = aiohttp.ClientTimeout(total=10, connect=4)
+    api_session = Session("127.0.0.4", "88", timeout, client, None, logger)
+
+    with pytest.raises(
+        error.TimeoutError, match=r"Failed to connect to 127\.0\.0\.4:88 within 4s"
+    ):
+        await api_session.async_api_get("/api/foo")

@@ -6,10 +6,24 @@ import logging
 
 from . import error
 
-DEFAULT_TIMEOUT = aiohttp.ClientTimeout(total=None, sock_connect=5, sock_read=5)
+CONNECT_TIMEOUT = 3
+CONNECT_ATTEMPTS = 2
+DEFAULT_TIMEOUT = aiohttp.ClientTimeout(
+    total=None, sock_connect=CONNECT_TIMEOUT, sock_read=5
+)
 DEFAULT_PORT = 80
 
 logger = logging.getLogger(__name__)
+
+
+def _client_timeout(
+    timeout: Union[int, aiohttp.ClientTimeout, None],
+) -> aiohttp.ClientTimeout:
+    if not timeout:
+        return DEFAULT_TIMEOUT
+    if isinstance(timeout, aiohttp.ClientTimeout):
+        return timeout
+    return aiohttp.ClientTimeout(total=timeout, sock_connect=CONNECT_TIMEOUT)
 
 
 class ApiHost:
@@ -17,7 +31,7 @@ class ApiHost:
         self,
         host: str,
         port: int,
-        timeout: int,
+        timeout: Union[int, aiohttp.ClientTimeout, None],
         session: Any,
         loop: Any,
         logger: logging.Logger = logger,
@@ -30,7 +44,7 @@ class ApiHost:
         # TODO: handle empty logger?
         self._logger = logger
 
-        self._timeout = timeout if timeout else DEFAULT_TIMEOUT
+        self._timeout = _client_timeout(timeout)
 
         self._session = session
 
@@ -40,7 +54,9 @@ class ApiHost:
             auth = aiohttp.BasicAuth(login=self._username, password=self._password)
 
         if not self._session:
-            self._session = aiohttp.ClientSession(loop=loop, timeout=timeout, auth=auth)
+            self._session = aiohttp.ClientSession(
+                loop=loop, timeout=self._timeout, auth=auth
+            )
 
         # TODO: remove?
         self._loop = loop
@@ -52,14 +68,13 @@ class ApiHost:
         data: Union[dict, str, None] = None,
         allow_ota_check_response: bool = False,
     ) -> Optional[dict]:
-        # TODO: check timeout
         client_timeout = self._timeout
         url = self.api_path(path)
+        kwargs: dict[str, Any] = {"timeout": client_timeout}
+        if data is not None:
+            kwargs["data"] = data
         try:
-            if data is not None:
-                response = await async_method(url, timeout=client_timeout, data=data)
-            else:
-                response = await async_method(url, timeout=client_timeout)
+            response = await self._async_send(async_method, url, **kwargs)
 
             accepted_statuses = (200, 202, 204) if allow_ota_check_response else (200,)
             if response.status not in accepted_statuses:
@@ -76,10 +91,15 @@ class ApiHost:
 
             return await response.json()
 
-        except asyncio.TimeoutError as ex:
+        except aiohttp.ConnectionTimeoutError as ex:
+            connect_timeout = client_timeout.sock_connect or client_timeout.connect
             raise error.TimeoutError(
-                f"Failed to connect to {self.host}:{self.port} within {client_timeout}s: ({ex})"
+                f"Failed to connect to {self.host}:{self.port} within "
+                f"{connect_timeout}s ({CONNECT_ATTEMPTS} attempts)"
             ) from ex
+
+        except asyncio.TimeoutError as ex:
+            raise error.TimeoutError(f"Request to {url} timed out") from ex
 
         except aiohttp.ClientConnectionError as ex:
             raise error.ConnectionError(
@@ -93,6 +113,20 @@ class ApiHost:
             raise error.ConnectionError(
                 f"Invalid response encoding from {url}: {ex}"
             ) from ex
+
+    async def _async_send(self, async_method: Any, url: str, **kwargs: Any) -> Any:
+        # Nothing was sent yet, so retrying on a new connection is safe.
+        for attempt in range(1, CONNECT_ATTEMPTS):
+            try:
+                return await async_method(url, **kwargs)
+            except aiohttp.ConnectionTimeoutError:
+                self._logger.debug(
+                    "Connection to %s timed out, retrying (attempt %s/%s)",
+                    url,
+                    attempt + 1,
+                    CONNECT_ATTEMPTS,
+                )
+        return await async_method(url, **kwargs)
 
     async def async_api_get(self, path: str) -> Optional[dict]:
         try:

@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.10](https://github.com/blebox/blebox_uniapi/compare/v2.5.9...v2.5.10) (2026-11-09)
+
+
+### Bug Fixes
+
+* retry once when device connection times out ([#208](https://github.com/blebox/blebox_uniapi/issues/208)) ([16e34cf](https://github.com/blebox/blebox_uniapi/commit/16e34cf62d25502aab9922db82d78237e08bd53b))
+
 ## [2.5.9](https://github.com/blebox/blebox_uniapi/compare/v2.5.8...v2.5.9) (2026-10-18)
 
 

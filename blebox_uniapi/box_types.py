@@ -72,6 +72,29 @@ BOX_TYPE_CONF: dict[str, dict[int, dict[str, Any]]] = {
                     },
                 ]
             ],
+        },
+        20210118: {
+            "api_path": "/state",
+            "sensors": [
+                [
+                    "0.air",
+                    {
+                        "airQualityLevel": "air.airQualityLevel",
+                        "pm1.value": "air.sensors[?type == 'pm1']|[0]|value",
+                        "pm1.state": "air.sensors[?type == 'pm1']|[0]|state",
+                        "pm1.trend": "air.sensors[?type == 'pm1']|[0]|trend",
+                        "pm1.qualityLevel": "air.sensors[?type == 'pm1']|[0]|qualityLevel",
+                        "pm2_5.value": "air.sensors[?type == 'pm2.5']|[0]|value",
+                        "pm2_5.state": "air.sensors[?type == 'pm2.5']|[0]|state",
+                        "pm2_5.trend": "air.sensors[?type == 'pm2.5']|[0]|trend",
+                        "pm2_5.qualityLevel": "air.sensors[?type == 'pm2.5']|[0]|qualityLevel",
+                        "pm10.value": "air.sensors[?type == 'pm10']|[0]|value",
+                        "pm10.state": "air.sensors[?type == 'pm10']|[0]|state",
+                        "pm10.trend": "air.sensors[?type == 'pm10']|[0]|trend",
+                        "pm10.qualityLevel": "air.sensors[?type == 'pm10']|[0]|qualityLevel",
+                    },
+                ]
+            ],
         }
     },
     # dimmerBox
